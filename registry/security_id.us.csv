@@ -1,0 +1,504 @@
+security_id|cik|ticker_yahoo|name|first_trade_date|added_asof
+1|0000004904|AEP|American Electric Power Company, Inc. - Common Stock|1962-01-02|2026-08-30
+2|0000012927|BA|Boeing Company (The) Common Stock|1962-01-02|2026-08-30
+3|0000018230|CAT|Caterpillar, Inc. Common Stock|1962-01-02|2026-08-30
+4|0001130310|CNP|CenterPoint Energy, Inc (Holding Co) Common Stock|1962-01-02|2026-08-30
+5|0000093410|CVX|Chevron Corporation Common Stock|1962-01-02|2026-08-30
+6|0001744489|DIS|Walt Disney Company (The) Common Stock|1962-01-02|2026-08-30
+7|0000936340|DTE|DTE Energy Company Common Stock|1962-01-02|2026-08-30
+8|0001047862|ED|Consolidated Edison, Inc. Common Stock|1962-01-02|2026-08-30
+9|0000040533|GD|General Dynamics Corporation Common Stock|1962-01-02|2026-08-30
+10|0000040545|GE|GE Aerospace Common Stock|1962-01-02|2026-08-30
+11|0000773840|HON|Honeywell International Inc. - Common Stock|1962-01-02|2026-08-30
+12|0000047217|HPQ|HP Inc. Common Stock|1962-01-02|2026-08-30
+13|0000051143|IBM|International Business Machines Corporation Common Stock|1962-01-02|2026-08-30
+14|0000051434|IP|International Paper Company Common Stock|1962-01-02|2026-08-30
+15|0000200406|JNJ|Johnson & Johnson Common Stock|1962-01-02|2026-08-30
+16|0000021344|KO|Coca-Cola Company (The) Common Stock|1962-01-02|2026-08-30
+17|0000056873|KR|Kroger Company (The) Common Stock|1962-01-02|2026-08-30
+18|0000936468|LMT|Lockheed Martin Corporation Common Stock|1962-01-02|2026-08-30
+19|0000066740|MMM|3M Company Common Stock|1962-01-02|2026-08-30
+20|0000764180|MO|Altria Group, Inc.|1962-01-02|2026-08-30
+21|0000310158|MRK|Merck & Company, Inc. Common Stock (new)|1962-01-02|2026-08-30
+22|0000068505|MSI|Motorola Solutions, Inc. Common Stock|1962-01-02|2026-08-30
+23|0000080424|PG|Procter & Gamble Company (The) Common Stock|1962-01-02|2026-08-30
+24|0002115436|XOM|ExxonMobil Holdings Corporation Common Stock|1962-01-02|2026-08-30
+25|0000101829|RTX|RTX Corporation Common Stock|1962-04-02|2026-08-30
+26|0000063908|MCD|McDonald's Corporation Common Stock|1966-07-05|2026-08-30
+27|0000004962|AXP|American Express Company Common Stock|1972-06-01|2026-08-30
+28|0000014272|BMY|Bristol-Myers Squibb Company Common Stock|1972-06-01|2026-08-30
+29|0001666700|DD|DuPont de Nemours, Inc. Common Stock|1972-06-01|2026-08-30
+30|0000315189|DE|Deere & Company Common Stock|1972-06-01|2026-08-30
+31|0000032604|EMR|Emerson Electric Company Common Stock|1972-06-01|2026-08-30
+32|0001551182|ETN|Eaton Corporation, PLC Ordinary Shares|1972-06-01|2026-08-30
+33|0000065984|ETR|Entergy Corporation Common Stock|1972-06-01|2026-08-30
+34|0000037996|F|Ford Motor Company Common Stock|1972-06-01|2026-08-30
+35|0000045012|HAL|Halliburton Company Common Stock|1972-06-01|2026-08-30
+36|0000059478|LLY|Eli Lilly and Company Common Stock|1972-06-01|2026-08-30
+37|0001004980|PCG|Pacific Gas & Electric Co. Common Stock|1972-06-01|2026-08-30
+38|0000077476|PEP|PepsiCo, Inc. - Common Stock|1972-06-01|2026-08-30
+39|0000078003|PFE|Pfizer, Inc. Common Stock|1972-06-01|2026-08-30
+40|0000097476|TXN|Texas Instruments Incorporated - Common Stock|1972-06-01|2026-08-30
+41|0000072971|WFC|Wells Fargo & Company Common Stock|1972-06-01|2026-08-30
+42|0000048898|HUBB|Hubbell Inc Common Stock|1972-06-05|2026-08-30
+43|0000104169|WMT|Walmart Inc. - Common Stock|1972-08-25|2026-08-30
+44|0000005272|AIG|American International Group, Inc. New Common Stock|1973-01-02|2026-08-30
+45|0000008818|AVY|Avery Dennison Corporation Common Stock|1973-02-21|2026-08-30
+46|0000070858|BAC|Bank of America Corporation Common Stock|1973-02-21|2026-08-30
+47|0000009389|BALL|Ball Corporation Common Stock|1973-02-21|2026-08-30
+48|0000010795|BDX|Becton, Dickinson and Company Common Stock|1973-02-21|2026-08-30
+49|0000021076|CLX|Clorox Company (The) Common Stock|1973-02-21|2026-08-30
+50|0000026172|CMI|Cummins Inc. Common Stock|1973-02-21|2026-08-30
+51|0000811156|CMS|CMS Energy Corporation Common Stock|1973-02-21|2026-08-30
+52|0000064803|CVS|CVS Health Corporation Common Stock|1973-02-21|2026-08-30
+53|0000031462|ECL|Ecolab Inc. Common Stock|1973-02-21|2026-08-30
+54|0000072741|ES|Eversource Energy (D/B/A) Common Stock|1973-02-21|2026-08-30
+55|0001711269|EVRG|Evergy, Inc. - Common Stock|1973-02-21|2026-08-30
+56|0000277135|GWW|W.W. Grainger, Inc. Common Stock|1973-02-21|2026-08-30
+57|0000352541|LNT|Alliant Energy Corporation - Common Stock|1973-02-21|2026-08-30
+58|0000063754|MKC|McCormick & Company, Incorporated Common Stock|1973-02-21|2026-08-30
+59|0000062709|MRSH|Marsh Common Stock|1973-02-21|2026-08-30
+60|0000753308|NEE|NextEra Energy, Inc. Common Stock|1973-02-21|2026-08-30
+61|0001111711|NI|NiSource Inc Common Stock|1973-02-21|2026-08-30
+62|0000764622|PNW|Pinnacle West Capital Corporation Common Stock|1973-02-21|2026-08-30
+63|0000031791|RVTY|Revvity, Inc. Common Stock|1973-02-21|2026-08-30
+64|0000091440|SNA|Snap-On Incorporated Common Stock|1973-02-21|2026-08-30
+65|0000064040|SPGI|S&P Global Inc. Common Stock|1973-02-21|2026-08-30
+66|0000097210|TER|Teradyne, Inc. - Common Stock|1973-02-21|2026-08-30
+67|0000027419|TGT|Target Corporation Common Stock|1973-02-21|2026-08-30
+68|0000217346|TXT|Textron Inc. Common Stock|1973-02-21|2026-08-30
+69|0001396009|VMC|Vulcan Materials Company (Holding Company) Common Stock|1973-02-21|2026-08-30
+70|0000072903|XEL|Xcel Energy Inc. - Common Stock|1973-02-21|2026-08-30
+71|0000049826|ITW|Illinois Tool Works Inc. Common Stock|1973-03-13|2026-08-30
+72|0000021665|CL|Colgate-Palmolive Company Common Stock|1973-05-02|2026-08-30
+73|0001109357|EXC|Exelon Corporation - Common Stock|1973-05-02|2026-08-30
+74|0001613103|MDT|Medtronic plc. Ordinary Shares|1973-05-02|2026-08-30
+75|0001390777|BNY|The Bank of New York Mellon Corporation Common Stock|1973-05-03|2026-08-30
+76|0000827052|EIX|Edison International Common Stock|1973-05-03|2026-08-30
+77|0000034903|FRT|Federal Realty Investment Trust Common Stock|1973-05-03|2026-08-30
+78|0000077360|PNR|Pentair plc. Ordinary Share|1973-05-03|2026-08-30
+79|0000036104|USB|U.S. Bancorp Common Stock|1973-05-03|2026-08-30
+80|0000106535|WY|Weyerhaeuser Company Common Stock|1973-05-03|2026-08-30
+81|0000096021|SYY|Sysco Corporation Common Stock|1973-05-08|2026-08-30
+82|0000011544|WRB|W.R. Berkley Corporation Common Stock|1973-10-23|2026-08-30
+83|0000051253|IFF|International Flavors & Fragrances, Inc. Common Stock|1974-12-17|2026-08-30
+84|0000024545|TAP|Molson Coors Beverage Company Class B Common Stock|1975-06-12|2026-08-30
+85|0000713676|PNC|PNC Financial Services Group, Inc. (The) Common Stock|1975-11-17|2026-08-30
+86|0000086312|TRV|The Travelers Companies, Inc. Common Stock|1975-11-17|2026-08-30
+87|0000831001|C|Citigroup, Inc. Common Stock|1977-01-03|2026-08-30
+88|0001048911|FDX|FedEx Corporation Common Stock|1978-04-12|2026-08-30
+89|0000106040|WDC|Western Digital Corporation - Common Stock|1978-10-31|2026-08-30
+90|0000313616|DHR|Danaher Corporation Common Stock|1978-12-29|2026-08-30
+91|0001841666|APA|APA Corporation - Common Stock|1979-05-15|2026-08-30
+92|0000092380|LUV|Southwest Airlines Company Common Stock|1980-01-02|2026-08-30
+93|0000788784|PEG|Public Service Enterprise Group Incorporated Common Stock|1980-01-02|2026-08-30
+94|0000100885|UNP|Union Pacific Corporation Common Stock|1980-01-02|2026-08-30
+95|0000001800|ABT|Abbott Laboratories Common Stock|1980-03-17|2026-08-30
+96|0000006281|ADI|Analog Devices, Inc. - Common Stock|1980-03-17|2026-08-30
+97|0000007084|ADM|Archer-Daniels-Midland Company Common Stock|1980-03-17|2026-08-30
+98|0000008670|ADP|Automatic Data Processing, Inc. - Common Stock|1980-03-17|2026-08-30
+99|0000004977|AFL|AFLAC Incorporated Common Stock|1980-03-17|2026-08-30
+100|0000006951|AMAT|Applied Materials, Inc. - Common Stock|1980-03-17|2026-08-30
+101|0000002488|AMD|Advanced Micro Devices, Inc. - Common Stock|1980-03-17|2026-08-30
+102|0000002969|APD|Air Products and Chemicals, Inc. Common Stock|1980-03-17|2026-08-30
+103|0000014693|BF-B|Brown Forman Inc Class B Common Stock|1980-03-17|2026-08-30
+104|0000313927|CHD|Church & Dwight Company, Inc. Common Stock|1980-03-17|2026-08-30
+105|0000020286|CINF|Cincinnati Financial Corporation - Common Stock|1980-03-17|2026-08-30
+106|0001166691|CMCSA|Comcast Corporation - Class A Common Stock|1980-03-17|2026-08-30
+107|0000715957|D|Dominion Energy, Inc. Common Stock|1980-03-17|2026-08-30
+108|0000029905|DOV|Dover Corporation Common Stock|1980-03-17|2026-08-30
+109|0001326160|DUK|Duke Energy Corporation (Holding Company) Common Stock|1980-03-17|2026-08-30
+110|0000033185|EFX|Equifax, Inc. Common Stock|1980-03-17|2026-08-30
+111|0000033213|EQT|EQT Corporation Common Stock|1980-03-17|2026-08-30
+112|0000035527|FITB|Fifth Third Bancorp Common Stock|1980-03-17|2026-08-30
+113|0000040704|GIS|General Mills, Inc. Common Stock|1980-03-17|2026-08-30
+114|0000040987|GPC|Genuine Parts Company Common Stock|1980-03-17|2026-08-30
+115|0000046080|HAS|Hasbro, Inc. - Common Stock|1980-03-17|2026-08-30
+116|0000049196|HBAN|Huntington Bancshares Incorporated - Common Stock|1980-03-17|2026-08-30
+117|0000048465|HRL|Hormel Foods Corporation Common Stock|1980-03-17|2026-08-30
+118|0001070750|HST|Host Hotels & Resorts, Inc. - Common Stock|1980-03-17|2026-08-30
+119|0000047111|HSY|The Hershey Company Common Stock|1980-03-17|2026-08-30
+120|0000050863|INTC|Intel Corporation - Common Stock|1980-03-17|2026-08-30
+121|0000052988|J|Jacobs Solutions Inc. Common Stock|1980-03-17|2026-08-30
+122|0000019617|JPM|JP Morgan Chase & Co. Common Stock|1980-03-17|2026-08-30
+123|0000055785|KMB|Kimberly-Clark Corporation - Common Stock|1980-03-17|2026-08-30
+124|0000060086|L|Loews Corporation Common Stock|1980-03-17|2026-08-30
+125|0000920760|LEN|Lennar Corporation Class A Common Stock|1980-03-17|2026-08-30
+126|0000060667|LOW|Lowe's Companies, Inc. Common Stock|1980-03-17|2026-08-30
+127|0000062996|MAS|Masco Corporation Common Stock|1980-03-17|2026-08-30
+128|0000036270|MTB|M&T Bank Corporation Common Stock|1980-03-17|2026-08-30
+129|0001164727|NEM|Newmont Corporation|1980-03-17|2026-08-30
+130|0000073124|NTRS|Northern Trust Corporation - Common Stock|1980-03-17|2026-08-30
+131|0000073309|NUE|Nucor Corporation Common Stock|1980-03-17|2026-08-30
+132|0000029989|OMC|Omnicom Group Inc. Common Stock|1980-03-17|2026-08-30
+133|0000075362|PCAR|PACCAR Inc. - Common Stock|1980-03-17|2026-08-30
+134|0000080661|PGR|Progressive Corporation (The) Common Stock|1980-03-17|2026-08-30
+135|0000076334|PH|Parker-Hannifin Corporation Common Stock|1980-03-17|2026-08-30
+136|0000822416|PHM|PulteGroup, Inc. Common Stock|1980-03-17|2026-08-30
+137|0000079879|PPG|PPG Industries, Inc. Common Stock|1980-03-17|2026-08-30
+138|0000922224|PPL|PPL Corporation Common Stock|1980-03-17|2026-08-30
+139|0001281761|RF|Regions Financial Corporation Common Stock|1980-03-17|2026-08-30
+140|0000084839|ROL|Rollins, Inc. Common Stock|1980-03-17|2026-08-30
+141|0000089800|SHW|Sherwin-Williams Company (The) Common Stock|1980-03-17|2026-08-30
+142|0000093751|STT|State Street Corporation Common Stock|1980-03-17|2026-08-30
+143|0000093556|SWK|Stanley Black & Decker, Inc. Common Stock|1980-03-17|2026-08-30
+144|0000310764|SYK|Stryker Corporation Common Stock|1980-03-17|2026-08-30
+145|0000097745|TMO|Thermo Fisher Scientific Inc Common Stock|1980-03-17|2026-08-30
+146|0001811074|TPL|Texas Pacific Land Corporation Common Stock|1980-03-17|2026-08-30
+147|0000100493|TSN|Tyson Foods, Inc. Common Stock|1980-03-17|2026-08-30
+148|0001466258|TT|Trane Technologies plc|1980-03-17|2026-08-30
+149|0000860731|TYL|Tyler Technologies, Inc. Common Stock|1980-03-17|2026-08-30
+150|0000074208|UDR|UDR, Inc. Common Stock|1980-03-17|2026-08-30
+151|0001792044|VTRS|Viatris Inc. - Common Stock|1980-03-17|2026-08-30
+152|0000783325|WEC|WEC Energy Group, Inc. Common Stock|1980-03-17|2026-08-30
+153|0000105770|WST|West Pharmaceutical Services, Inc. Common Stock|1980-03-17|2026-08-30
+154|0000072331|NDSN|Nordson Corporation - Common Stock|1980-03-18|2026-08-30
+155|0000092230|TFC|Truist Financial Corporation Common Stock|1980-03-18|2026-08-30
+156|0000766704|WELL|Welltower Inc. Common Stock|1980-03-19|2026-08-30
+157|0000315293|AON|Aon plc Class A Ordinary Shares (Ireland)|1980-06-02|2026-08-30
+158|0000320335|GL|Globe Life Inc. Common Stock|1980-10-01|2026-08-30
+159|0001039684|OKE|ONEOK, Inc. Common Stock|1980-10-01|2026-08-30
+160|0000319201|KLAC|KLA Corporation  - Common Stock|1980-10-08|2026-08-30
+161|0000277948|CSX|CSX Corporation - Common Stock|1980-11-03|2026-08-30
+162|0001393311|PSA|Public Storage Common Stock|1980-11-18|2026-08-30
+163|0000320187|NKE|Nike, Inc. Common Stock|1980-12-02|2026-08-30
+164|0000320193|AAPL|Apple Inc. - Common Stock|1980-12-12|2026-08-30
+165|0000079282|BRO|Brown & Brown, Inc. Common Stock|1981-02-11|2026-08-30
+166|0000352915|UHS|Universal Health Services, Inc. Common Stock|1981-07-09|2026-08-30
+167|0000354950|HD|Home Depot, Inc. (The) Common Stock|1981-09-22|2026-08-30
+168|0000010456|BAX|Baxter International Inc. Common Stock|1981-10-27|2026-08-30
+169|0001163165|COP|ConocoPhillips Common Stock|1981-12-31|2026-08-30
+170|0000024741|GLW|Corning Incorporated Common Stock|1981-12-31|2026-08-30
+171|0000049071|HUM|Humana Inc. Common Stock|1981-12-31|2026-08-30
+172|0000202058|LHX|L3Harris Technologies, Inc. Common Stock|1981-12-31|2026-08-30
+173|0001133421|NOC|Northrop Grumman Corporation Common Stock|1981-12-31|2026-08-30
+174|0000797468|OXY|Occidental Petroleum Corporation Common Stock|1981-12-31|2026-08-30
+175|0001024478|ROK|Rockwell Automation, Inc. Common Stock|1981-12-31|2026-08-30
+176|0000087347|SLB|SLB Limited Common Shares|1981-12-31|2026-08-30
+177|0000092122|SO|Southern Company (The) Common Stock|1981-12-31|2026-08-30
+178|0000107263|WMB|Williams Companies, Inc. (The) Common Stock|1981-12-31|2026-08-30
+179|0001035002|VLO|Valero Energy Corporation Common Stock|1982-01-04|2026-08-30
+180|0001739940|CI|The Cigna Group Common Stock|1982-03-31|2026-08-30
+181|0000702165|NSC|Norfolk Southern Corporation Common Stock|1982-06-02|2026-08-30
+182|0000711404|COO|The Cooper Companies, Inc.  - Common Stock|1983-01-21|2026-08-30
+183|0000318154|AMGN|Amgen Inc. - Common Stock|1983-06-17|2026-08-30
+184|0000720005|RJF|Raymond James Financial, Inc. Common Stock|1983-07-01|2026-08-30
+185|0000719955|WSM|Williams-Sonoma, Inc. Common Stock (DE)|1983-07-07|2026-08-30
+186|0000721371|CAH|Cardinal Health, Inc. Common Stock|1983-08-04|2026-08-30
+187|0000723254|CTAS|Cintas Corporation - Common Stock|1983-08-19|2026-08-30
+188|0000723531|PAYX|Paychex, Inc. - Common Stock|1983-08-26|2026-08-30
+189|0000038777|BEN|Franklin Templeton, Inc. Common Stock|1983-09-23|2026-08-30
+190|0000091142|AOS|A.O. Smith Corporation Common Stock|1983-09-30|2026-08-30
+191|0000726958|CASY|Caseys General Stores, Inc. - Common Stock|1983-10-20|2026-08-30
+192|0000732717|T|AT&T Inc.|1983-11-21|2026-08-30
+193|0000732712|VZ|Verizon Communications Inc. Common Stock|1983-11-21|2026-08-30
+194|0000728535|JBHT|J.B. Hunt Transport Services, Inc. - Common Stock|1983-11-22|2026-08-30
+195|0000731802|ATO|Atmos Energy Corporation Common Stock|1983-12-28|2026-08-30
+196|0000707549|LRCX|Lam Research Corporation - Common Stock|1984-05-04|2026-08-30
+197|0000723125|MU|Micron Technology, Inc. - Common Stock|1984-06-01|2026-08-30
+198|0000354190|AJG|Arthur J. Gallagher & Co. Common Stock|1984-06-20|2026-08-30
+199|0001037868|AME|AMETEK, Inc.|1984-07-19|2026-08-30
+200|0000004127|SWKS|Skyworks Solutions, Inc. - Common Stock|1984-09-07|2026-08-30
+201|0000746515|EXPD|Expeditors International of Washington, Inc. Common Stock|1984-09-26|2026-08-30
+202|0000731766|UNH|UnitedHealth Group Incorporated Common Stock (DE)|1984-10-17|2026-08-30
+203|0000764478|BBY|Best Buy Co., Inc. Common Stock|1985-04-18|2026-08-30
+204|0000765880|DOC|Healthpeak Properties, Inc. Common Stock|1985-05-23|2026-08-30
+205|0000769397|ADSK|Autodesk, Inc. - Common Stock|1985-06-28|2026-08-30
+206|0001090012|DVN|Devon Energy Corporation Common Stock|1985-07-22|2026-08-30
+207|0000906163|NVR|NVR, Inc. Common Stock|1985-07-22|2026-08-30
+208|0000745732|ROST|Ross Stores, Inc. - Common Stock|1985-08-08|2026-08-30
+209|0000779152|JKHY|Jack Henry & Associates, Inc. - Common Stock|1985-11-20|2026-08-30
+210|0000865752|MNST|Monster Beverage Corporation - Common Stock|1985-12-09|2026-08-30
+211|0001341439|ORCL|Oracle Corporation Common Stock|1986-03-12|2026-08-30
+212|0000789019|MSFT|Microsoft Corporation - Common Stock|1986-03-13|2026-08-30
+213|0001113169|TROW|T. Rowe Price Group, Inc. - Common Stock|1986-04-02|2026-08-30
+214|0000909832|COST|Costco Wholesale Corporation - Common Stock|1986-07-09|2026-08-30
+215|0000796343|ADBE|Adobe Inc. - Common Stock|1986-08-13|2026-08-30
+216|0000798354|FISV|Fiserv, Inc. - Common Stock|1986-09-25|2026-08-30
+217|0001701605|BKR|Baker Hughes Company - Common Stock|1987-04-06|2026-08-30
+218|0000813672|CDNS|Cadence Design Systems, Inc. - Common Stock|1987-06-10|2026-08-30
+219|0000109198|TJX|TJX Companies, Inc. (The) Common Stock|1987-06-26|2026-08-30
+220|0000814547|FICO|Fair Isaac Corporation Common Stock|1987-07-22|2026-08-30
+221|0000815097|CCL|Carnival Corporation Ltd. Common Shares|1987-07-24|2026-08-30
+222|0000815556|FAST|Fastenal Company - Common Stock|1987-08-20|2026-08-30
+223|0000316709|SCHW|Charles Schwab Corporation (The) Common Stock|1987-09-22|2026-08-30
+224|0000833444|JCI|Johnson Controls International plc Ordinary Share|1987-09-28|2026-08-30
+225|0000820318|COHR|Coherent Corp. Common Stock|1987-10-02|2026-08-30
+226|0000091576|KEY|KeyCorp Common Stock|1987-11-05|2026-08-30
+227|0001285785|MOS|Mosaic Company (The) Common Stock|1988-01-26|2026-08-30
+228|0000789570|MGM|MGM Resorts International Common Stock|1988-05-02|2026-08-30
+229|0000823768|WM|Waste Management, Inc. Common Stock|1988-06-22|2026-08-30
+230|0000842023|TECH|Bio-Techne Corp - Common Stock|1989-02-09|2026-08-30
+231|0000832101|IEX|IDEX Corporation Common Stock|1989-06-02|2026-08-30
+232|0000849399|GEN|Gen Digital Inc. - Common Stock|1989-06-23|2026-08-30
+233|0000849395|CRH|CRH PLC Ordinary Shares|1989-07-13|2026-08-30
+234|0000821189|EOG|EOG Resources, Inc. Common Stock|1989-10-04|2026-08-30
+235|0000857005|PTC|PTC Inc. - Common Stock|1989-12-08|2026-08-30
+236|0000858877|CSCO|Cisco Systems, Inc. - Common Stock|1990-02-16|2026-08-30
+237|0000920148|LH|Labcorp Holdings Inc. Common Stock|1990-03-29|2026-08-30
+238|0000864749|TRMB|Trimble Inc. - Common Stock|1990-07-20|2026-08-30
+239|0000866787|AZO|AutoZone, Inc. Common Stock|1991-04-02|2026-08-30
+240|0000872589|REGN|Regeneron Pharmaceuticals, Inc. - Common Stock|1991-04-02|2026-08-30
+241|0000874716|IDXX|IDEXX Laboratories, Inc. - Common Stock|1991-06-21|2026-08-30
+242|0000874761|AES|The AES Corporation Common Stock|1991-06-26|2026-08-30
+243|0000875320|VRTX|Vertex Pharmaceuticals Incorporated - Common Stock|1991-07-24|2026-08-30
+244|0000877212|ZBRA|Zebra Technologies Corporation - Class A Common Stock|1991-08-15|2026-08-30
+245|0000875045|BIIB|Biogen Inc. - Common Stock|1991-09-17|2026-08-30
+246|0000878927|ODFL|Old Dominion Freight Line, Inc. - Common Stock|1991-10-24|2026-08-30
+247|0000820313|APH|Amphenol Corporation Common Stock|1991-11-08|2026-08-30
+248|0000879101|KIM|Kimco Realty Corporation (HC) Common Stock|1991-11-22|2026-08-30
+249|0000804328|QCOM|QUALCOMM Incorporated - Common Stock|1991-12-13|2026-08-30
+250|0000882095|GILD|Gilead Sciences, Inc. - Common Stock|1992-01-22|2026-08-30
+251|0000882835|ROP|Roper Technologies, Inc. - Common Stock|1992-02-13|2026-08-30
+252|0000883241|SNPS|Synopsys, Inc. - Common Stock|1992-02-26|2026-08-30
+253|0000016918|STZ|Constellation Brands, Inc. Common Stock|1992-03-17|2026-08-30
+254|0000885725|BSX|Boston Scientific Corporation Common Stock|1992-05-19|2026-08-30
+255|0001757898|STE|STERIS plc (Ireland) Ordinary Shares|1992-06-01|2026-08-30
+256|0000882184|DHI|D.R. Horton, Inc. Common Stock|1992-06-05|2026-08-30
+257|0001707925|LIN|Linde plc - Ordinary Shares|1992-06-17|2026-08-30
+258|0000829224|SBUX|Starbucks Corporation - Common Stock|1992-06-26|2026-08-30
+259|0000895421|MS|Morgan Stanley Common Stock|1993-02-23|2026-08-30
+260|0000896878|INTU|Intuit Inc. - Common Stock|1993-03-12|2026-08-30
+261|0000827054|MCHP|Microchip Technology Incorporated - Common Stock|1993-03-19|2026-08-30
+262|0000896159|CB|Chubb Limited  Common Stock|1993-03-25|2026-08-30
+263|0000898173|ORLY|O'Reilly Automotive, Inc. - Common Stock|1993-04-23|2026-08-30
+264|0000884887|RCL|Royal Caribbean Cruises Ltd. Common Stock|1993-04-28|2026-08-30
+265|0000898293|JBL|Jabil Inc. Common Stock|1993-05-03|2026-08-30
+266|0000899051|ALL|Allstate Corporation (The) Common Stock|1993-06-03|2026-08-30
+267|0000906345|CPT|Camden Property Trust Common Stock|1993-07-22|2026-08-30
+268|0000906107|VMRK|Vivmark Residential Common Shares of Beneficial Interest|1993-08-12|2026-08-30
+269|0000749251|IT|Gartner, Inc. Common Stock|1993-10-05|2026-08-30
+270|0000910521|DECK|Deckers Outdoor Corporation Common Stock|1993-10-15|2026-08-30
+271|0000910606|REG|Regency Centers Corporation - Common Stock|1993-10-29|2026-08-30
+272|0000879169|INCY|Incyte Corporation - Common Stock|1993-11-04|2026-08-30
+273|0001063761|SPG|Simon Property Group, Inc. Common Stock|1993-12-14|2026-08-30
+274|0000912595|MAA|Mid-America Apartment Communities, Inc. Common Stock|1994-01-28|2026-08-30
+275|0000916076|MLM|Martin Marietta Materials, Inc. Common Stock|1994-02-17|2026-08-30
+276|0000916365|TSCO|Tractor Supply Company - Common Stock|1994-02-17|2026-08-30
+277|0000915913|ALB|Albemarle Corporation Common Stock|1994-02-22|2026-08-30
+278|0000900075|CPRT|Copart, Inc. - Common Stock|1994-03-17|2026-08-30
+279|0000866374|FLEX|Flex Ltd. - Ordinary Shares|1994-03-18|2026-08-30
+280|0000920522|ESS|Essex Property Trust, Inc. Common Stock|1994-06-07|2026-08-30
+281|0000726728|O|Realty Income Corporation Common Stock|1994-10-18|2026-08-30
+282|0001059556|MCO|Moody's Corporation Common Stock|1994-10-31|2026-08-30
+283|0000091419|SJM|The J.M. Smucker Company Common Stock|1994-10-31|2026-08-30
+284|0000927653|MCK|McKesson Corporation Common Stock|1994-11-10|2026-08-30
+285|0000927628|COF|Capital One Financial Corporation Common Stock|1994-11-16|2026-08-30
+286|0000105634|EME|EMCOR Group, Inc. Common Stock|1995-01-10|2026-08-30
+287|0000935703|DLTR|Dollar Tree, Inc. - Common Stock|1995-03-07|2026-08-30
+288|0001140859|COR|Cencora, Inc. Common Stock|1995-04-04|2026-08-30
+289|0000940944|DRI|Darden Restaurants, Inc. Common Stock|1995-05-09|2026-08-30
+290|0000943819|RMD|ResMed Inc. Common Stock|1995-06-02|2026-08-30
+291|0000943452|WAB|Westinghouse Air Brake Technologies Corporation Common Stock|1995-06-16|2026-08-30
+292|0000831259|FCX|Freeport-McMoRan, Inc. Common Stock|1995-07-10|2026-08-30
+293|0000914208|IVZ|Invesco Ltd Common Stock|1995-08-25|2026-08-30
+294|0000947484|ACGL|Arch Capital Group Ltd. - Common Stock|1995-09-14|2026-08-30
+295|0000922621|ERIE|Erie Indemnity Company - Class A Common Stock|1995-10-02|2026-08-30
+296|0001095073|EG|Everest Group, Ltd. Common Stock|1995-10-03|2026-08-30
+297|0000927066|DVA|DaVita Inc. Common Stock|1995-10-31|2026-08-30
+298|0001000228|HSIC|Henry Schein, Inc. - Common Stock|1995-11-03|2026-08-30
+299|0001001250|EL|Estee Lauder Companies, Inc. (The) Common Stock|1995-11-17|2026-08-30
+300|0001000697|WAT|Waters Corporation Common Stock|1995-11-17|2026-08-30
+301|0001002047|NTAP|NetApp, Inc. - Common Stock|1995-11-21|2026-08-30
+302|0000874766|HIG|The Hartford Insurance Group, Inc. Common Stock|1995-12-15|2026-08-30
+303|0001020569|IRM|Iron Mountain Incorporated (Delaware)Common Stock REIT|1996-02-01|2026-08-30
+304|0001067983|BRK-B|Berkshire Hathaway Inc. New Common Stock|1996-05-09|2026-08-30
+305|0001013237|FDS|FactSet Research Systems Inc. Common Stock|1996-06-28|2026-08-30
+306|0001022671|STLD|Steel Dynamics, Inc. - Common Stock|1996-11-22|2026-08-30
+307|0001022079|DGX|Quest Diagnostics Incorporated Common Stock|1996-12-17|2026-08-30
+308|0000936395|CIEN|Ciena Corporation Common Stock|1997-02-07|2026-08-30
+309|0000946581|TTWO|Take-Two Interactive Software, Inc. - Common Stock|1997-04-15|2026-08-30
+310|0000740260|VTR|Ventas, Inc. Common Stock|1997-05-05|2026-08-30
+311|0001018724|AMZN|Amazon.com, Inc. - Common Stock|1997-05-15|2026-08-30
+312|0001035443|ARE|Alexandria Real Estate Equities, Inc. Common Stock|1997-05-28|2026-08-30
+313|0001037038|RL|Ralph Lauren Corporation Common Stock|1997-06-12|2026-08-30
+314|0001037540|BXP|BXP, Inc. Common Stock|1997-06-18|2026-08-30
+315|0001035983|FIX|Comfort Systems USA, Inc. Common Stock|1997-06-27|2026-08-30
+316|0001041061|YUM|Yum! Brands, Inc.|1997-09-17|2026-08-30
+317|0001043277|CHRW|C.H. Robinson Worldwide, Inc. - Common Stock|1997-10-16|2026-08-30
+318|0001031296|FE|FirstEnergy Corp. Common Stock|1997-11-10|2026-08-30
+319|0001037646|MTD|Mettler-Toledo International, Inc. Common Stock|1997-11-14|2026-08-30
+320|0001045609|PLD|Prologis, Inc. Common Stock|1997-11-21|2026-08-30
+321|0001067701|URI|United Rentals, Inc. Common Stock|1997-12-18|2026-08-30
+322|0001002910|AEE|Ameren Corporation Common Stock|1998-01-02|2026-08-30
+323|0001014473|VRSN|VeriSign, Inc. - Common Stock|1998-01-30|2026-08-30
+324|0001050915|PWR|Quanta Services, Inc. Common Stock|1998-02-12|2026-08-30
+325|0001053507|AMT|American Tower Corporation (REIT) Common Stock|1998-02-27|2026-08-30
+326|0001048286|MAR|Marriott International - Class A Common Stock|1998-03-23|2026-08-30
+327|0001058290|CTSH|Cognizant Technology Solutions Corporation - Class A Common Stock|1998-06-19|2026-08-30
+328|0001032208|SRE|DBA Sempra Common Stock|1998-06-29|2026-08-30
+329|0001057352|CSGP|CoStar Group, Inc. - Common Stock|1998-07-01|2026-08-30
+330|0001060391|RSG|Republic Services, Inc. Common Stock|1998-07-01|2026-08-30
+331|0001051470|CCI|Crown Castle Inc. Common Stock|1998-08-18|2026-08-30
+332|0001065088|EBAY|eBay Inc. - Common Stock|1998-09-24|2026-08-30
+333|0001045810|NVDA|NVIDIA Corporation - Common Stock|1999-01-22|2026-08-30
+334|0001075531|BKNG|Booking Holdings Inc. - Common Stock|1999-03-31|2026-08-30
+335|0000886982|GS|Goldman Sachs Group, Inc. (The) Common Stock|1999-05-04|2026-08-30
+336|0001048695|FFIV|F5, Inc. - Common Stock|1999-06-04|2026-08-30
+337|0001034054|SBAC|SBA Communications Corporation - Class A Common Stock|1999-06-16|2026-08-30
+338|0001069202|LII|Lennox International, Inc. Common Stock|1999-07-29|2026-08-30
+339|0002012383|BLK|BlackRock, Inc. Common Stock|1999-10-01|2026-08-30
+340|0001973266|TKO|TKO Group Holdings, Inc. Class A Common Stock|1999-10-19|2026-08-30
+341|0001086222|AKAM|Akamai Technologies, Inc. - Common Stock|1999-10-29|2026-08-30
+342|0001090727|UPS|United Parcel Service, Inc. Common Stock|1999-11-10|2026-08-30
+343|0001090872|A|Agilent Technologies, Inc. Common Stock|1999-11-18|2026-08-30
+344|0001094285|TDY|Teledyne Technologies Incorporated Common Stock|1999-11-23|2026-08-30
+345|0000075677|PKG|Packaging Corporation of America Common Stock|2000-01-28|2026-08-30
+346|0001099800|EW|Edwards Lifesciences Corporation Common Stock|2000-03-27|2026-08-30
+347|0001099219|MET|MetLife, Inc. Common Stock|2000-04-05|2026-08-30
+348|0001097864|ON|ON Semiconductor Corporation - Common Stock|2000-05-02|2026-08-30
+349|0001035267|ISRG|Intuitive Surgical, Inc. - Common Stock|2000-06-16|2026-08-30
+350|0001100682|CRL|Charles River Laboratories International, Inc. Common Stock|2000-06-23|2026-08-30
+351|0001835632|MRVL|Marvell Technology, Inc. - Common Stock|2000-06-30|2026-08-30
+352|0001101239|EQIX|Equinix, Inc. - Common Stock|2000-08-11|2026-08-30
+353|0001116132|TPR|Tapestry, Inc. Common Stock|2000-10-06|2026-08-30
+354|0001121788|GRMN|Garmin Ltd. Common Stock (Switzerland)|2000-12-08|2026-08-30
+355|0001123360|GPN|Global Payments Inc. Common Stock|2001-01-16|2026-08-30
+356|0001097149|ALGN|Align Technology, Inc. - Common Stock|2001-01-30|2026-08-30
+357|0001140536|WTW|Willis Towers Watson Public Limited Company - Ordinary Shares|2001-06-12|2026-08-30
+358|0001103982|MDLZ|Mondelez International, Inc. - Class A Common Stock|2001-06-13|2026-08-30
+359|0001069183|AXON|Axon Enterprise, Inc. - Common Stock|2001-06-19|2026-08-30
+360|0001136893|FIS|Fidelity National Information Services, Inc. Common Stock|2001-06-20|2026-08-30
+361|0001467373|ACN|Accenture plc Class A Ordinary Shares (Ireland)|2001-07-19|2026-08-30
+362|0001136869|ZBH|Zimmer Biomet Holdings, Inc. Common Stock|2001-07-25|2026-08-30
+363|0001996862|BG|Bunge Limited Common Shares|2001-08-02|2026-08-30
+364|0001126328|PFG|Principal Financial Group Inc - Common Stock|2001-10-23|2026-08-30
+365|0001156039|ELV|Elevance Health, Inc. Common Stock|2001-10-30|2026-08-30
+366|0001071739|CNC|Centene Corporation Common Stock|2001-12-13|2026-08-30
+367|0001137774|PRU|Prudential Financial, Inc. Common Stock|2001-12-13|2026-08-30
+368|0001065280|NFLX|Netflix, Inc. - Common Stock|2002-05-23|2026-08-30
+369|0001120193|NDAQ|Nasdaq, Inc. - Common Stock|2002-07-01|2026-08-30
+370|0001174922|WYNN|Wynn Resorts, Limited - Common Stock|2002-10-25|2026-08-30
+371|0001156375|CME|CME Group Inc. - Class A Common Stock|2002-12-06|2026-08-30
+372|0001137789|STX|Seagate Technology Holdings PLC - Ordinary Shares (Ireland)|2002-12-11|2026-08-30
+373|0001013871|NRG|NRG Energy, Inc. Common Stock|2003-12-02|2026-08-30
+374|0001267238|AIZ|Assurant, Inc. Common Stock|2004-02-05|2026-08-30
+375|0001138118|CBRE|CBRE Group Inc Common Stock Class A|2004-06-10|2026-08-30
+376|0001108524|CRM|Salesforce, Inc. Common Stock|2004-06-23|2026-08-30
+377|0001286681|DPZ|Domino's Pizza Inc - Common Stock|2004-07-13|2026-08-30
+378|0001289490|EXR|Extra Space Storage Inc Common Stock|2004-08-16|2026-08-30
+379|0001652044|GOOG|Alphabet Inc. - Class C Capital Stock|2004-08-19|2026-08-30
+380|0001652044|GOOGL|Alphabet Inc. - Class A Common Stock|2004-08-19|2026-08-30
+381|0001297996|DLR|Digital Realty Trust, Inc. Common Stock|2004-10-29|2026-08-30
+382|0001280452|MPWR|Monolithic Power Systems, Inc. - Common Stock|2004-11-19|2026-08-30
+383|0001300514|LVS|Las Vegas Sands Corp. Common Stock|2004-12-15|2026-08-30
+384|0001093557|DXCM|DexCom, Inc. - Common Stock|2005-04-14|2026-08-30
+385|0001316835|BLDR|Builders FirstSource, Inc. Common Stock|2005-06-28|2026-08-30
+386|0001437107|WBD|Warner Bros. Discovery, Inc. - Series A Common Stock|2005-07-08|2026-08-30
+387|0001324424|EXPE|Expedia Group, Inc. - Common Stock|2005-07-21|2026-08-30
+388|0001324404|CF|CF Industries Holdings, Inc. Common Stock|2005-08-11|2026-08-30
+389|0000820027|AMP|Ameriprise Financial, Inc. Common Stock|2005-09-15|2026-08-30
+390|0001571949|ICE|Intercontinental Exchange Inc. Common Stock|2005-11-16|2026-08-30
+391|0002041610|PSKY|Paramount Skydance Corporation - Class B Common Stock|2005-12-05|2026-08-30
+392|0001335258|LYV|Live Nation Entertainment, Inc. Common Stock|2005-12-21|2026-08-30
+393|0001058090|CMG|Chipotle Mexican Grill, Inc. Common Stock|2006-01-26|2026-08-30
+394|0000100517|UAL|United Airlines Holdings, Inc. - Common Stock|2006-02-06|2026-08-30
+395|0001260221|TDG|Transdigm Group Incorporated Common Stock|2006-03-15|2026-08-30
+396|0001141391|MA|Mastercard Incorporated Common Stock|2006-05-25|2026-08-30
+397|0001336920|LDOS|Leidos Holdings, Inc. Common Stock|2006-10-17|2026-08-30
+398|0001274494|FSLR|First Solar, Inc. - Common Stock|2006-11-17|2026-08-30
+399|0001383312|BR|Broadridge Financial Solutions, Inc. Common Stock|2007-03-22|2026-08-30
+400|0001375365|SMCI|Super Micro Computer, Inc. - Common Stock|2007-03-29|2026-08-30
+401|0001283699|TMUS|T-Mobile US, Inc. - Common Stock|2007-04-19|2026-08-30
+402|0000027904|DAL|Delta Air Lines, Inc. Common Stock|2007-05-03|2026-08-30
+403|0001381197|IBKR|Interactive Brokers Group, Inc. - Class A Common Stock|2007-05-04|2026-08-30
+404|0001145197|PODD|Insulet Corporation - Common Stock|2007-05-15|2026-08-30
+405|0001385157|TEL|TE Connectivity plc Ordinary Shares|2007-06-14|2026-08-30
+406|0001393818|BX|Blackstone Inc. Common Stock|2007-06-22|2026-08-30
+407|0001397187|LULU|lululemon athletica inc. - Common Stock|2007-07-27|2026-08-30
+408|0001403568|ULTA|Ulta Beauty, Inc. - Common Stock|2007-10-25|2026-08-30
+409|0001408198|MSCI|MSCI Inc. Common Stock|2007-11-15|2026-08-30
+410|0001415404|ECHO|EchoStar Corporation - Common stock|2008-01-02|2026-08-30
+411|0001413329|PM|Philip Morris International Inc Common Stock|2008-03-17|2026-08-30
+412|0001403161|V|Visa Inc.|2008-03-19|2026-08-30
+413|0001410636|AWK|American Water Works Company, Inc. Common Stock|2008-04-23|2026-08-30
+414|0001418135|KDP|Keurig Dr Pepper Inc. - Common Stock|2008-05-07|2026-08-30
+415|0002005951|SW|Smurfit WestRock plc Ordinary Shares|2008-06-17|2026-08-30
+416|0001730168|AVGO|Broadcom Inc. - Common Stock|2009-08-06|2026-08-30
+417|0001442145|VRSK|Verisk Analytics, Inc. - Common Stock|2009-10-07|2026-08-30
+418|0000029534|DG|Dollar General Corporation Common Stock|2009-11-13|2026-08-30
+419|0001262039|FTNT|Fortinet, Inc. - Common Stock|2009-11-18|2026-08-30
+420|0001091667|CHTR|Charter Communications, Inc. - Class A Common Stock|2010-01-05|2026-08-30
+421|0002011641|FERG|Ferguson Enterprises Inc. Common Stock|2010-01-05|2026-08-30
+422|0001474735|GNRC|Generac Holdlings Inc. Common Stock|2010-02-11|2026-08-30
+423|0001489393|LYB|LyondellBasell Industries NV Ordinary Shares Class A (Netherlands)|2010-04-28|2026-08-30
+424|0001374310|CBOE|Cboe Global Markets, Inc. Common Stock|2010-06-15|2026-08-30
+425|0001318605|TSLA|Tesla, Inc.  - Common Stock|2010-06-29|2026-08-30
+426|0001404912|KKR|KKR & Co. Inc. Common Stock|2010-07-15|2026-08-30
+427|0001413447|NXPI|NXP Semiconductors N.V. - Common Stock|2010-08-06|2026-08-30
+428|0001467858|GM|General Motors Company Common Stock|2010-11-18|2026-08-30
+429|0001389170|TRGP|Targa Resources, Inc. Common Stock|2010-12-07|2026-08-30
+430|0001175454|CPAY|Corpay, Inc. Common Stock|2010-12-15|2026-08-30
+431|0001506307|KMI|Kinder Morgan, Inc. Common Stock|2011-02-11|2026-08-30
+432|0000860730|HCA|HCA Healthcare, Inc. Common Stock|2011-03-10|2026-08-30
+433|0001501585|HII|Huntington Ingalls Industries, Inc. Common Stock|2011-03-22|2026-08-30
+434|0001858681|APO|Apollo Global Management, Inc. (New) Common Stock|2011-03-30|2026-08-30
+435|0001510295|MPC|Marathon Petroleum Corporation Common Stock|2011-06-24|2026-08-30
+436|0001524472|XYL|Xylem Inc. Common Stock New|2011-10-13|2026-08-30
+437|0001521332|APTV|Aptiv PLC Ordinary Shares|2011-11-17|2026-08-30
+438|0001534701|PSX|Phillips 66 Common Stock|2012-04-12|2026-08-30
+439|0001748790|AMCR|Amcor plc Ordinary Shares|2012-05-15|2026-08-30
+440|0001326801|META|Meta Platforms, Inc. - Class A Common Stock|2012-05-18|2026-08-30
+441|0001373715|NOW|ServiceNow, Inc. Common Stock|2012-06-29|2026-08-30
+442|0001327567|PANW|Palo Alto Networks, Inc. - Common Stock|2012-07-20|2026-08-30
+443|0001539838|FANG|Diamondback Energy, Inc. - Common Stock|2012-10-12|2026-08-30
+444|0001327811|WDAY|Workday, Inc. - Class A Common Stock|2012-10-12|2026-08-30
+445|0001551152|ABBV|AbbVie Inc. Common Stock|2013-01-02|2026-08-30
+446|0001513761|NCLH|Norwegian Cruise Line Holdings Ltd. Ordinary Shares|2013-01-18|2026-08-30
+447|0001555280|ZTS|Zoetis Inc. Class A Common Stock|2013-02-01|2026-08-30
+448|0001478242|IQV|IQVIA Holdings, Inc. Common Stock|2013-05-09|2026-08-30
+449|0001564708|NWS|News Corporation - Class B Common Stock|2013-06-19|2026-08-30
+450|0001564708|NWSA|News Corporation - Class A Common Stock|2013-06-19|2026-08-30
+451|0001402057|CDW|CDW Corporation - Common Stock|2013-06-27|2026-08-30
+452|0001393052|VEEV|Veeva Systems Inc. Class A Common Stock|2013-10-16|2026-08-30
+453|0001579241|ALLE|Allegion plc Ordinary Shares|2013-11-18|2026-08-30
+454|0001585689|HLT|Hilton Worldwide Holdings Inc. Common Stock|2013-12-12|2026-08-30
+455|0001176948|ARES|Ares Management Corporation Class A Common Stock|2014-05-02|2026-08-30
+456|0001596532|ANET|Arista Networks, Inc. Common Stock|2014-06-06|2026-08-30
+457|0001601712|SYF|Synchrony Financial Common Stock|2014-07-31|2026-08-30
+458|0000759944|CFG|Citizens Financial Group, Inc. Common Stock|2014-09-24|2026-08-30
+459|0001601046|KEYS|Keysight Technologies Inc. Common Stock|2014-10-20|2026-08-30
+460|0001609711|GDDY|GoDaddy Inc. Class A Common Stock|2015-03-31|2026-08-30
+461|0001637459|KHC|The Kraft Heinz Company - Common Stock|2015-07-06|2026-08-30
+462|0001633917|PYPL|PayPal Holdings, Inc. - Common Stock|2015-07-06|2026-08-30
+463|0001633978|LITE|Lumentum Holdings Inc. - Common Stock|2015-07-23|2026-08-30
+464|0001645590|HPE|Hewlett Packard Enterprise Company Common Stock|2015-10-19|2026-08-30
+465|0001512673|XYZ|Block, Inc. Class A Common Stock,|2015-11-19|2026-08-30
+466|0001659166|FTV|Fortive Corporation Common Stock|2016-07-05|2026-08-30
+467|0001571996|DELL|Dell Technologies Inc. Class C Common Stock|2016-08-17|2026-08-30
+468|0001671933|TTD|The Trade Desk, Inc. - Class A Common Stock|2016-09-21|2026-08-30
+469|0001692819|VST|Vistra Corp. Common Stock|2016-10-05|2026-08-30
+470|0000004281|HWM|Howmet Aerospace Inc. Common Stock|2016-11-01|2026-08-30
+471|0001687229|INVH|Invitation Homes Inc. Common Stock|2017-02-01|2026-08-30
+472|0001690820|CVNA|Carvana Co. Class A Common Stock|2017-04-28|2026-08-30
+473|0001699150|IR|Ingersoll Rand Inc. Common Stock|2017-05-12|2026-08-30
+474|0001705696|VICI|VICI Properties Inc. Common Stock|2018-01-02|2026-08-30
+475|0001674101|VRT|Vertiv Holdings, LLC Class A Common Stock|2018-08-02|2026-08-30
+476|0001682852|MRNA|Moderna, Inc. - Common Stock|2018-12-07|2026-08-30
+477|0001754301|FOXA|Fox Corporation - Class A Common Stock|2019-03-12|2026-08-30
+478|0001754301|FOX|Fox Corporation - Class B Common Stock|2019-03-13|2026-08-30
+479|0001751788|DOW|Dow Inc. Common Stock|2019-03-20|2026-08-30
+480|0001543151|UBER|Uber Technologies, Inc. Common Stock|2019-05-10|2026-08-30
+481|0001755672|CTVA|Corteva, Inc. Common Stock|2019-05-24|2026-08-30
+482|0001535527|CRWD|CrowdStrike Holdings, Inc. - Class A Common Stock|2019-06-12|2026-08-30
+483|0001561550|DDOG|Datadog, Inc. - Class A Common Stock|2019-09-19|2026-08-30
+484|0001783180|CARR|Carrier Global Corporation Common Stock|2020-03-19|2026-08-30
+485|0001781335|OTIS|Otis Worldwide Corporation Common Stock|2020-03-19|2026-08-30
+486|0001321655|PLTR|Palantir Technologies Inc. - Class A Common Stock|2020-09-30|2026-08-30
+487|0001792789|DASH|DoorDash, Inc. - Common Stock|2020-12-09|2026-08-30
+488|0001559720|ABNB|Airbnb, Inc. - Class A Common Stock|2020-12-10|2026-08-30
+489|0000895126|EXE|Expand Energy Corporation - Common Stock|2021-02-10|2026-08-30
+490|0001679788|COIN|Coinbase Global, Inc. - Class A Common Stock|2021-04-14|2026-08-30
+491|0001751008|APP|Applovin Corporation - Class A Common Stock|2021-04-15|2026-08-30
+492|0001783879|HOOD|Robinhood Markets, Inc. - Class A Common Stock|2021-07-29|2026-08-30
+493|0001868275|CEG|Constellation Energy Corporation - Common Stock When-Issued|2022-01-19|2026-08-30
+494|0001932393|GEHC|GE HealthCare Technologies Inc. - Common Stock|2022-12-15|2026-08-30
+495|0001944048|KVUE|Kenvue Inc. Common Stock|2023-05-04|2026-08-30
+496|0001967680|VLTO|Veralto Corp Common Stock|2023-10-04|2026-08-30
+497|0001713445|RDDT|Reddit, Inc. Class A Common Stock|2024-03-21|2026-08-30
+498|0001964738|SOLV|Solventum Corporation Common Stock|2024-03-26|2026-08-30
+499|0001996810|GEV|GE Vernova Inc. Common Stock|2024-03-27|2026-08-30
+500|0002023554|SNDK|Sandisk Corporation - Common Stock When-Issued|2025-02-13|2026-08-30
+501|0002058873|Q|Qnity Electronics, Inc. Common Stock|2025-10-27|2026-08-30
+502|0002082247|FDXF|FedEx Freight Holding Company, Inc. Common Stock|2026-05-27|2026-08-30
+503|0002089271|HONA|Honeywell Aerospace Inc. - Common Stock|2026-06-15|2026-08-30

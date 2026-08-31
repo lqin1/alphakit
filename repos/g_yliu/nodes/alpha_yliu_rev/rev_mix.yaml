@@ -1,0 +1,12 @@
+region: us
+universe: g_common.field_common_univ.field_common_univ-us_top400
+
+nodes:
+  alpha_yliu_rev_mix:
+    deps:
+      - g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight
+      - g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight
+      - g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight
+    ops:
+      - truncate: 0.02
+      - scale: book

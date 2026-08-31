@@ -1,0 +1,9 @@
+calendar: nyse
+time_cutoff: "1500"
+return_metric: g_common.field_base_px.field_base_px-ret_1d_1500
+universe: g_common.field_common_univ.field_common_univ-us_top400
+booksize: 20000000
+cost_model: null
+sim:
+  participation: 0.10
+  halt_proxy: 3          # 无 is_halted field, 显式降级 (§九)

@@ -1,0 +1,15 @@
+region: us
+universe: g_common.field_common_univ.field_common_univ-us_top400
+lookback: 65
+
+nodes:
+  alpha_lqin_senti:
+    params: {window: 60}
+    deps:
+      - g_common.field_base_px.field_base_px-adj_close_1500
+      - g_common.factor_common_gics.factor_common_gics-sector
+    ops:
+      - rank
+      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
+      - truncate: 0.02
+      - scale: book
