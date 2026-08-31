@@ -72,13 +72,13 @@ python3 -m venv .venv
 
 | 引用名 | 秩 | 内容 |
 |---|---|---|
-| `g_common.base_px.field_base_px-adj_close_1500` | di×ii | 复权收盘 |
+| `g_common.field_base_px.field_base_px-adj_close_1500` | di×ii | 复权收盘 |
 | `…-volume_1500` | di×ii | 原始成交股数 |
 | `…-ret_1d_1500` | di×ii | 复权日收益 |
 | `…-adv_dollar` | di×ii | 20 日平均成交额 |
 | `…-market_ret` | **di** | 等权市场收益（秩-1 示例） |
-| `g_common.sector.factor_common_gics-sector` | di×ii | GICS sector 码（i1） |
-| `g_common.univ.field_common_univ-us_top400` | di×ii | 按 ADV 排名的池子（bool） |
+| `g_common.factor_common_gics.factor_common_gics-sector` | di×ii | GICS sector 码（i1） |
+| `g_common.field_common_univ.field_common_univ-us_top400` | di×ii | 按 ADV 排名的池子（bool） |
 
 查看：
 
@@ -182,13 +182,13 @@ lookback: 60
 
 nodes:
   factor_yliu_mom:
-    deps: [g_common.base_px.field_base_px-adj_close_1500]
+    deps: [g_common.field_base_px.field_base_px-adj_close_1500]
     params: {window: 60}
 ```
 
 ```python
 # repos/g_yliu/nodes/factor_yliu_mom/mom.py
-PX = "g_common.base_px.field_base_px-adj_close_1500"
+PX = "g_common.field_base_px.field_base_px-adj_close_1500"
 
 def handle(ctx):
     n  = ctx.params["window"]
@@ -240,7 +240,7 @@ alpha 就是**写了池子和 ops 的普通节点**，没有别的机制：
 
 ```yaml
 region: us
-universe: g_common.univ.field_common_univ-us_top400
+universe: g_common.field_common_univ.field_common_univ-us_top400
 lookback: 30
 
 nodes:
@@ -250,7 +250,7 @@ nodes:
     deps: [...]
     ops:
       - rank
-      - neutralize: g_common.sector.factor_common_gics-sector
+      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
       - linear_decay: 3
       - truncate: 0.02
       - scale: book
@@ -277,8 +277,8 @@ nodes:
 秩-1 的依赖在 handle 里取到标量，直接广播即可，不需要对齐代码：
 
 ```python
-rf  = ctx.f("g_common.macro.field_macro_rates-rf_1m")   # 标量
-ret = ctx.f("g_common.base_px.field_base_px-ret_1d_1500")  # Series(N)
+rf  = ctx.f("g_common.field_macro_rates.field_macro_rates-rf_1m")   # 标量
+ret = ctx.f("g_common.field_base_px.field_base_px-ret_1d_1500")  # Series(N)
 return ret - rf / 252
 ```
 
