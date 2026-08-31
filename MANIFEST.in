@@ -1,0 +1,7 @@
+# sdist 的默认启发式会自作主张把 tests/test_*.py 收进去, 但 smoke.py 与 run_all.py
+# 不匹配那条模式——结果是发行包里躺着四套自检里的两套, 且它们要的
+# pipeline/validate_l2.py、repos/、storage/ 一个都不在, 解包后一条也跑不起来。
+#
+# 半套跑不起来的测试比没有更坏：它让人以为查过了。发行包只装引擎（与 wheel 一致），
+# 完整自检跟着 git 仓库走——manual.md §2 让新机器 clone 后跑 tests/run_all.py, 正是这个前提。
+prune tests

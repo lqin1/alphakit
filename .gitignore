@@ -216,3 +216,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# ============================== alphakit ==============================
+# README「布局」与 manual §2.2 都写着「storage/ 整体在 .gitignore 内, 由 pipeline
+# 完全可重建」——在此之前那是一句空头支票: 头一次 `git add .` 就会把 60 MB 引导数据
+# 连同 zarr 分块一起写进历史, 而它本来就是三条命令能重造的东西。
+# registry/ 故意不在此列: 它是 append-only 的 security_id 注册表, storage/ 可以整个
+# 删掉, 它不行——删了历史 ID 的含义就没了。
+
+# `alphakit pnl` 的四交付物落地处, 每次评估整目录重写, 与 storage/ 同理
+pnl_out/
+
+# 上面「Distribution / packaging」段里的 `lib/` 本意是 build 产物, 但这个模式匹配任意
+# 层级的 lib/ 目录——architecture.md §二 规定每个研究 repo 都带一个 lib/（跨 node_dir
+# 共用的工具函数）。不放行的话那些代码会被静默漏在版本控制外, 而 `git status` 干净得
+# 完全看不出来, 直到换台机器 clone 下来才发现 import 不到。
+!repos/*/lib/

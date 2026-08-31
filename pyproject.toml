@@ -1,0 +1,46 @@
+[build-system]
+# >=77 才认 PEP 639 的 license/license-files 字符串形式（旧写法在新 setuptools 上已是弃用告警）
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alpha-kit"
+description = "中低频 Alpha 研究与回测引擎：统一 Node 模型、Zarr L3 存储、ops 链、precise 仿真"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "QL" }]
+# manual.md §2.1 承诺「只需要 Python 3.11+」——这里是那句话的可执行版本
+requires-python = ">=3.11"
+
+# 下界取本仓库实测跑通的版本, 不写 `*` 也不虚报兼容性: 引擎读写 zarr v3 布局、
+# 依赖 pandas 3 的 copy-on-write 语义（ops 链「永远返回副本」的前提），装低了不是慢是错。
+# numpy 由 pandas 拉进来, 故不单列; pyarrow 是 dump/pnl 四交付物的 feather 后端。
+dependencies = [
+    "pandas>=3.0.5",
+    "pyarrow>=25.0.1",
+    "zarr>=3.3.0",
+    "PyYAML>=6.0.3",
+]
+
+# 版本号的唯一真相在 alpha_kit/__init__.py，避免两处各写一份然后对不上
+dynamic = ["version"]
+
+[project.scripts]
+# architecture.md §十二 与 manual.md 通篇写的都是 `alphakit run …`；
+# 有了这一行它才不再是文档里的一个 shell 函数别名。
+alphakit = "alpha_kit.cli:main"
+
+[tool.setuptools]
+# 显式列包, 不用 auto-discovery: 仓库根下的 repos/ pipeline/ storage/ tests/ 都带 .py,
+# 自动发现会把研究仓库和摄入脚本一起打进 wheel（storage/ 更是几十 MB 数据）。
+# §二 的原则是 alpha_kit 为纯引擎——这一行是那条边界的物理执行。
+packages = [
+    "alpha_kit",
+    "alpha_kit.core",
+    "alpha_kit.runner",
+    "alpha_kit.pnl",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "alpha_kit.__version__" }
