@@ -91,10 +91,10 @@ python3 -m venv .venv
 下文一律写 `alphakit`；`source .venv/bin/activate` 之后就是这么敲，没激活则写全 `.venv/bin/alphakit`。
 
 ```bash
-alphakit run repos/g_yliu/nodes/liq/            --sd 2025-12-01   # 例5 因子 → 3 个产物
-alphakit run repos/g_lqin/nodes/senti/          --sd 2025-12-01   # 他人的 alpha
-alphakit run repos/g_yliu/nodes/rev/rev.yaml    --sd 2025-12-01   # 例6 两个变体
-alphakit run repos/g_yliu/nodes/rev/rev_mix.yaml --sd 2025-12-01  # 例7 combo
+alphakit run repos/g_yliu/nodes/factor_yliu_liq/            --sd 2025-12-01   # 例5 因子 → 3 个产物
+alphakit run repos/g_lqin/nodes/alpha_lqin_senti/          --sd 2025-12-01   # 他人的 alpha
+alphakit run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml    --sd 2025-12-01   # 例6 两个变体
+alphakit run repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml --sd 2025-12-01  # 例7 combo
 ```
 
 一条命令自证整条链是通的：
@@ -176,7 +176,7 @@ L3     storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/
 ### 4.2 最小的一个因子
 
 ```yaml
-# repos/g_yliu/nodes/mom/mom.yaml
+# repos/g_yliu/nodes/factor_yliu_mom/mom.yaml
 region: us
 lookback: 60
 
@@ -187,7 +187,7 @@ nodes:
 ```
 
 ```python
-# repos/g_yliu/nodes/mom/mom.py
+# repos/g_yliu/nodes/factor_yliu_mom/mom.py
 PX = "g_common.base_px.field_base_px-adj_close_1500"
 
 def handle(ctx):
@@ -197,7 +197,7 @@ def handle(ctx):
 ```
 
 ```bash
-alphakit run repos/g_yliu/nodes/mom/ --sd 2025-12-01
+alphakit run repos/g_yliu/nodes/factor_yliu_mom/ --sd 2025-12-01
 ```
 
 落到 `storage/l3/us/g_yliu/mom/factor_yliu_mom-mom/`。
@@ -291,7 +291,7 @@ return ret - rf / 252
 所以一次完整运行不会在第 12 秒才死于一个拼写错误：
 
 ```bash
-alphakit run repos/g_yliu/nodes/rev/rev.yaml --dry-run   # 预检 + 只执行一天, 不落库
+alphakit run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --dry-run   # 预检 + 只执行一天, 不落库
 ```
 
 拼错一个 60 字符的引用名，光靠肉眼很难看出来，所以诊断会给出最近的候选：
@@ -316,7 +316,7 @@ universe 是不是秩-2 bool、`sd`/`ed` 在不在轴上、`ed` 有没有越过�
 ### 4.8 评估：`alphakit pnl`
 
 ```bash
-alphakit pnl --node g_yliu.rev.alpha_yliu_rev_mix-weight --halt-proxy 3
+alphakit pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight --halt-proxy 3
 ```
 
 `--halt-proxy 3` **不是可选的**：本数据集没有 `is_halted` field，而 §九 规定此时要么显式降级、
@@ -334,7 +334,7 @@ alphakit pnl --node g_yliu.rev.alpha_yliu_rev_mix-weight --halt-proxy 3
 `daily` / `metrics.json`。终端上还会打**七道闸门**：
 
 ```
-g_yliu.rev.alpha_yliu_rev_mix-weight   2025-12-01..2026-08-27  (186 sessions × 503 names)
+g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight   2025-12-01..2026-08-27  (186 sessions × 503 names)
   Sharpe=-0.0364  Ann.Ret=-0.002813  Turnover=0.3814  Margin(bps)=-0.2927  Fitness=-0.003127  MaxDD=0.061
   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
   [PASS    ] market beta    beta=0.08843  r2=0.01782  sharpe_hedged=-0.3132
@@ -345,7 +345,7 @@ g_yliu.rev.alpha_yliu_rev_mix-weight   2025-12-01..2026-08-27  (186 sessions × 
   [NO-BASIS] 池子卫生           empty_weight_days=0  weight_gross_dev_max=4.819e-09  coverage_min=399
   [FAIL    ] 前视状态           ghost_detection=proxy(3)  ghost_days=1  delist_source=none
   submission readiness: 3/7 gates pass
-  四交付物 → pnl_out/g_yliu.rev.alpha_yliu_rev_mix-weight/
+  四交付物 → pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight/
 ```
 
 **每道闸门通过也打印数字**，且没有判据时报 `NO-BASIS` 而不是 `PASS`——空白绝不能在

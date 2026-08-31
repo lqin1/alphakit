@@ -98,10 +98,10 @@ g_yliu/  g_lqin/                 ← 个人 repo, 本人说了算, 无需 review
   regions/us.yaml                # 自 template 而来, 可自由修改 (见下)
   lib/
   nodes/
-    liq/                         # node_dir: 一组常一起重跑的东西
+    factor_yliu_liq/             # node_dir: 一组常一起重跑的东西, 用完整 identity 命名
       liq.yaml                   #   可含多个节点; 节点名 factor_yliu_liq
       liq.py
-    rev/
+    alpha_yliu_rev/
       rev.yaml                   #   两个变体 alpha_yliu_rev_w005 / _w020
       rev.py
       rev_mix.yaml  rev_mix.py   #   同目录另一个 yaml: alpha_yliu_rev_mix
@@ -130,7 +130,7 @@ store/factor|alpha/<他人>/*            只读
 
 **写权限在晋升那一刻翻转**，这不是洁癖：§5.2 的 cron 会 append 已登记节点，而该节点仍住在作者的 ns 下（§十一 晋升不搬家），§3.3 又规定同一节点禁止并发写（Zarr 无锁）。三条并存的后果是——作者早上在本地跑自己那个已登记的节点，撞上夜间尚未结束的 append，**数组损坏且没有任何机制会发现**（catalog 只看 `last_session`，不校验内容）。登记后该节点目录改由日更用户所有，`store.write` / `upsert` 在 `meta.registered == true` 且调用方非 pipeline 时拒绝。作者要继续迭代就用新 identity（`resid_mom_v2`），这本来也是 §一原则3 想要的形态。
 
-想改别人的 factor：copy 到自己 ns 下（`g_yliu.resid_mom.factor_yliu_resid_mom_v2-resid_mom`），命名空间天然支持 fork。**引用不需要 clone 对方 repo**——deps 解析的是 store 里的数据，不是代码；要看定义时走 catalog 里的 `code_ref`（repo + commit + path）。
+想改别人的 factor：copy 到自己 ns 下（`g_yliu.factor_yliu_resid_mom.factor_yliu_resid_mom_v2-resid_mom`），命名空间天然支持 fork。**引用不需要 clone 对方 repo**——deps 解析的是 store 里的数据，不是代码；要看定义时走 catalog 里的 `code_ref`（repo + commit + path）。
 
 ### region：每人一份，靠 hash 保可比性
 
@@ -174,7 +174,7 @@ run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01 --pnl   # 用数据
 **一切由节点名承载。** 节点名的形式是 `{kind}_{ns}_{name}`，`kind` 与 `ns` 从中**解析**而来，yaml 里不再声明——少一处可以写错、也少一处可以与目录打架的地方。
 
 ```
-仓库      g_{user}/nodes/{node_dir}/*.yaml + *.py     ← node_dir 分组; 一个 yaml 可含多个节点
+仓库      g_{user}/nodes/{node_dir}/*.yaml + *.py     ← node_dir 分组, 用完整 identity 命名
 节点名    {kind}_{ns}_{name}                          ← 如 factor_yliu_liq
 L3 路径   storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/
 引用名    {repo}.{node_dir}.{node_name}-{output}      ← region 由 config 的 `region:` 提供
@@ -183,7 +183,7 @@ L3 路径   storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/
 **引用名与路径是一一对应的纯字符串关系**，不需要索引就能互推：
 
 ```
-g_yliu.liq.factor_yliu_liq-adv20
+g_yliu.factor_yliu_liq.factor_yliu_liq-adv20
    ↕
 storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/
 ```
@@ -211,8 +211,8 @@ storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/
 deps:
   - g_common.base_px.field_base_px-*        # 通配: 编译期展开为该节点当时全部输出
   - g_common.base_px.field_base_px-adj_close_tc
-  - g_yliu.liq.factor_yliu_liq-rvol20
-  - g_lqin.senti.alpha_lqin_senti-weight    # 吃别人的 alpha
+  - g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20
+  - g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight    # 吃别人的 alpha
 ```
 
 **通配 `{repo}.{node_dir}.{node_name}-*` 在编译期展开**为该节点当时的全部输出，展开清单写进权重 meta——config 保持一行、新增输出自动可见，同时历史运行的依赖集被冻结、可复现。引擎按 handle 实际 `ctx.f/win` 调用过的名字**惰性加载**：声明是全集、加载是子集。
@@ -493,7 +493,7 @@ def _make_multi_outputs(spec, cols):
 > 两者也不会撞在一起——这是 §3.2 把 `{node_name}-{output}` 一起写进叶子换来的。
 
 ```yaml
-# g_yliu/nodes/beta_decomp/beta_decomp.yaml       ← node_dir = beta_decomp
+# g_yliu/nodes/factor_yliu_beta_decomp/beta_decomp.yaml   ← node_dir 用完整 identity
 region: us                                        # kind / ns 由节点名解析, 不声明
 lookback: 250
 
@@ -509,7 +509,7 @@ nodes:
 ```
 
 ```python
-# g_yliu/nodes/beta_decomp/beta_decomp.py
+# g_yliu/nodes/factor_yliu_beta_decomp/beta_decomp.py
 def handle(ctx):
     w = ctx.params["window"]
     px  = ctx.win("g_common.base_px.field_base_px-adj_close_tc", w + 1)
@@ -529,7 +529,7 @@ def handle(ctx):
 ### 4.6 例 2：单输出数据节点（直接 return 值）
 
 ```yaml
-# g_yliu/nodes/intraday_vol/intraday_vol.yaml
+# g_yliu/nodes/factor_yliu_intraday_vol/intraday_vol.yaml
 region: us
 
 nodes:
@@ -542,7 +542,7 @@ nodes:
 ```
 
 ```python
-# g_yliu/nodes/intraday_vol/intraday_vol.py
+# g_yliu/nodes/factor_yliu_intraday_vol/intraday_vol.py
 import numpy as np, pandas as pd
 
 def handle(ctx):
@@ -604,7 +604,7 @@ def handle(ctx):
 ### 4.8 例 4：alpha 与 combo
 
 ```yaml
-# g_yliu/nodes/rev/rev.yaml
+# g_yliu/nodes/alpha_yliu_rev/rev.yaml
 region: us                        # kind 缺省 alpha, ns 由 repo 目录推导
 universe: g_common.univ.field_common_univ-us_top3000   # 数据节点不写 = 全集; alpha 写具体池子
 lookback: 30
@@ -622,27 +622,27 @@ nodes:
 ```
 
 ```yaml
-# g_yliu/nodes/rev/rev_senti_mix.yaml
+# g_yliu/nodes/alpha_yliu_rev/rev_senti_mix.yaml
 region: us
 universe: g_common.univ.field_common_univ-us_top3000
 nodes:
   alpha_yliu_rev_senti_mix:       # combo = deps 含 alpha 的普通节点, 不是特殊 kind
-    deps: [g_yliu.rev.alpha_yliu_rev_w005-weight, g_lqin.senti.alpha_lqin_senti-weight]
+    deps: [g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight, g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight]
     ops:
       - truncate: 0.02
       - scale: book
 ```
 
 ```python
-# g_yliu/nodes/rev/rev.py
+# g_yliu/nodes/alpha_yliu_rev/rev.py
 def handle(ctx):
     n  = ctx.params["days"]
     px = ctx.win("g_common.base_px.field_base_px-adj_close_tc", n + 1)
     return -(px.loc[0] / px.loc[-n] - 1)                  # 单输出, 裸值
 
-# g_yliu/nodes/rev/rev_senti_mix.py
+# g_yliu/nodes/alpha_yliu_rev/rev_senti_mix.py
 def handle(ctx):
-    return 0.6 * ctx.f("g_yliu.rev.alpha_yliu_rev_w005-weight") + 0.4 * ctx.f("g_lqin.senti.alpha_lqin_senti-weight")
+    return 0.6 * ctx.f("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight") + 0.4 * ctx.f("g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight")
 ```
 
 ```bash
@@ -672,7 +672,7 @@ run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01 --pnl
 #### 例 5：多个 L3 → 多个 L3 因子
 
 ```yaml
-# g_yliu/nodes/liq/liq.yaml
+# g_yliu/nodes/factor_yliu_liq/liq.yaml
 region: us
 lookback: 20
 
@@ -690,7 +690,7 @@ nodes:
 ```
 
 ```python
-# g_yliu/nodes/liq/liq.py
+# g_yliu/nodes/factor_yliu_liq/liq.py
 import numpy as np
 
 def handle(ctx):
@@ -720,7 +720,7 @@ storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/    -illiq20/    -rvol20/
 #### 例 6：多个 L3 → 一个 alpha
 
 ```yaml
-# g_yliu/nodes/rev/rev.yaml      ← 一个 yaml 装整族; node_dir = rev
+# g_yliu/nodes/alpha_yliu_rev/rev.yaml      ← 一个 yaml 装整族; node_dir = rev
 region: us                          # kind 缺省 alpha, ns 由 repo 目录推导 (§4.11.6)
 universe: g_common.univ.field_common_univ-us_top3000     # 全 ref, 不是裸名 (§4.11.6)
 lookback: 30
@@ -731,7 +731,7 @@ nodes:
     params: {days: 5}               # 与名字里的 w005 编译期校验一致
     deps:
       - g_common.base_px.field_base_px-adj_close_tc
-      - g_yliu.liq.factor_yliu_liq-rvol20          # 吃例 5 的产出
+      - g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20          # 吃例 5 的产出
       - g_common.sector.factor_common_gics-sector        # 供 neutralize 用, 见下
     ops:
       - rank
@@ -746,7 +746,7 @@ nodes:
   alpha_yliu_rev_w020:              # 变体手写展开 (§4.9.4), 同一个 yaml
     code: rev.py                    # 同一份代码
     params: {days: 20}
-    deps: [g_common.base_px.field_base_px-adj_close_tc, g_yliu.liq.factor_yliu_liq-rvol20, g_common.sector.factor_common_gics-sector]
+    deps: [g_common.base_px.field_base_px-adj_close_tc, g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20, g_common.sector.factor_common_gics-sector]
     ops:
       - rank
       - neutralize: g_common.sector.factor_common_gics-sector
@@ -756,12 +756,12 @@ nodes:
 ```
 
 ```python
-# g_yliu/nodes/rev/rev.py  —— 两个变体共用, 差异全在 params
+# g_yliu/nodes/alpha_yliu_rev/rev.py  —— 两个变体共用, 差异全在 params
 def handle(ctx):
     n   = ctx.params["days"]
     px  = ctx.win("g_common.base_px.field_base_px-adj_close_tc", n + 1)
     raw = -(px.loc[0] / px.loc[-n] - 1)               # 反转: 跌得多的买
-    return raw / ctx.f("g_yliu.liq.factor_yliu_liq-rvol20")          # 波动归一, 单输出直接 return
+    return raw / ctx.f("g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20")          # 波动归一, 单输出直接 return
 ```
 
 **`ops` 用到的分组 field 也必须写进 `deps`。** `neutralize: g_common.sector.factor_common_gics-sector` 由引擎在 ops 链里解析，handle 里根本没提它——但它是**编译期就要能解析、运行期要能加载**的依赖，漏写则 §7.1 的"deps 不存在则报错"兜底会在运行时才炸，而且报错点在算子链里、离 yaml 很远。规则：**凡是这个节点跑起来需要读到的 L3，无论谁去读它，都要出现在 `deps` 里**。
@@ -771,34 +771,34 @@ def handle(ctx):
 #### 例 7：多个 alpha → 一个 combo
 
 ```yaml
-# g_yliu/nodes/rev/rev_mix.yaml   ← 同一个 node_dir 下的另一个 yaml
+# g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml   ← 同一个 node_dir 下的另一个 yaml
 region: us
 universe: g_common.univ.field_common_univ-us_top3000
 
 nodes:
   alpha_yliu_rev_mix:               # code: 省略 -> 同名的 rev_mix.py
     deps:
-      - g_yliu.rev.alpha_yliu_rev_w005-weight
-      - g_yliu.rev.alpha_yliu_rev_w020-weight
-      - g_lqin.senti.alpha_lqin_senti-weight            # 吃别人的 alpha
+      - g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight
+      - g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight
+      - g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight            # 吃别人的 alpha
     ops:
       - truncate: 0.02
       - scale: book
 ```
 
 ```python
-# g_yliu/nodes/rev/rev_mix.py
+# g_yliu/nodes/alpha_yliu_rev/rev_mix.py
 def handle(ctx):
-    return (0.4 * ctx.f("g_yliu.rev.alpha_yliu_rev_w005-weight")
-          + 0.3 * ctx.f("g_yliu.rev.alpha_yliu_rev_w020-weight")
-          + 0.3 * ctx.f("g_lqin.senti.alpha_lqin_senti-weight"))
+    return (0.4 * ctx.f("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight")
+          + 0.3 * ctx.f("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight")
+          + 0.3 * ctx.f("g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight"))
 ```
 
 三个要点：
 
 1. **combo 不是一种特殊节点**（§附录A：combo 概念取消）。它只是 `deps` 里含 `alpha.*` 的普通节点，走同一条 `run`、同一个内核、同样的 ops 链。要判断某个节点是不是合成层，看它的 deps 有没有 `alpha.*` 即可，不需要命名前缀。
 
-2. **吃别人的 alpha 不需要 clone 对方的 repo**（§二）。`deps` 解析的是 store 里的**数据**，不是代码；想看 `g_lqin.senti.alpha_lqin_senti-weight` 是怎么算的，走 catalog 里的 `code_ref`（repo + commit + path）。
+2. **吃别人的 alpha 不需要 clone 对方的 repo**（§二）。`deps` 解析的是 store 里的**数据**，不是代码；想看 `g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight` 是怎么算的，走 catalog 里的 `code_ref`（repo + commit + path）。
 
 3. **`scale: book` 在 combo 里不是可有可无的收尾。** 三个上游各自满足 `Σ|w| = 1`，混合权重 `0.4 + 0.3 + 0.3` 也正好是 1.0——直觉上组合后应该还是 1。但实测：合成用例上组合后 `Σ|w|` 只有 **0.484**，而在本仓库真实跑出来的三个 alpha 上是 **0.5088**——两者都远小于 1。原因是：不同 alpha 在同一只票上方向相反时会互相抵消，抵消掉的部分不会凭空回到别的票上。少了这一步，账本**只投出去约 51%**，而 Sharpe 看着还挺正常（收益和风险同比例缩水），只有 `daily.long_value + |short_value|` 会露馅。§4.4 把 `scale` 从"自动补"改成"编译期校验必须以 scale 收尾"，防的就是这个。
 
@@ -810,7 +810,7 @@ run 'nodes/alpha_yliu_rev_w*'     --sd 2018-01-01        # alpha: 整族, 一个
 run nodes/alpha_yliu_rev_mix/     --sd 2018-01-01 --pnl  # combo + 评估
 ```
 
-跨 config 的依赖必须**已经在 store 里**（§7.1：v0 不做图分析，引擎唯一兜底是"deps 不存在则报错"），所以顺序不能颠倒。`store status g_yliu.liq.factor_yliu_liq-rvol20` 可查。
+跨 config 的依赖必须**已经在 store 里**（§7.1：v0 不做图分析，引擎唯一兜底是"deps 不存在则报错"），所以顺序不能颠倒。`store status g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20` 可查。
 
 产出的 L3 结构：
 
@@ -821,7 +821,7 @@ storage/l3/us/
                alpha_yliu_rev_mix-weight/                       ← 例 7
   g_lqin/senti/ alpha_lqin_senti-weight/                        ← 他人产出, 只读
 weights/
-  g_yliu.rev.alpha_yliu_rev_mix-weight.feather + meta.json      ← §7.4 dump, pnl 的正式接口
+  g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight.feather + meta.json      ← §7.4 dump, pnl 的正式接口
 ```
 
 **引用名的四段在这里各司其职**：`{repo}` 说明谁负责、`{node_dir}` 说明属于哪一组工作、`{node_name}` 说明是哪一次计算（`{kind}_{ns}_` 前缀让 kind 与 ns 无需另行声明）、`{output}` 说明是哪一份数据。四段与路径一一对应、纯字符串可互推，不需要任何索引——完整规则见 §3.2 与 §4.11。
@@ -959,7 +959,7 @@ pipelines:
     fingerprint: sha256:4d02...
     owner: infra
     tier: 1
-  - node: g_yliu.resid_mom.factor_yliu_resid_mom-resid_mom
+  - node: g_yliu.factor_yliu_resid_mom.factor_yliu_resid_mom-resid_mom
     repo: g_yliu
     commit: f3a9c1...
     fingerprint: sha256:9c1e...
@@ -1113,7 +1113,7 @@ def run_node(node, spec, sd, ed, flags):
 ### 7.4 dump
 
 ```
-weights/g_yliu.rev.alpha_yliu_rev_senti_mix-weight.feather     # 或 per-day CSV (--dump-format)
+weights/g_yliu.alpha_yliu_rev.alpha_yliu_rev_senti_mix-weight.feather     # 或 per-day CSV (--dump-format)
 + meta.json  # region_hash / return_metric / universe / booksize / sd / ed / code_ref
              # + deps_versions（每个依赖当时的 version）+ cutoff + l2_asof
 ```
@@ -1125,8 +1125,8 @@ weights/g_yliu.rev.alpha_yliu_rev_senti_mix-weight.feather     # 或 per-day CSV
 **权重文件是正式接口**：引擎与评估解耦，两侧独立重跑；外来权重（他人给的、手改实验的）同样可评估。**precise 是唯一模式**——pnl 不是"算指标的评估器"而是**仿真器**：维护持仓账本，指标只是账本的汇总视图。
 
 ```
-pnl.py --weight weights/g_yliu.rev.alpha_yliu_rev_w005_h250-weight.feather     # 独立文件入口
-pnl.py --node g_yliu.rev.alpha_yliu_rev_w005_h250-weight --sd ... --ed ...     # 直接读 store 入口
+pnl.py --weight weights/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005_h250-weight.feather     # 独立文件入口
+pnl.py --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005_h250-weight --sd ... --ed ...     # 直接读 store 入口
        [--rm g_common.base_px.field_base_px-vwap_return_1500_1530]            # 覆盖收益序列: 执行敏感性
        [--booksize 20e6]                                  # 参与率约束的必备输入
        [--cost-model g_common.cost.field_common_cost-bps_liquidity_v1]
@@ -1177,7 +1177,7 @@ pos_value[delist_today] = 0                            # 退市: 对价已由 re
 ### 8.3 四交付物
 
 ```
-pnl_out/g_yliu.rev.alpha_yliu_rev_w005_h250-weight/
+pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005_h250-weight/
   holding.feather   # date × instrument: holding_value + holding_weight(= value/booksize,
                     #   与目标权重同尺度可逐股对比); 股数视图归未来订单生成模块
   pnl.feather       # date × instrument 逐股逐日损益 —— 归因("收益集中在哪些票/哪个月/
@@ -1291,7 +1291,7 @@ gap_participation / gap_realloc / gap_reprice     # 目标 vs 实现的三分解
 version: 2
 pipelines:
   - {node: g_common.base_px.field_base_px-adj_close_1500, repo: g_common, commit: 7e21ab..., owner: infra, tier: 1}
-  - {node: g_yliu.resid_mom.factor_yliu_resid_mom-resid_mom,     repo: g_yliu,   commit: f3a9c1..., owner: yliu,  tier: 2}
+  - {node: g_yliu.factor_yliu_resid_mom.factor_yliu_resid_mom-resid_mom,     repo: g_yliu,   commit: f3a9c1..., owner: yliu,  tier: 2}
 ```
 
 （完整字段与"按 identity 登记、钉 commit 不钉分支"的理由见 §5.2。）
@@ -1403,12 +1403,12 @@ g_yliu/
   regions/us.yaml
   lib/                             # 跨节点共用的代码 (扫描族的那一份就在这)
   nodes/
-    rev/
+    alpha_yliu_rev/                # node_dir 用完整 identity, ls 一眼看清 kind 与归属
       README.md                    # 假设 / 数据 / 结论 —— 一年后唯一还记得"为什么"的地方
       rev.yaml  rev.py             #   alpha_yliu_rev_w005 / _w020
       rev_mix.yaml  rev_mix.py     #   alpha_yliu_rev_mix
-    liq/       README.md  liq.yaml  liq.py
-    resid_mom/ README.md  ...
+    factor_yliu_liq/       README.md  liq.yaml  liq.py
+    factor_yliu_resid_mom/ README.md  ...
 ```
 
 **`node_dir` 按"常一起重跑的东西"分组，一个 README 说清这组在做什么。** 而节点自身的 kind / ns / 参数全在**节点名**里（`alpha_yliu_rev_w005`），所以 `ls storage/l3/us/g_yliu/rev/` 出来就是 `alpha_yliu_rev_w005-weight/`、`alpha_yliu_rev_w020-weight/`——**分组由目录给、身份由名字给，两者不重复**。四种曾经的备选方案各自的代价：
@@ -1430,7 +1430,7 @@ g_yliu/
 
 **落库后的验收检查**，把 §5.2 承诺的"一致性检查告警"说具体：覆盖率对比滚动中位数、NaN 比例落在声明的 `sla` 带内、分位漂移检查、无未来日期的值。任一不过则**不落库**、告警 owner、并在 catalog 标 `stale` 让下游看得见。
 
-**晋升清单**（g_common 的 PR 模板，CI 阻断项）：`nodes.lock` 已重新生成且与钉住的 commit 一致 · registry 钉的是 commit 而非分支 · `owner` / `backup_owner` 均在职 · meta 带 `title` / `tags` / `status` / `region_hash` / `l2_asof` · **所有 deps 均已登记** · 不依赖任何 `*_lab` ns · `region_hash` 等于模板标准值 · 毒化测试与 cutoff 静态检查绿 · alpha 另需 `dims == [di, ii]` 且 ops 以 `scale` 收尾 · 最近 250 个 session 的覆盖率与 NaN 比例在 `sla` 内 · 探针 PnL 已算、与任一已登记节点的最大相关性写进 PR 正文 · 回填 dry-run 对最近 20 个 session 与 store 现值逐位一致。
+**晋升清单**（g_common 的 PR 模板，CI 阻断项）：`nodes.lock` 已重新生成且与钉住的 commit 一致 · registry 钉的是 commit 而非分支 · `owner` / `backup_owner` 均在职 · meta 带 `title` / `tags` / `status` / `region_hash` / `l2_asof` · **所有 deps 均已登记** · 不依赖任何 `status: wip` 的节点 · `region_hash` 等于模板标准值 · 毒化测试与 cutoff 静态检查绿 · alpha 另需 `dims == [di, ii]` 且 ops 以 `scale` 收尾 · 最近 250 个 session 的覆盖率与 NaN 比例在 `sla` 内 · 探针 PnL 已算、与任一已登记节点的最大相关性写进 PR 正文 · 回填 dry-run 对最近 20 个 session 与 store 现值逐位一致。
 人工项（非作者 approver）：读该节点目录里的 README，假设是否说清、节点是否与假设相符 · 若最大相关性 > 0.7 需书面说明或撤回 · 商定 tier 与 SLA · 被它取代的旧节点要有废弃计划并设 `replaced_by`。
 合并时自动执行：store 节点目录 `chown` 给日更用户、归档 git bundle、meta 置 `status: registered` 与 `promoted_at`、接入监控并把 owner 挂上滞后告警。
 
@@ -1442,8 +1442,8 @@ g_yliu/
 
 ```
 store search --tag reversal --dims di,ii
-store search --similar-to g_yliu_lab.rev.factor_yliu_lab_rev-w005 --min-corr 0.6
-  → g_lqin.rev.factor_lqin_rev-st     corr 0.93   registered, owner lqin
+store search --similar-to g_yliu.factor_yliu_rev.factor_yliu_rev-w005 --min-corr 0.6
+  → g_lqin.factor_lqin_rev.factor_lqin_rev-st     corr 0.93   registered, owner lqin
   → g_common.rev.factor_common_rev-w005 corr 0.88   registered
 ```
 
@@ -1453,7 +1453,9 @@ store search --similar-to g_yliu_lab.rev.factor_yliu_lab_rev-w005 --min-corr 0.6
 
 研究产出的绝大多数是失败品。但先把量级摆正：秩-2 稠密节点 96 MB、稀疏的 1–12 MB，500 个约 10–48 GB，**不算问题**；而**一个 m5 秩-3 节点就是 7.5 GB、m1 是 37 GB**。所以策略是：秩-3 激进回收、秩-2 懒回收、**可见性对所有秩都激进**。真正的成本是 catalog 污染与通配的波及面。
 
-**扫描产物进 `{user}_lab` 沙箱 ns**。§4.9.4 强制手写展开变体，一次扫描就是 20 个节点——"每年 100+ 节点"主要就是这么来的。只有胜出者才在 `{user}` 下重新声明。`_lab` 不进默认 catalog、30 天硬 TTL、**且从 owner 的 repo 之外 `deps` 它是编译期错误**。
+**扫描产物靠 `status: wip` 隔离，而不是靠一个沙箱 ns**。§4.9.4 强制手写展开变体，一次扫描就是 20 个节点——"每年 100+ 节点"主要就是这么来的；只有胜出者才被作者显式改成 `keep`。
+
+> 早先的方案是把扫描产物丢进 `{user}_lab` 这样一个沙箱 ns，**但它在本文档自己的语法下不可表达**：§4.11.1 规定 `ns ::= ^[a-z][a-z0-9]*$`（单段、不含下划线，否则 `{kind}_{ns}_{name}` 无从切分），`yliu_lab` 过不了；§4.11.6 又要求 ns 段等于所在 repo 的 owner，个人 repo 也写不出它。而 `wip` 状态已经做到了同样的三件事——不进 `*` 通配、不进默认 catalog、有 TTL——**用一个已有的机制，胜过为同一件事新增一个不可表达的命名空间**。
 
 | status | 进通配 `*` | 默认 catalog | 数据保留 |
 |---|---|---|---|
@@ -1554,7 +1556,7 @@ spread                       |   0.47   3.1%  0.24     0.23   2.1% |
 alpha submit nodes/alpha_yliu_rev_mix/ [--dry-run]
 ```
 
-它是**对 `run --pnl` 的一次预设，不是新机器**：① 把研究员的 `regions/us.yaml` 换成模板标准值、重算 `region_hash`、**在该口径下重跑**（§二 允许本地自由修改，正是因为有这一步——工具必须**执行**这次重跑，而不是只校验 hash 然后拒绝）· ② canonical universe 复评，并把 `us_top3000` 与 `us_top1500` **并排打印**（§十一 点名了这个诊断："top3000 Sharpe 2.5 → top1500 掉到 0.8 的基本是小票流动性溢价"），不要等 reviewer 来问 · ③ 对池中已有向量做相关性去重（5000 个 alpha 实测 13 ms，池就是 store 里一个 (K×D) f4 数组、5000 个才 40 MB，不需要 DB），**报告最近的 5 个及其相关系数而非只给判决**——"0.68 vs `g_lqin.rev.alpha_lqin_rev_w003-weight`"是可行动的，"拒绝"只会让人瞎猜 · ④ 毒化测试作为提交闸门而非只在 CI · ⑤ 七道闸门全部硬阻断 · ⑥ 冻结提交记录（`code_ref`、config hash、`region_hash`、权重 hash、IS 指标、闸门块、最近邻）· ⑦ 交给 OOS——研究员的环境物理截断于 OOS 边界，他**跑不了**这一步。
+它是**对 `run --pnl` 的一次预设，不是新机器**：① 把研究员的 `regions/us.yaml` 换成模板标准值、重算 `region_hash`、**在该口径下重跑**（§二 允许本地自由修改，正是因为有这一步——工具必须**执行**这次重跑，而不是只校验 hash 然后拒绝）· ② canonical universe 复评，并把 `us_top3000` 与 `us_top1500` **并排打印**（§十一 点名了这个诊断："top3000 Sharpe 2.5 → top1500 掉到 0.8 的基本是小票流动性溢价"），不要等 reviewer 来问 · ③ 对池中已有向量做相关性去重（5000 个 alpha 实测 13 ms，池就是 store 里一个 (K×D) f4 数组、5000 个才 40 MB，不需要 DB），**报告最近的 5 个及其相关系数而非只给判决**——"0.68 vs `g_lqin.alpha_lqin_rev_w003.alpha_lqin_rev_w003-weight`"是可行动的，"拒绝"只会让人瞎猜 · ④ 毒化测试作为提交闸门而非只在 CI · ⑤ 七道闸门全部硬阻断 · ⑥ 冻结提交记录（`code_ref`、config hash、`region_hash`、权重 hash、IS 指标、闸门块、最近邻）· ⑦ 交给 OOS——研究员的环境物理截断于 OOS 边界，他**跑不了**这一步。
 
 回传的东西刻意很窄：accept/reject、完整的 canonical IS 指标、以及 OOS **只以有界摘要形式**返回（Sharpe 分桶、收益符号、OOS/IS 衰减比、与池中最相关成员及其名字）。**OOS 日收益向量永不回传。** 再加一个**提交次数预算**（如每人每季 6 次，同 `family` 的变体共用一份家族预算）——没有预算，评估器就是一台神谕机，OOS 会以每次提交约一比特的速度退化成 IS，**这才是真正的失效模式，而不是数据泄漏**。
 
