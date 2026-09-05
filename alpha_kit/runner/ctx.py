@@ -92,24 +92,32 @@ class UniverseView:
 
 
 class _CS:
-    """截面工具，nan-aware，作用在 ii 轴。"""
+    """截面工具, 作用在 ii 轴——**转调 `ops` 里那一份实现**, 不另写一套。
+
+    这里曾经是第二套实现, 且与 ops 的 NaN 语义相反: `demean` 用了 pandas 默认的
+    `dropna=True`, 而 `cs_neutralize` 明确传 `dropna=False` 并用一整段注释解释为什么
+    ——分组字段缺失的票会整组被丢掉、组均值变 NaN, 于是原本有值的票静默变 NaN,
+    覆盖率掉一块而不报错。同一个概念两套行为, 在 handle 里中性化和在 ops 链里
+    中性化会给出不同的数, 而文档说它们等价。
+    """
 
     @staticmethod
     def rank(x: pd.Series) -> pd.Series:
-        r = x.rank(method="average", na_option="keep")
-        n = r.notna().sum()
-        return (r - 1) / (n - 1) - 0.5 if n > 1 else r * 0.0
+        from .ops import cs_rank
+        return cs_rank(x)
 
     @staticmethod
     def zscore(x: pd.Series) -> pd.Series:
+        # ops 链里没有 zscore, 所以这一份是唯一实现, 不是副本——不必转调
         s = x.std()
         return (x - x.mean()) / s if s and np.isfinite(s) and s > 0 else x * 0.0
 
     @staticmethod
     def demean(x: pd.Series, by: pd.Series | None = None) -> pd.Series:
+        from .ops import cs_neutralize
         if by is None:
             return x - x.mean()
-        return x - by.map(x.groupby(by).mean())
+        return cs_neutralize(x, by)
 
 
 class Ctx:

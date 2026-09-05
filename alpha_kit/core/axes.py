@@ -45,13 +45,28 @@ class Axes:
         """
         root = Path(root)
         a = root / "_axes"
-        if (a / "securities.json").exists() and not overwrite:
-            old = json.loads((a / "securities.json").read_text())
-            if old != securities[:len(old)]:
-                raise ValueError(
-                    f"{a} already holds {len(old)} security_ids and the new list is not an extension "
-                    f"of it -- replaying would shift the column meaning of every historical chunk.\n"
-                    f"  Append-only: new names go on the end. To truly rebuild, pass overwrite=True.")
+        if not overwrite:
+            # 两条轴同一条理由, 同一道闸门。此前只有 securities 有守卫, sessions 是
+            # 无条件覆写——而 di 轴错位比 ii 轴更糟: 日历里补进一个半日市或删掉一个
+            # 节假日, 每个 chunk 仍在原来的行位置上, 于是**全库所有面板整体错开一天**,
+            # 等于一次性给每个 alpha 注入一天前视。形状没变、日期范围看着干净、指纹
+            # 不动（定义确实没改）, 没有任何地方会喊。
+            for fname, new_list, what, why in (
+                ("securities.json", securities, "security_ids",
+                 "would shift the column meaning of every historical chunk"),
+                ("sessions.json", sessions, "sessions",
+                 "would shift every panel in time -- a one-day lookahead injected store-wide"),
+            ):
+                f = a / fname
+                if not f.exists():
+                    continue
+                old = json.loads(f.read_text())
+                if old != new_list[:len(old)]:
+                    raise ValueError(
+                        f"{a} already holds {len(old)} {what} and the new list is not an "
+                        f"extension of it -- replaying {why}.\n"
+                        f"  Append-only: new entries go on the end. To truly rebuild, pass "
+                        f"overwrite=True.")
         a.mkdir(parents=True, exist_ok=True)
         allocated = len(securities) + reserve
         (a / "sessions.json").write_text(json.dumps(sessions))

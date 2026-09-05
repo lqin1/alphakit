@@ -96,6 +96,47 @@ class Spec:
 
 # ------------------------------------------------------------------ 加载器
 
+RANKS = {("di",), ("di", "ii"), ("di", "ii", "ti")}
+
+# yaml 的键集是**封闭**的。此前没有白名单, 认不得的键被 doc.get 静默丢掉:
+# `universe:` 拼错一个字母, spec.universe 就是 None, 池子是 None, 掩码恒 True,
+# 预检里每一处 universe 检查都在 `if spec.universe:` 后面——于是 alpha 悄悄按
+# 全部 503 只票交易而不是 us_top400, 同一个 .py 因为一个它从未提到的 yaml 键
+# 而给出不同的数。`lookback:` 拼错同理, 预热直接变 0。
+FILE_KEYS = {"region", "universe", "lookback", "nodes", "cutoff", "booksize",
+             "return_metric", "cost_model", "sim"}
+NODE_KEYS = {"code", "params", "deps", "ops", "outputs"}
+OUTPUT_KEYS = {"dtype", "dims", "grid", "ops"}
+
+
+def _closed(got, allowed: set[str], where: str, what: str) -> None:
+    """认不得的键必须报错, 且要给出最接近的候选——拼错的键静默消失是最贵的一类错。"""
+    import difflib
+    unknown = sorted(set(got) - allowed)
+    if not unknown:
+        return
+    hint = difflib.get_close_matches(unknown[0], sorted(allowed), 1)
+    raise ConfigError(
+        f"{where}: unknown {what} key(s) {unknown}"
+        + (f"; did you mean {hint[0]}?" if hint else "")
+        + f"\n  allowed: {sorted(allowed)}")
+
+
+def _dims(raw, where: str) -> tuple[str, ...]:
+    """dims 必须是三种秩之一（§3.6）。
+
+    此前这里只做 `tuple(...)`, 没有任何成员检查: `dims: [di, zz]` 会被原样收下, 然后
+    在 store / ctx / node 的每一处 `dims == (...)` 分支里全部落到 else, 最后以
+    "rank-3 必须声明 grid" 的形式炸出来——报的是另一个问题, 而错在写下 dims 的那一行。
+    """
+    d = tuple(raw)
+    if d not in RANKS:
+        raise ConfigError(
+            f"{where}: dims={list(d)} is not a rank; must be one of "
+            f"{sorted(list(r) for r in RANKS)}")
+    return d
+
+
 def _params(raw, where: str) -> dict:
     """params 认两种写法, 归一成一个 dict。
 
@@ -256,6 +297,7 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
     node_dir = path.parent.name
     repo = repo or path.parent.parent.parent.name
 
+    _closed(doc, FILE_KEYS, str(path), "file-level")
     region = doc.get("region", "us")
     rdoc, rhash = load_region(path, region)
     def pick(key):                      # config 覆盖 region；两者都没有就是 None
@@ -302,6 +344,7 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
                 f"{path}: node {name} has ns segment `{ns}` but lives in {repo} -- a personal repo may "
                 f"only write its own ns ({repo[2:]}).")
 
+        _closed(body, NODE_KEYS, f"{path}:{name}", "node")
         code = path.parent / (body.get("code") or f"{path.stem}.py")
         node_ops = _norm_ops(body.get("ops"), f"{path}:{name}.ops")
         raw_out = body.get("outputs")
@@ -329,8 +372,9 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
             for k, o in raw_out.items():
                 o = o or {}
                 check_name(k, f"the output name of {path}:{name}")
+                _closed(o, OUTPUT_KEYS, f"{path}:{name}.{k}", "output")
                 outs[k] = Output(k, dtype=o.get("dtype", "f4"),
-                                 dims=tuple(o.get("dims", ("di", "ii"))),
+                                 dims=_dims(o.get("dims", ("di", "ii")), f"{path}:{name}.{k}"),
                                  grid=o.get("grid"),
                                  ops=_norm_ops(o.get("ops"), f"{path}:{name}.{k}.ops")
                                      or (node_ops if len(raw_out) == 1 else []))

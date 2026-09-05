@@ -90,7 +90,13 @@ def cmd_run(a) -> int:
         try:
             run(spec, store, a.sd or store.axes.sessions[0], a.ed,
                 only=a.only, rebuild=a.rebuild, probe=a.probe)
-        except (ConfigError, StoreError) as e:
+        except (ConfigError, StoreError, ValueError, KeyError, TypeError) as e:
+            # ConfigError 是 ValueError 的子类, 但引擎运行期抛的多数是**裸**的
+            # ValueError/KeyError/TypeError: ctx._coerce 的形状不符（作者最常犯的
+            # 那个错）、multi_outputs 的键不对、OpChain 的游标跳变、轴上没有这一天。
+            # 之前它们一个都不在这个 except 里, 于是 _runtime_error 那 20 行"把位置
+            # 指回作者自己那一行"从不执行, 而且异常直接冲出 for 循环——glob 里后面
+            # 九个 yaml 连预检都跑不到, 与 cmd_run 开头写明的契约相反。
             report([_runtime_error(f, e)]); rc = 1
     return rc
 
@@ -99,6 +105,10 @@ def cmd_store(a) -> int:
     store = Store(a.store, a.region)
     if a.action == "status":
         cat = store.catalog()
+        if a.ref:                      # 此前这个参数被收下然后丢掉
+            cat = cat[cat["ref"].str.startswith(a.ref)]
+            if cat.empty:
+                print(f"no ref starts with {a.ref!r}"); return 1
         if cat.empty:
             print("store is empty"); return 0
         cat["first"] = cat["first_session"].map(lambda i: store.axes.date(int(i)) if i is not None else "")
@@ -107,7 +117,10 @@ def cmd_store(a) -> int:
         print(cat[cols].to_string(index=False))
         print(f"\naxes: {store.axes.n_sessions} sessions x {store.axes.n_securities} securities")
     elif a.action == "ls":
-        for r in store.list_refs():
+        hits = [r for r in store.list_refs() if not a.ref or r.startswith(a.ref)]
+        if not hits:
+            print(f"no ref starts with {a.ref!r}"); return 1
+        for r in hits:
             print(r)
     elif a.action == "meta":
         import json
@@ -153,12 +166,11 @@ def main(argv=None) -> int:
     r.add_argument("--probe", nargs="?", type=int, const=20, default=None,
                    help="trial-run the warmed tail; does not write the store")
     r.add_argument("--rebuild", action="store_true", help="full rebuild, bumping version")
-    r.add_argument("--pnl", action="store_true")
     r.set_defaults(fn=cmd_run)
 
     s = sub.add_parser("store", parents=[common], help="query tool, not an executor")
     s.add_argument("action", choices=["status", "ls", "meta"])
-    s.add_argument("ref", nargs="?")
+    s.add_argument("ref", nargs="?", help="prefix filter for status/ls; exact ref for meta")
     s.set_defaults(fn=cmd_store)
 
     p = sub.add_parser("pnl", parents=[common], help="weights -> metrics")

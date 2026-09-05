@@ -34,11 +34,44 @@ def _load_weights(store: Store, node: str | None, weight_file: str | None,
     return store.read(node, sd, ed)
 
 
+def _require_contiguous(store: Store, w) -> None:
+    """权重的日期轴必须是 session 轴上连续的一段。
+
+    `dropna(how="all")` 删掉的是**内部**的空洞: 一个节点先跑了 1–3 月、后来又跑了
+    6 月起, 中间那段在库里是 fill_value NaN, dropna 一删, 6 月 1 日那一行就紧挨着
+    3 月 31 日。仿真器只校验单调与不重复（simulate.py:197）, 逐日循环把相邻两行
+    当作相邻两个 session, 于是**两个月的价格变动凭空消失**而持仓照样接上去,
+    Sharpe 与年化按"约 190 个连续交易日"算出来。
+
+    store 的 meta 记的是 min/max, `store status` 会把这段显示成完整区间, 所以没有
+    任何别的地方会喊。宁可拒绝也不要给一个看着合理的数。
+    """
+    if len(w) < 2:
+        return
+    sessions = store.axes.sessions
+    try:
+        i0, i1 = sessions.index(str(w.index[0])), sessions.index(str(w.index[-1]))
+    except ValueError as e:                       # 日期根本不在轴上
+        raise StoreError(f"weight dates are not on the session axis: {e}") from None
+    want = sessions[i0:i1 + 1]
+    if len(want) != len(w):
+        have = {str(d) for d in w.index}
+        holes = [d for d in want if d not in have]
+        raise StoreError(
+            f"weights are not contiguous on the session axis: {len(holes)} missing "
+            f"session(s) between {w.index[0]} and {w.index[-1]}, first at {holes[0]}.\n"
+            f"  Simulating across a hole applies the next available return to the position "
+            f"held before it -- the price movement in between vanishes while the position "
+            f"carries across, and the result looks entirely plausible.\n"
+            f"  Re-run the node over the gap, or evaluate one side with --sd/--ed.")
+
+
 def run_pnl(a) -> int:
     store = Store(a.store, a.region)
     node = getattr(a, "node", None)
     w = _load_weights(store, node, getattr(a, "weight", None), a.sd, a.ed)
     w = w.dropna(how="all")
+    _require_contiguous(store, w)
     if w.empty:
         raise StoreError(f"{node}: weights are empty -- run that node first")
     sd, ed = w.index[0], w.index[-1]
@@ -61,8 +94,17 @@ def run_pnl(a) -> int:
     # pyarrow 静默强转成字符串（只发一条 warning），读回来就对不上了
     res.write(out)
 
+    # 权重是在哪个口径下**算出来**的, 与本次评估用的是不是同一个——这才是有意义的
+    # 可比性检查, 也正是 §二 的 region_hash 存在的理由。此前 cli 把 hash 算出来放进
+    # namespace 就没了, gate 7 只能永远读到 None、永远报 NO-BASIS。
+    computed_under = None
+    if node and store.exists(node):
+        computed_under = (store.meta(node) or {}).get("region_hash")
+
     m = compute_metrics(res, market_ret=mkt,
                         meta={"node": name, "return_metric": a.rm,
+                              "region_hash": getattr(a, "region_hash", None),
+                              "region_hash_canonical": computed_under,
                               "booksize": a.booksize, "sd": str(sd), "ed": str(ed),
                               "cost_bps": a.cost_bps,
                               "participation": a.participation,

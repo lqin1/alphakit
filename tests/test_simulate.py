@@ -470,6 +470,46 @@ def test_metrics_and_gates():
 # =====================================================================
 # 10. 真实 store 端到端
 # =====================================================================
+def test_pnl_refuses_a_spliced_timeline():
+    """权重的日期轴必须在 session 轴上连续（§8.2）。
+
+    `dropna(how="all")` 删掉的是**内部**空洞: 节点先跑 1–3 月、后来又跑 6 月起,
+    中间在库里是 fill_value NaN, 一删 6/1 就紧挨着 3/31。仿真器只校验单调与不重复,
+    逐日循环把相邻两行当作相邻两个 session——两个月的价格变动凭空消失而持仓照样
+    接上去, 指标按"约 190 个连续交易日"算出来, 且 store 的 meta 记 min/max,
+    `store status` 会把这段显示成完整区间。没有任何别的地方会喊。
+    """
+    from alpha_kit.pnl.report import _require_contiguous
+    from alpha_kit.core.store import StoreError
+
+    class _FakeStore:                       # 只用到 axes.sessions, 不必碰盘
+        class axes:
+            sessions = [f"2024-01-{d:02d}" for d in range(1, 21)]
+
+    idx = _FakeStore.axes.sessions
+    ok = pd.DataFrame(1.0, index=idx[2:9], columns=[101, 102])
+    _require_contiguous(_FakeStore, ok)
+    say("    [ok  ] contiguous run accepted")
+
+    holed = pd.DataFrame(1.0, index=idx[2:5] + idx[12:16], columns=[101, 102])
+    try:
+        _require_contiguous(_FakeStore, holed)
+        check(False, "spliced weights were accepted")
+    except StoreError as e:
+        check("not contiguous" in str(e), f"wrong error: {e}")
+        check("2024-01-06" in str(e), f"error does not name the first hole: {e}")
+        say("    [ok  ] spliced weights refused, first hole named")
+
+    _require_contiguous(_FakeStore, ok.iloc[:1])
+    off = pd.DataFrame(1.0, index=["1999-01-01", "1999-01-02"], columns=[101])
+    try:
+        _require_contiguous(_FakeStore, off)
+        check(False, "off-axis dates were accepted")
+    except StoreError as e:
+        check("session axis" in str(e), f"wrong error: {e}")
+    return "contiguous ok; hole refused and located; off-axis refused"
+
+
 def test_real_store():
     root = Path(__file__).resolve().parents[1] / "storage" / "l3"
     from alpha_kit.core.store import Store
@@ -616,7 +656,8 @@ def main() -> int:
     tests = [test_identity, test_split, test_dividend, test_halt, test_delist,
              test_both_sides_frozen, test_all_frozen, test_ghost_detection,
              test_kernel_invariants, test_metrics_and_gates, test_deliverables,
-             test_real_store, test_timing]
+             test_pnl_refuses_a_spliced_timeline,
+    test_real_store, test_timing]
     for fn in tests:
         head = next((l.strip() for l in (fn.__doc__ or "").splitlines() if l.strip()), "")
         say(f"\n=== {fn.__name__} — {head}")

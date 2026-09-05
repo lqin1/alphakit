@@ -48,7 +48,7 @@
     "version": 1,
     "first_session": 64,
     "last_session": 249,
-    "updated_at": "2026-09-05T03:15:44Z",
+    "updated_at": "2026-09-05T03:57:21Z",
     "deps": [
       "g_common.field_base_px.adj_close_1500",
       "g_yliu.factor_yliu_liq.rvol20",
@@ -75,7 +75,7 @@
     "code_ref": {
       "path": "repos/g_yliu/nodes/alpha_yliu_rev/rev.py"
     },
-    "lookback": 30
+    "lookback": 32
   },
   "zarr_format": 3,
   "node_type": "array",

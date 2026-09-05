@@ -981,6 +981,111 @@ def test_param_tag_consistency():
     return f"lone case exempt / consistent family allowed / mismatched value and missing tag both rejected ({len(TAGS)} tags)"
 
 
+def test_session_axis_is_append_only():
+    """di 轴与 ii 轴同一道闸门（§3.3）。
+
+    此前只有 securities 有守卫, sessions 是无条件覆写。而 di 轴错位比 ii 轴更糟:
+    日历里补进一个半日市或删掉一个节假日, 每个 chunk 仍在原来的行位置上, 于是全库
+    所有面板整体错开一天——一次性给每个 alpha 注入一天前视, 形状没变、日期范围看着
+    干净、指纹不动（定义确实没改）, 没有任何地方会喊。
+    """
+    root = TMP / "axguard"
+    shutil.rmtree(root, ignore_errors=True)
+    ss = list(SESSIONS)
+    Axes.create(root / REGION, ss, list(SECURITIES), reserve=RESERVE)
+    Axes.create(root / REGION, ss + ["2024-01-15"], list(SECURITIES), reserve=RESERVE)
+    check(Axes.load(root / REGION).n_sessions == len(ss) + 1, "追加 session 被误拒")
+    for bad, why in [(ss[:3] + ["2024-01-99"] + ss[4:], "改中间某一天"),
+                     (["2024-01-15"] + ss, "在头部插入一天"),
+                     (ss[:5], "截短")]:
+        e = raises(ValueError, Axes.create, root / REGION, bad, list(SECURITIES))
+        check("sessions" in str(e) and "append-only" in str(e).lower() or "Append-only" in str(e),
+              f"{why}: 报错文不对题 {e}")
+    check(Axes.load(root / REGION).n_sessions == len(ss) + 1, "被拒的改动却已落盘")
+    ov = Axes.create(root / REGION, ss[:3], list(SECURITIES), overwrite=True)
+    check(ov.n_sessions == 3, "overwrite=True 仍应放行")
+    return "追加放行 / 3 种非扩展全拒 / overwrite 仍是逃生口"
+
+
+def test_dims_must_be_a_rank():
+    """dims 只能是三种秩之一（§3.6）。
+
+    此前只做 tuple(), 无成员检查: `dims: [di, zz]` 被原样收下, 在 store/ctx/node 的
+    每一处分支里落到 else, 最后以"rank-3 必须声明 grid"炸出来——报的是另一个问题。
+    """
+    dep = "g_common.field_base_px.adj_close_1500"
+    def mk(dims):
+        return spec_from(f"nodes:\n  factor_yliu_d:\n    deps: [{dep}]\n"
+                         f"    outputs:\n      d:\n        dims: {dims}\n",
+                         node_dir="dm", stem="dm")
+    for ok in ("[di]", "[di, ii]"):
+        check(mk(ok) is not None, f"合法 dims {ok} 被拒")
+    for bad in ("[di, zz]", "[ii, di]", "[di, ii, ti, xx]", "[]"):
+        e = raises(ConfigError, mk, bad)
+        check("rank" in str(e), f"dims={bad} 的报错文不对题：{e}")
+    return "2 种合法放行；4 种非法在写下它的那一行被拒"
+
+
+def test_yaml_key_set_is_closed():
+    """认不得的 yaml 键必须报错, 不能静默丢掉。
+
+    `universe:` 拼错一个字母 → spec.universe 是 None → 掩码恒 True → alpha 悄悄按
+    全部 503 只票交易而不是 us_top400; 而预检里每一处 universe 检查都在
+    `if spec.universe:` 后面, 所以一句话都不会说。
+    """
+    dep = "g_common.field_base_px.adj_close_1500"
+    base = "nodes:\n  factor_yliu_k:\n    deps: [%s]\n" % dep
+    check(spec_from(base, node_dir="ky", stem="ky") is not None, "合法 yaml 被拒")
+    for bad, frag in [("univeres: x\n" + base, "univeres"),
+                      ("lookbak: 3\n" + base, "lookbak")]:
+        e = raises(ConfigError, spec_from, bad, node_dir="ky", stem="ky")
+        check(frag in str(e) and "did you mean" in str(e), f"缺少近似候选：{e}")
+    e = raises(ConfigError, spec_from,
+               "nodes:\n  factor_yliu_k:\n    deps: [%s]\n    codee: x.py\n" % dep,
+               node_dir="ky", stem="ky")
+    check("codee" in str(e), f"节点级未知键没报：{e}")
+    return "文件级 2 个 + 节点级 1 个未知键全拒, 且都给出最接近的候选"
+
+
+def test_warmup_is_additive_not_max():
+    """预热 = handle 要的 + 算子链要的, 不是两者取大（§7.1）。
+
+    链吃的是 handle 的产出: 要让链在第一个请求日就填满缓冲, handle 必须在那之前
+    ops_lookback 天就已经在产出有效值, 而 handle 本身要 declared 天才有效。
+
+    这条曾经写成 `max()`。`lookback: 5` + `win(6)` + `linear_decay: 3` 的真实需求是
+    5+2=7, max 给 5——实测同一个 session 与预热充足时相比 501/503 只票全不一样、
+    最大差 0.11, 而且不报任何警。取大之所以诱人是两段各自都"够", 但它们不是同一段
+    时间; 这条断言就是钉住"相加"这件事本身。
+    """
+    from alpha_kit.runner.node import warmup
+    dep = "g_common.field_base_px.adj_close_1500"
+    def spec_with(ops_yaml, look):
+        body = (f"lookback: {look}\nnodes:\n  factor_yliu_w:\n"
+                f"    deps: [{dep}]\n{ops_yaml}")
+        s = spec_from(body, node_dir="wu", stem="wu")
+        return s.lookback, s.nodes["factor_yliu_w"]
+
+    cases = [
+        ("",                                        5,  0,  5),   # 无 ops
+        ("    ops:\n      - linear_decay: 3\n",     5,  2,  7),   # n 日窗口要 n-1 天
+        ("    ops:\n      - delay: 2\n",            5,  2,  7),
+        ("    ops:\n      - delay: 2\n      - linear_decay: 5\n", 5, 6, 11),  # TS 串联相加
+        ("    ops:\n      - rank\n",                5,  0,  5),   # CS 算子不吃历史
+        ("    ops:\n      - linear_decay: 3\n",     0,  2,  2),
+    ]
+    for ops_yaml, look, want_ops, want_total in cases:
+        declared, node = spec_with(ops_yaml, look)
+        got = warmup(declared, node)
+        check(got == want_total,
+              f"lookback={look} + ops({want_ops}) 应是 {want_total}, 实得 {got}"
+              f"（max 会给 {max(look, want_ops)}）")
+    # 相加与取大必须真的分得开, 否则这条断言测了个寂寞
+    d, n = spec_with("    ops:\n      - linear_decay: 5\n", 3)
+    check(warmup(d, n) == 7 and max(3, 4) == 4, "本例中相加与取大不可区分, 测试无效")
+    return f"{len(cases)} 组: 相加而非取大; 3+4 给 7 而非 4"
+
+
 def test_params_spellings_are_one_definition():
     """params 的两种写法必须归一到同一个定义（含指纹）。
 
@@ -1149,6 +1254,10 @@ TESTS = [
     test_node_level_ops_with_multiple_outputs,
     test_node_ops_and_output_ops_conflict,
     test_param_tag_consistency,
+    test_session_axis_is_append_only,
+    test_dims_must_be_a_rank,
+    test_yaml_key_set_is_closed,
+    test_warmup_is_additive_not_max,
     test_params_spellings_are_one_definition,
     test_fingerprint_covers_the_definition,
     test_op_contract_matches_runner,

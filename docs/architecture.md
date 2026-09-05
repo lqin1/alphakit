@@ -152,7 +152,7 @@ store/factor|alpha/<他人>/*            只读
 pip install alpha_kit
 git clone .../g_yliu && cd g_yliu
 run nodes/factor_yliu_resid_mom/     --sd 2015-01-01   # 造数据
-run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01 --pnl   # 用数据
+run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01          # 用数据
 ```
 
 ---
@@ -651,7 +651,7 @@ def handle(ctx):
 ```bash
 run nodes/field_base_px_adj/         --sd 2010-01-01   # 数据与 alpha 同一条命令
 run nodes/factor_yliu_beta_decomp/   --sd 2015-01-01
-run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01 --pnl
+run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01
 ```
 
 ### 4.9 config 通用规则（沿用）
@@ -813,7 +813,8 @@ def handle(ctx):
 ```bash
 run nodes/factor_yliu_liq/        --sd 2015-01-01        # 因子: 3 个产物
 run 'nodes/alpha_yliu_rev_w*'     --sd 2018-01-01        # alpha: 整族, 一个进程
-run nodes/alpha_yliu_rev_mix/     --sd 2018-01-01 --pnl  # combo + 评估
+run nodes/alpha_yliu_rev_mix/     --sd 2018-01-01        # combo
+pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight  # 评估
 ```
 
 跨 config 的依赖必须**已经在 store 里**（§7.1：v0 不做图分析，引擎唯一兜底是"deps 不存在则报错"），所以顺序不能颠倒。`store status g_yliu.factor_yliu_liq.rvol20` 可查。
@@ -1059,7 +1060,7 @@ engine 的 `effective_ed`（取依赖 last_session 的 min）由 registry 顺序
 ### 7.1 执行语义
 
 - **声明顺序 = 执行顺序**：被依赖的节点写在前面（先跑完落 store，后者读到）。跨 config 依赖须已在 store（`store status <名>` 可查），引擎唯一兜底：deps 不存在则报错，不做图分析。
-- `--only` 只跑指定节点；`--pnl` 对本次运行中**每个** kind 为 alpha 的节点都评估（不只终点），扫描族因此只读一遍面板。
+- `--only` 只跑指定节点。`--pnl`（对本次运行中每个 alpha 节点都评估）**尚未实现**：它曾经作为一个 argparse 参数存在但从不被读取——声明了却什么都不做的开关比没有更坏, 故已移除, 待 §15.8 的扫描运行器一并落地。当前评估用独立的 `pnl --node <ref>`。
 - **lookback 预热**：config 声明，引擎取 **max(声明值, ops 可推导下限)**；预热段照常执行 handle 推进 state，只喂状态不进输出。语义承诺"预热充分则一致"，严格逐位一致等 cache 版。
 
 ### 7.2 主循环
@@ -1320,7 +1321,6 @@ run PATH                         # 唯一执行入口; PATH 可是节点目录�
     --universe NAME              # 探索期临时覆盖
     --time                       # 分阶段耗时
     --sd DATE --ed DATE          # 评估窗口; ed 缺省 today(按数据新鲜度回退)
-    --pnl                        # 对 alpha 输出串 pnl.py
     --dump-format feather|csv
     --cache-read / --cache-write full|off|lag:k / --force    # [目标] cache 版引入
 

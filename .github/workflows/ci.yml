@@ -1,0 +1,39 @@
+# 214 条断言与一个正确的退出码此前没有任何东西去调用它——安全网只网住了有人
+# 记得手跑的那些。数据随仓库入库（storage/ 约 63 MB）, 所以 CI 不需要外网取数,
+# 整条链能真跑, 而不是只做一次 import 冒烟。
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # pyproject 承诺 ">=3.11"; 两端都跑, 免得承诺只在开发机上成立
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: python -m pip install --upgrade pip && pip install -e .
+      - name: engine + data self-check
+        # run_all.py 非零退出即失败; 它把五套串起来跑
+        run: python tests/run_all.py
+      - name: end-to-end rebuild from committed L2
+        # 删掉 L3 再造一遍, 证明"开箱即用"这句话是真的而不是本地缓存的产物
+        run: |
+          rm -rf storage/l3
+          python pipeline/build_l3_base.py
+          run repos/g_yliu/nodes/factor_yliu_liq/            --sd 2025-12-01
+          run repos/g_yliu/nodes/factor_yliu_mom/            --sd 2025-12-01
+          run repos/g_lqin/nodes/alpha_lqin_senti/           --sd 2025-12-01
+          run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml     --sd 2025-12-01
+          run repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml --sd 2025-12-01
+          pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight --sd 2025-12-01

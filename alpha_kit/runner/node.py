@@ -40,6 +40,29 @@ def effective_ed(store: Store, ed: str | None, deps: set[str]) -> str:
     return cap if ed is None else min(ed, cap)
 
 
+def warmup(declared: int, node: NodeSpec) -> int:
+    """这个节点要预热多少天（§7.1）。
+
+    两段**相加**, 不是取大的那个:
+
+        declared      handle 自己要多少天先前历史（`ctx.win(ref, w)` 要 w-1 天）
+        ops_lookback  算子链要多少天**有效的 handle 输出**（TS 串联时窗口相加）
+
+    链吃的是 handle 的产出。要让链在第一个**请求日**就已填满缓冲, handle 必须在那
+    之前 ops_lookback 天就在产出有效值——而 handle 本身又要 declared 天才有效。
+
+    这里曾经写的是 `max()`: `lookback: 5` + `win(6)` + `linear_decay: 3` 的真实需求是
+    5+2=7, max 给 5, 于是起跑后前 2 天的输出来自未填满的衰减缓冲。实测同一个 session
+    与预热充足时相比 **501/503 只票全不一样, 最大差 0.11**, 且不报任何警——数值看着
+    完全合理。取大的那个之所以诱人, 是因为两段各自都"够"; 但它们不是同一段时间。
+
+    单独成函数而不是内联: 预热错了产出的是**看着合理的错数**, 这类东西必须能被
+    一条不需要 store 的断言钉住。
+    """
+    from .ops import ops_lookback
+    return declared + max((ops_lookback(o.ops) for o in node.outputs.values()), default=0)
+
+
 def resolve_deps(store: Store, node: NodeSpec) -> list[str]:
     """通配在编译期展开为当时该节点的全部输出，展开清单进 meta（§3.2）。"""
     out: list[str] = []
@@ -61,13 +84,9 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
                 f"`store status` lists what has landed.")
 
     i_sd, i_ed = store.axes.pos(sd), store.axes.pos(ed)
-    # 先建算子链：预热下限由链自己给（TS 算子串联时窗口相加, 且 n 日窗口只需 n-1 天
-    # 先前历史）。这里曾经有一份独立实现, 与链的算法双向不一致——`delay:2 → decay:5`
-    # 它给 5 而正确值是 6, 预热不足会让最初几天的输出来自未填满的缓冲, 数值看着合理却是错的。
     from .ops import ops_lookback
     has_ops = any(o.ops for o in node.outputs.values())
-    lookback = max(spec.lookback,
-                   max((ops_lookback(o.ops) for o in node.outputs.values()), default=0))
+    lookback = warmup(spec.lookback, node)
     i_start = max(0, i_sd - lookback)
     load_sd, load_ed = store.axes.date(i_start), ed
     cols = store.axes.securities
@@ -198,10 +217,22 @@ def _assemble(keep: dict[int, object], o, store: Store, cols):
 def run(spec: Spec, store: Store, sd: str, ed: str | None, *, only: str | None = None,
         rebuild: bool = False, probe: int | None = None) -> list[dict]:
     todo = [spec.nodes[only]] if only else list(spec.nodes.values())
-    alldeps = {d for n in todo for d in n.deps if not is_wildcard(d)}
+    # 新鲜度上限要覆盖**所有真正会被读到的** L3, 否则「绝不静默算半截数据」就有洞:
+    #   · 通配 dep 此前被整个丢掉（`if not is_wildcard(d)`）, 而 template 的缺省
+    #     依赖恰恰就是通配形——最常见的那一类反而不设防;
+    #   · universe 从来不是 dep（UniverseView 单独构造）, 也就从不参与封顶。
+    #     它落后时新的几行是 fill_value=False, 掩码全 False, scale 记一笔退化,
+    #     于是整天的权重是一排 0.0 写进库——pnl 的 dropna 删不掉 0.0, 那几天
+    #     被当成"收益恰好为零"算进 Sharpe。
+    alldeps: set[str] = set()
+    for n in todo:
+        for d in n.deps:
+            alldeps.update(store.expand(d) if is_wildcard(d) else [d])
     if spec.return_metric:
         alldeps.add(spec.return_metric)
-    ed = effective_ed(store, ed, alldeps)
+    if spec.universe:
+        alldeps.add(spec.universe)
+    ed = effective_ed(store, ed, {d for d in alldeps if store.exists(d)})
     if probe is not None:
         i = store.axes.pos(ed)
         sd = store.axes.date(max(0, i - probe))
