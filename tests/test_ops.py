@@ -294,7 +294,7 @@ def test_warmup_calls_prime_state():
 def test_reset_gives_identical_results():
     """同一条链跑两遍、中间 reset()，必须逐位一致（op-state 归零干净）。"""
     uni = Univ(members=[101, 102, 103, 104], groups=[1, 1, 2, 2, 2])
-    ops = [("rank", None), ("neutralize", "g_common.field_common_ref.field_common_ref-sector"),
+    ops = [("rank", None), ("neutralize", "g_common.field_common_ref.sector"),
            ("delay", 1), ("linear_decay", 3), ("exp_decay", 2),
            ("truncate", 0.4), ("scale", "book")]
     ch = OpChain(ops, uni)

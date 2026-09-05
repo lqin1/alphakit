@@ -1,4 +1,4 @@
-PX = "g_common.field_base_px.field_base_px-adj_close_1500"
+PX = "g_common.field_base_px.adj_close_1500"
 
 def handle(ctx):
     n  = ctx.params["window"]

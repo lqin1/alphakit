@@ -1,9 +1,9 @@
 """流动性与波动三件套。一次窗口读取算出三个产物, 避免重复读盘。"""
 import numpy as np
 
-PX  = "g_common.field_base_px.field_base_px-adj_close_1500"
-VOL = "g_common.field_base_px.field_base_px-volume_1500"
-RET = "g_common.field_base_px.field_base_px-ret_1d_1500"
+PX  = "g_common.field_base_px.adj_close_1500"
+VOL = "g_common.field_base_px.volume_1500"
+RET = "g_common.field_base_px.ret_1d_1500"
 
 
 def handle(ctx):

@@ -20,7 +20,7 @@ import pandas as pd
 import zarr
 
 from .axes import Axes
-from .naming import Ref, parse_ref
+from .naming import Ref, is_wildcard, parse_ref
 
 def _covered(z, dims: list[str], n: int) -> int:
     """有数据的列数（秩-1 没有列轴, 记 0）。"""
@@ -50,7 +50,14 @@ class StoreError(RuntimeError):
 
 class Store:
     def __init__(self, root: str | Path, region: str = "us"):
-        self.root = Path(root)
+        root = Path(root)
+        # region 文件里的 l3_root 写的是**它自己那一层**（storage/l3/us）: 一个 region
+        # 文件指着别人的父目录, 读的人还得自己在脑子里补一段, 写全反而不容易搞错。
+        # 于是这里两种写法都认——末段已经是 region 时不再重复拼接, 否则
+        # storage/l3/us 会变成 storage/l3/us/us。
+        if root.name == region:
+            root = root.parent
+        self.root = root
         self.region = region
         # 轴按 region 存：`security_id` 与 session 都是**按市场**定义的——美股与其他市场
         # 不共享列轴, 日历也不同。轴若放在 region 之上, 接入第二个市场时要么列轴被迫
@@ -61,7 +68,7 @@ class Store:
     # ------------------------------------------------------------ 路径与引用
     def path(self, ref: str | Ref) -> Path:
         r = parse_ref(ref) if isinstance(ref, str) else ref
-        return self.root / self.region / r.repo / r.node_dir / f"{r.node_name}-{r.output}"
+        return self.root / self.region / r.repo / r.node_dir / r.leaf
 
     def exists(self, ref: str | Ref) -> bool:
         return (self.path(ref) / "zarr.json").exists()
@@ -77,10 +84,10 @@ class Store:
         return out
 
     def expand(self, pattern: str) -> list[str]:
-        """`{repo}.{node_dir}.{node_name}-*` 通配 → 该节点当时的全部输出（§3.2）。"""
-        if not pattern.endswith("-*"):
+        """通配 → 该节点当时的全部输出（§3.2）。折叠形写 `{repo}.{node_dir}.*`。"""
+        if not is_wildcard(pattern):
             return [pattern]
-        stem = pattern[:-1]                      # 含末尾的 '-'
+        stem = pattern[:-1]                      # 含末尾的 '-' 或 '.'
         hits = sorted(r for r in self.list_refs() if r.startswith(stem))
         if not hits:
             raise StoreError(f"通配 {pattern} 展开为空——该节点尚未产出任何输出")

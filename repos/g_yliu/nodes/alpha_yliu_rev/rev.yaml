@@ -1,5 +1,5 @@
 region: us
-universe: g_common.field_common_univ.field_common_univ-us_top400
+universe: g_common.field_common_univ.us_top400
 lookback: 30
 
 nodes:
@@ -7,12 +7,12 @@ nodes:
     code: rev.py
     params: {window: 5}
     deps:
-      - g_common.field_base_px.field_base_px-adj_close_1500
-      - g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20
-      - g_common.factor_common_gics.factor_common_gics-sector
+      - g_common.field_base_px.adj_close_1500
+      - g_yliu.factor_yliu_liq.rvol20
+      - g_common.factor_common_gics.sector
     ops:
       - rank
-      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
+      - neutralize: g_common.factor_common_gics.sector
       - linear_decay: 3
       - truncate: 0.02
       - scale: book
@@ -21,12 +21,12 @@ nodes:
     code: rev.py
     params: {window: 20}
     deps:
-      - g_common.field_base_px.field_base_px-adj_close_1500
-      - g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20
-      - g_common.factor_common_gics.factor_common_gics-sector
+      - g_common.field_base_px.adj_close_1500
+      - g_yliu.factor_yliu_liq.rvol20
+      - g_common.factor_common_gics.sector
     ops:
       - rank
-      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
+      - neutralize: g_common.factor_common_gics.sector
       - linear_decay: 3
       - truncate: 0.02
       - scale: book

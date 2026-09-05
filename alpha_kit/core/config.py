@@ -16,7 +16,7 @@ import yaml
 # 命名规则住在 naming.py；这里 re-export，既有 `from ...config import parse_ref`
 # 的写法不受影响——拆分是为了让 store 不必依赖加载器，不是为了制造迁移工作。
 from .naming import (KINDS, NAME_RE, NS_RE, RESERVED, ConfigError, Ref,  # noqa: F401
-                     check_name, parse_ref)
+                     check_name, is_wildcard, parse_ref)
 TAGS = {"window": "w", "halflife": "h", "lag": "k", "quantile": "q", "count": "n"}
 CS_OPS = {"rank", "neutralize", "truncate", "scale"}
 TS_OPS = {"linear_decay", "exp_decay", "delay"}
@@ -125,6 +125,40 @@ def load_region(path: Path, region: str) -> tuple[dict, str | None]:
             doc = yaml.safe_load(f.read_text()) or {}
             return doc, "sha256:" + hashlib.sha256(_canon(doc).encode()).hexdigest()[:16]
     return {}, None
+
+
+def find_region(region: str, repo: str | None = None,
+                root: Path | None = None) -> tuple[dict, str | None, Path | None]:
+    """不带 config 路径时定位 `regions/{region}.yaml`——`pnl` 的入口是一个 store ref。
+
+    按 §二, region 文件是**可比性的锚**: 口径 hash 进权重 meta, 提交 alpha 池时按 hash
+    校验。各 repo 各存一份、内容必须一致。所以这里扫到多份就逐一比 hash, 不一致直接
+    报错——口径一旦悄悄分叉, 两个人算出来的 Sharpe 就不再可比, 而这件事没有任何
+    别的地方会喊出来。给了 repo 就先按 repo 找（alpha 属于哪个 repo, 就按那个 repo
+    声明的口径评估）。
+    """
+    root = root or Path.cwd()
+    cands: list[Path] = []
+    if repo:
+        f = root / "repos" / repo / "regions" / f"{region}.yaml"
+        if f.exists():
+            cands = [f]
+    if not cands:
+        cands = sorted(root.glob(f"repos/*/regions/{region}.yaml"))
+    if not cands:
+        return {}, None, None
+    seen: dict[str, list[Path]] = {}
+    for f in cands:
+        doc = yaml.safe_load(f.read_text()) or {}
+        h = "sha256:" + hashlib.sha256(_canon(doc).encode()).hexdigest()[:16]
+        seen.setdefault(h, []).append(f)
+    if len(seen) > 1:
+        detail = "\n".join(f"  {h}  {', '.join(str(x) for x in fs)}" for h, fs in seen.items())
+        raise ConfigError(
+            f"region `{region}` 在各 repo 下内容不一致——口径已分叉, 跨 repo 结果不再可比:\n"
+            f"{detail}\n  这两份必须逐字一致; 要改口径就一起改。")
+    doc = yaml.safe_load(cands[0].read_text()) or {}
+    return doc, next(iter(seen)), cands[0]
 
 
 def resolve_tc(ref: str, cutoff: str | None) -> str:
@@ -275,7 +309,7 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
         node_cutoff = (body.get("params") or {}).get("cutoff", cutoff)
         deps = [resolve_tc(str(d), node_cutoff) for d in (body.get("deps") or [])]
         for d in deps:
-            parse_ref(d.replace("-*", "-x"))
+            parse_ref(d[:-1] + "x" if is_wildcard(d) else d)
         for o in outs.values():
             o.ops = [(op, resolve_tc(a, node_cutoff) if op == "neutralize" else a)
                      for op, a in o.ops]

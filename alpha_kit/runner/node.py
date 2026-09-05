@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ..core.config import NodeSpec, Spec
+from ..core.config import NodeSpec, Spec, is_wildcard
 from ..core.store import Store, StoreError
 from .ctx import Ctx, PanelLoader, UniverseView
 
@@ -44,7 +44,7 @@ def resolve_deps(store: Store, node: NodeSpec) -> list[str]:
     """通配在编译期展开为当时该节点的全部输出，展开清单进 meta（§3.2）。"""
     out: list[str] = []
     for d in node.deps:
-        out.extend(store.expand(d) if d.endswith("-*") else [d])
+        out.extend(store.expand(d) if is_wildcard(d) else [d])
     return out
 
 
@@ -197,7 +197,7 @@ def _assemble(keep: dict[int, object], o, store: Store, cols):
 def run(spec: Spec, store: Store, sd: str, ed: str | None, *, only: str | None = None,
         rebuild: bool = False, probe: int | None = None) -> list[dict]:
     todo = [spec.nodes[only]] if only else list(spec.nodes.values())
-    alldeps = {d for n in todo for d in n.deps if not d.endswith("-*")}
+    alldeps = {d for n in todo for d in n.deps if not is_wildcard(d)}
     if spec.return_metric:
         alldeps.add(spec.return_metric)
     ed = effective_ed(store, ed, alldeps)

@@ -25,7 +25,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..core.config import CS_OPS, KINDS, ConfigError, Spec, parse_ref
+from ..core.config import CS_OPS, KINDS, ConfigError, Spec, is_wildcard, parse_ref
 
 ERROR = "error"
 WARN = "warn"
@@ -193,7 +193,7 @@ class _Cat:
         return str(self.meta(ref).get("dtype") or "")
 
     def expand(self, pattern: str) -> list[str]:
-        stem = pattern[:-1]                       # 含末尾的 '-'
+        stem = pattern[:-1]                       # 含末尾的 '-' 或 '.'
         return sorted(r for r in self.known if r.startswith(stem))
 
 
@@ -309,13 +309,13 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                     "v0 未实现 §4.9.5 的 cutoff 替换；请写死实际 cutoff"
                     "（如 `-adj_close_1500`）")
                 continue
-            if dep.endswith("-*"):
+            if is_wildcard(dep):
                 hits = cat.expand(dep)
                 if not hits:
                     # §4.9 ②：通配是简写而非豁免，展开为空说明上游一个输出都没落库
                     add(ERROR, "DEP_WILDCARD_EMPTY", node.name, f,
                         f"通配 {dep} 展开为空——该节点尚未产出任何输出",
-                        _suggest(dep[:-2] + "-", cat.known))
+                        _suggest(dep[:-1], cat.known))
                     continue
                 resolved.extend(hits)
                 continue
@@ -333,7 +333,7 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                     f"{list(spec.nodes)[at]} 产出",
                     "§7.1：声明顺序即执行顺序，被依赖的节点要写在前面")
 
-        resolved_all |= {r for r in resolved if not r.endswith("-*")}
+        resolved_all |= {r for r in resolved if not is_wildcard(r)}
 
         # ------------------------------------------------------- 秩 / CS 算子
         ranks = {len(o.dims) for o in node.outputs.values()}

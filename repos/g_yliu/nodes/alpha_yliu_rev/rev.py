@@ -1,6 +1,6 @@
 """短期反转, 波动归一。两个变体共用, 差异全在 params。"""
-PX   = "g_common.field_base_px.field_base_px-adj_close_1500"
-RVOL = "g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20"
+PX   = "g_common.field_base_px.adj_close_1500"
+RVOL = "g_yliu.factor_yliu_liq.rvol20"
 
 
 def handle(ctx):

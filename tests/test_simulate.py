@@ -428,8 +428,8 @@ def test_metrics_and_gates():
                    cost_bps=2.0, halt_proxy=2, universe=uni,
                    adv_dollar=pd.DataFrame(5e8, index=dates, columns=cols))
     m = metrics(res, meta={"region_hash": "a3f91c", "region_hash_canonical": "a3f91c",
-                           "deps_tc": {"g_common.field_base_px.field_base_px-adj_close_tc":
-                                       "g_common.field_base_px.field_base_px-adj_close_1500"},
+                           "deps_tc": {"g_common.field_base_px.adj_close_tc":
+                                       "g_common.field_base_px.adj_close_1500"},
                            "weight_hash": "sha256:deadbeef"})
     say("")
     for line in format_report(m).splitlines():
@@ -479,10 +479,10 @@ def test_real_store():
     except FileNotFoundError:
         say(f"    [skip] {root} 下没有可用的轴（先跑 pipeline/build_l3_base.py），跳过端到端")
         return
-    ret = s.read("g_common.field_base_px.field_base_px-ret_1d_1500")
-    adv = s.read("g_common.field_base_px.field_base_px-adv_dollar")
-    uni = s.read("g_common.field_common_univ.field_common_univ-us_top400").astype(bool)
-    mom = s.read("g_yliu.factor_yliu_mom.factor_yliu_mom-mom")
+    ret = s.read("g_common.field_base_px.ret_1d_1500")
+    adv = s.read("g_common.field_base_px.adv_dollar")
+    uni = s.read("g_common.field_common_univ.us_top400").astype(bool)
+    mom = s.read("g_yliu.factor_yliu_mom.mom")
     # 现成的 alpha 权重面板此刻还是全 0，故就地用 mom 因子造一份真权重：
     # 池内去均值再 scale（Σ|w|=1），池外恰为 0——正是 §3.5 两端夹住的掩码。
     x = mom.where(uni)
@@ -499,7 +499,7 @@ def test_real_store():
     resid = hv - (prev + res.pnl.to_numpy() + fl["trade"].to_numpy()
                   + fl["settle"].to_numpy() + fl["cost"].to_numpy())
     close(resid, 0.0, 1e-9 * 20e6, "真实面板上会计恒等式成立")
-    m = metrics(res, market_ret=s.read("g_common.field_base_px.field_base_px-market_ret"))
+    m = metrics(res, market_ret=s.read("g_common.field_base_px.market_ret"))
     say("")
     for line in format_report(m).splitlines():
         say("    " + line)
@@ -563,11 +563,11 @@ def test_deliverables():
         paths = res.write(td)
         (Path(td) / "metrics.json").write_text(
             json.dumps(metrics(res), ensure_ascii=False, indent=1, allow_nan=False))
-        back = pd.read_feather(paths["daily"])
-        check(len(back) == T and "return" in back.columns, "daily.feather 可读回",
+        back = pd.read_csv(paths["daily"])
+        check(len(back) == T and "return" in back.columns, "daily.csv 可读回",
               f"{len(back)} 行 × {len(back.columns)} 列")
-        check(pd.read_feather(paths["holding"]).shape[1] == 2 * N + 1,
-              "holding.feather 拍平成 {块}|{security_id}")
+        check(pd.read_csv(paths["holding"]).shape[1] == 2 * N + 1,
+              "holding.csv 拍平成 {块}|{security_id}")
         m = json.loads((Path(td) / "metrics.json").read_text())
         check(set(m) >= {"scalar", "by_year", "audit", "gates", "summary", "snapshot"},
               "metrics.json 结构齐全", str(sorted(m)))

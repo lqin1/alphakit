@@ -5,7 +5,7 @@
 """
 A = "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight"
 B = "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight"
-C = "g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight"
+C = "g_lqin.alpha_lqin_senti.weight"
 
 
 def handle(ctx):

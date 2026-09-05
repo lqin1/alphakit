@@ -48,10 +48,10 @@ SECURITIES = [101, 102, 103, 104, 105]
 RESERVE = 7
 
 R2 = "g_yliu.liq.factor_yliu_liq-adv20"                  # 秩-2
-R1 = "g_common.field_macro_cpi.field_macro_cpi-yoy"                # 秩-1
-R3 = "g_common.field_taq_rv.field_taq_rv-rv_5m"                   # 秩-3
-RB = "g_common.field_common_univ.field_common_univ-us_top3000"        # bool
-RI = "g_common.factor_common_gics.factor_common_gics-sector"         # int8
+R1 = "g_common.field_macro_cpi.yoy"                # 秩-1
+R3 = "g_common.field_taq_rv.rv_5m"                   # 秩-3
+RB = "g_common.field_common_univ.us_top3000"        # bool
+RI = "g_common.factor_common_gics.sector"         # int8
 
 
 # --------------------------------------------------------------- 测试骨架
@@ -499,6 +499,23 @@ def test_expand_wildcard():
     return f"3 个输出被展开、相邻节点未误入、空展开抛 {type(e).__name__}"
 
 
+def test_store_root_accepts_region_qualified_path():
+    """region 文件里的 `l3_root` 写的是它自己那一层（storage/l3/us）。
+
+    两种写法必须落到同一个目录, 否则 `storage/l3/us` 会被拼成 `storage/l3/us/us`——
+    那不会报错, 只会安静地建出一个空 store, 然后所有 read 都说"没这个 ref"。
+    """
+    st1 = fresh("st_root")
+    root = st1.root
+    a = Store(str(root), REGION)                   # 不带 region 段
+    b = Store(str(root / REGION), REGION)          # 带 region 段
+    check(a.root == b.root, f"两种 l3_root 写法根不同：{a.root} vs {b.root}")
+    check(a.path(R2) == b.path(R2), f"两种写法路径不同：{a.path(R2)} vs {b.path(R2)}")
+    check(a.path(R2).parent.parent.parent == root / REGION,
+          f"region 层不对：{a.path(R2)}")
+    return f"`{root.name}` 与 `{root.name}/{REGION}` 落到同一处"
+
+
 def test_path_ref_roundtrip():
     """§4.11.6 检查 ⑨：ref 拆解后能拼回原路径。两者一一对应、不需要索引。"""
     st = fresh("st_path")
@@ -511,7 +528,7 @@ def test_path_ref_roundtrip():
         r = parse_ref(ref)
         check(str(r) == ref, f"str(Ref) 不等于原串：{r}")
         check(st.path(r) == p, "传 Ref 与传字符串给出不同路径")
-        check(f"{r.node_name}-{r.output}" == p.name, f"叶子名不是 node-output：{p.name}")
+        check(r.leaf == p.name, f"叶子名不符折叠规则：{p.name}")
     st.write(R2, panel(SESSIONS[:1], SECURITIES))
     check(st.list_refs() == [R2], f"list_refs = {st.list_refs()}")
     cat = st.catalog()
@@ -642,7 +659,7 @@ def test_parse_ref_accepts_canonical():
     check(str(r) == "g_yliu.liq.factor_yliu_liq-adv20", f"拼不回去：{r}")
     r2 = parse_ref("g_yliu.rev.alpha_yliu_rev_w005-weight")
     check(r2.kind == "alpha" and r2.output == "weight", f"{r2.kind}/{r2.output}")
-    check(parse_ref("g_common.field_base_px.field_base_px-adj_close_1500").ns == "base",
+    check(parse_ref("g_common.field_base_px.adj_close_1500").ns == "base",
           "g_common 的 ns 段解析错")
     return f"kind={r.kind} ns={r.ns} output={r.output}，str() 往返一致"
 
@@ -835,7 +852,7 @@ def test_cs_ops_only_on_rank2():
                              ("[di, ii, ti]", ", grid: m5", "秩-3")]:
         for op in sorted(CS_OPS):
             arg = {"rank": "", "truncate": ": 0.02", "scale": ": book",
-                   "neutralize": ": g_common.factor_common_gics.factor_common_gics-sector"}[op]
+                   "neutralize": ": g_common.factor_common_gics.sector"}[op]
             e = raises(ConfigError, spec_from,
                        f"nodes:\n  factor_yliu_m:\n    outputs:\n"
                        f"      m: {{dims: {dims}{extra}, ops: [{{{op}{arg}}}]}}\n"
@@ -886,7 +903,7 @@ def test_op_arg_types():
     check("zscore" in str(e) and "可用" in str(e), f"未知算子的报错没列出可用算子：{e}")
     s = spec_from("nodes:\n  factor_yliu_m:\n    ops:\n      - rank\n"
                   "      - truncate: 0.02\n      - linear_decay: 3\n"
-                  "      - neutralize: g_common.factor_common_gics.factor_common_gics-sector\n",
+                  "      - neutralize: g_common.factor_common_gics.sector\n",
                   node_dir="o4", stem="o4")
     ops = s.nodes["factor_yliu_m"].outputs["m"].ops
     check(ops[1] == ("truncate", 0.02) and ops[2] == ("linear_decay", 3),
@@ -971,21 +988,21 @@ def test_fingerprint_covers_the_definition():
     就会放行, 同一个数组里改动日前后是两个定义。
     """
     body = "nodes:\n  factor_yliu_f:\n    params: {window: 20}\n    deps: [%s]\n"
-    dep = "g_common.field_base_px.field_base_px-adj_close_1500"
+    dep = "g_common.field_base_px.adj_close_1500"
     base = spec_from(body % dep, node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
     p = spec_from((body % dep).replace("window: 20", "window: 21"),
                   node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
     check(p != base, "改 params 指纹没变")
-    d = spec_from(body % "g_common.field_base_px.field_base_px-volume_1500",
+    d = spec_from(body % "g_common.field_base_px.volume_1500",
                   node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
     check(d != base, "换 deps 指纹没变")
     c = spec_from(body % dep, node_dir="fp", stem="fp",
                   code="def handle(ctx):\n    return 1.0\n"
                   ).nodes["factor_yliu_f"].fingerprint()
     check(c != base, "改 code 指纹没变")
-    u = spec_from("universe: g_common.field_common_univ.field_common_univ-us_top400\n" + (body % dep),
+    u = spec_from("universe: g_common.field_common_univ.us_top400\n" + (body % dep),
                   node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
-    u2 = spec_from("universe: g_common.field_common_univ.field_common_univ-us_top3000\n" + (body % dep),
+    u2 = spec_from("universe: g_common.field_common_univ.us_top3000\n" + (body % dep),
                    node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
     lb = spec_from("lookback: 250\n" + (body % dep),
                    node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
@@ -1036,10 +1053,12 @@ def test_real_repo_specs_load():
             check(node.node_dir == f.parent.name, f"{f}: node_dir 推导错 {node.node_dir}")
             check(node.kind in KINDS, f"{f}: kind={node.kind}")
             for k, o in node.outputs.items():
-                check(str(node.ref(k)).endswith(f"{node.name}-{k}"), f"{f}: ref 拼错")
+                # 折叠规则（§4.11）：node_name 与 node_dir 同名时中间那段省略
+                want = k if node.name == node.node_dir else f"{node.name}-{k}"
+                check(str(node.ref(k)).endswith(want), f"{f}: ref 拼错")
             if node.kind == "alpha":
                 n_alpha += 1
-                check(all(str(node.ref(k)).endswith("-weight") for k in node.outputs)
+                check(all(node.ref(k).output == "weight" for k in node.outputs)
                       or len(node.outputs) > 1, f"{f}: 单输出 alpha 不叫 weight")
     return f"{len(files)} 个 yaml / {n_nodes} 个节点（{n_alpha} 个 alpha）全部加载通过"
 
@@ -1066,6 +1085,7 @@ TESTS = [
     test_version_bumps_only_on_rebuild,
     test_check_fingerprint,
     test_expand_wildcard,
+    test_store_root_accepts_region_qualified_path,
     test_path_ref_roundtrip,
     test_sparse_cost_is_proportional,
     test_sparse_write_of_nonfloat_dtype,

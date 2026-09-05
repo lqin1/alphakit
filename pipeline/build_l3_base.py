@@ -5,13 +5,13 @@
 L2 → L3 的文件格式、路径模板与 vendor 容错三副担子都留在这里。
 
 产出（region = us）：
-  g_common.field_base_px.field_base_px-adj_close_1500   秩-2 f4   复权收盘
-  g_common.field_base_px.field_base_px-volume_1500      秩-2 f4   原始成交股数
-  g_common.field_base_px.field_base_px-ret_1d_1500      秩-2 f4   复权日收益
-  g_common.field_base_px.field_base_px-adv_dollar       秩-2 f4   20 日平均成交额
-  g_common.field_base_px.field_base_px-market_ret       秩-1 f4   等权市场收益
-  g_common.factor_common_gics.factor_common_gics-sector       秩-2 i1   GICS sector 码
-  g_common.field_common_univ.field_common_univ-us_top400       秩-2 bool 按 ADV 排名的池子
+  g_common.field_base_px.adj_close_1500   秩-2 f4   复权收盘
+  g_common.field_base_px.volume_1500      秩-2 f4   原始成交股数
+  g_common.field_base_px.ret_1d_1500      秩-2 f4   复权日收益
+  g_common.field_base_px.adv_dollar       秩-2 f4   20 日平均成交额
+  g_common.field_base_px.market_ret       秩-1 f4   等权市场收益
+  g_common.factor_common_gics.sector       秩-2 i1   GICS sector 码
+  g_common.field_common_univ.us_top400       秩-2 bool 按 ADV 排名的池子
 """
 from __future__ import annotations
 
@@ -100,20 +100,20 @@ def main() -> int:
     common = dict(region=REGION, source="l2 base us", cutoff="1500",
                   l2_asof=l2_meta["asof"], builder="pipeline/build_l3_base.py")
     jobs = [
-        ("g_common.field_base_px.field_base_px-adj_close_1500", adj_close, ["di", "ii"], "f4",
+        ("g_common.field_base_px.adj_close_1500", adj_close, ["di", "ii"], "f4",
          {**common, "desc": "close × adj_factor"}),
-        ("g_common.field_base_px.field_base_px-volume_1500", volume, ["di", "ii"], "f4",
+        ("g_common.field_base_px.volume_1500", volume, ["di", "ii"], "f4",
          {**common, "desc": "原始成交股数, 未经拆股调整"}),
-        ("g_common.field_base_px.field_base_px-ret_1d_1500", ret_1d, ["di", "ii"], "f4",
+        ("g_common.field_base_px.ret_1d_1500", ret_1d, ["di", "ii"], "f4",
          {**common, "desc": "复权日收益"}),
-        ("g_common.field_base_px.field_base_px-adv_dollar", adv, ["di", "ii"], "f4",
+        ("g_common.field_base_px.adv_dollar", adv, ["di", "ii"], "f4",
          {**common, "desc": "20 日平均成交额(美元)"}),
-        ("g_common.field_base_px.field_base_px-market_ret", market_ret, ["di"], "f4",
+        ("g_common.field_base_px.market_ret", market_ret, ["di"], "f4",
          {**common, "desc": "等权市场收益; 无基准序列与股本, 非市值加权", "caveat": "equal_weighted"}),
-        ("g_common.factor_common_gics.factor_common_gics-sector", sector, ["di", "ii"], "i1",
+        ("g_common.factor_common_gics.sector", sector, ["di", "ii"], "i1",
          {**common, "desc": "GICS sector 官方码 10..60; 0 = 未知",
           "caveat": "当前快照回填, 无历史行业变更"}),
-        (f"g_common.field_common_univ.field_common_univ-us_top{args.top}", univ, ["di", "ii"], "bool",
+        (f"g_common.field_common_univ.us_top{args.top}", univ, ["di", "ii"], "bool",
          {**common, "desc": f"按 20 日 ADV 排名前 {args.top}"}),
     ]
     for ref, data, dims, dtype, meta in jobs:

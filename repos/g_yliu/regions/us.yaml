@@ -1,8 +1,14 @@
 calendar: nyse
 time_cutoff: "1500"
-return_metric: g_common.field_base_px.field_base_px-ret_1d_1500
-universe: g_common.field_common_univ.field_common_univ-us_top400
+return_metric: g_common.field_base_px.ret_1d_1500
+universe: g_common.field_common_univ.us_top400
 booksize: 20000000
+
+# 路径口径也归 region 管：同一个 region 下所有人读同一个 L3、写同一个 pnl_out,
+# 否则各自 --store 指到不同地方, 算出来的东西彼此无法比对, 而这正是 §二 要防的。
+# CLI 上显式给的 --store / --out 仍然优先, 这里只是缺省值。
+l3_root: storage/l3/us
+pnl_out: pnl_out
 cost_model: null
 sim:
   participation: 0.10

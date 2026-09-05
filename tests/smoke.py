@@ -54,16 +54,16 @@ def main() -> int:
           f"{s.axes.n_sessions} sessions × {s.axes.n_securities} securities")
     base = [r for r in s.list_refs() if r.startswith("g_common.")]
     check("base 节点齐全", len(base) >= 7, f"{len(base)} 个")
-    px = s.read("g_common.field_base_px.field_base_px-adj_close_1500")
+    px = s.read("g_common.field_base_px.adj_close_1500")
     check("秩-2 读回对齐到全局轴", px.shape == (s.axes.n_sessions, s.axes.n_securities),
           f"{px.shape}")
-    mr = s.read("g_common.field_base_px.field_base_px-market_ret")
+    mr = s.read("g_common.field_base_px.market_ret")
     check("秩-1 读回是 Series", mr.ndim == 1, f"{mr.shape}")
-    u = s.read("g_common.field_common_univ.field_common_univ-us_top400")
+    u = s.read("g_common.field_common_univ.us_top400")
     check("bool universe", u.dtypes.iloc[0] == bool, f"日均成员 {int(u.sum(axis=1).mean())}")
-    check("区间读", s.read("g_common.field_base_px.field_base_px-ret_1d_1500",
+    check("区间读", s.read("g_common.field_base_px.ret_1d_1500",
                           s.axes.date(-6), s.axes.date(-1)).shape[0] == 6)
-    check("通配展开", len(s.expand("g_common.field_base_px.field_base_px-*")) == 5)
+    check("通配展开", len(s.expand("g_common.field_base_px.*")) == 5)
 
     print("=== 3. 命名与编译期检查 ===")
     r = parse_ref("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight")
@@ -90,13 +90,13 @@ def main() -> int:
 
     print("=== 5. 产出正确性 ===")
     refs = s.list_refs()
-    for want in ["g_yliu.factor_yliu_liq.factor_yliu_liq-adv20",
+    for want in ["g_yliu.factor_yliu_liq.adv20",
                  "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight",
                  "g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight"]:
         check(f"落库 {want.split('.')[-1]}", want in refs)
-    if "g_yliu.factor_yliu_liq.factor_yliu_liq-adv20" in refs:
-        vol = s.read("g_common.field_base_px.field_base_px-volume_1500")
-        adv = s.read("g_yliu.factor_yliu_liq.factor_yliu_liq-adv20")
+    if "g_yliu.factor_yliu_liq.adv20" in refs:
+        vol = s.read("g_common.field_base_px.volume_1500")
+        adv = s.read("g_yliu.factor_yliu_liq.adv20")
         d = adv.dropna(how="all").index[-1]; i = list(px.index).index(d)
         ref_ = (px.iloc[i - 19:i + 1] * vol.iloc[i - 19:i + 1]).mean()
         got = adv.loc[d]; both = ref_.notna() & got.notna()
@@ -107,7 +107,7 @@ def main() -> int:
         a = s.read(w); row = a.dropna(how="all").iloc[-1]
         gross = float(row.abs().sum())
         check("combo Σ|w| = 1（scale 生效）", abs(gross - 1.0) < 1e-3, f"Σ|w| = {gross:.6f}")
-        pool = s.read("g_common.field_common_univ.field_common_univ-us_top400").loc[row.name]
+        pool = s.read("g_common.field_common_univ.us_top400").loc[row.name]
         outside = float(row[~pool].abs().sum())
         check("池外权重恰为 0（掩码第二道闸门）", outside == 0.0, f"池外 Σ|w| = {outside:g}")
 
@@ -118,7 +118,7 @@ def main() -> int:
     check("pnl 跑通", r.returncode == 0,
           "" if r.returncode == 0 else r.stderr.strip().splitlines()[-1][:110])
     d = REPO / "pnl_out" / "g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight"
-    for f in ("holding.feather", "pnl.feather", "daily.feather", "metrics.json"):
+    for f in ("holding.csv", "pnl.csv", "daily.csv", "metrics.json"):
         check(f"交付物 {f}", (d / f).exists())
     if (d / "metrics.json").exists():
         import json
