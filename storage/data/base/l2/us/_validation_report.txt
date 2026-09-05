@@ -1,0 +1,117 @@
+alphakit L2 validation report
+generated   : 2026-09-05T02:31:28+00:00
+contract    : docs/l2_schema.md §8 (V1..V8) + X-series structural checks
+l2_dir      : /home/ubuntu/workspace/alphakit/storage/data/base/l2/us
+raw_dir     : /home/ubuntu/workspace/alphakit/storage/data/base/l1/yahoo/chart
+registry    : /home/ubuntu/workspace/alphakit/registry/security_id.us.csv
+tables      : 250 pv, 239 cax, 250 sec_master, 250 industry, 2 calendar
+exit policy : 0 only if V1..V8 all PASS and no X-check FAILs; W-series findings never fail the run
+
+==============================================================================
+SUMMARY
+==============================================================================
+[PASS] V1   adjusted daily RETURNS match the vendor within 1bp per securit checked=  124,822 violations=      0
+[PASS] V2   split inversion direction, conditional on vendor-applied state checked=       17 violations=      0
+[PASS] V3   date axis: calendar sessions <-> pv files, no orphans/gaps     checked=      250 violations=      0
+[PASS] V4   referential integrity: no dup security_id per pv/cax file, all checked=  126,939 violations=      0
+[PASS] V5   OHLC sanity: low<=min(o,c), high>=max(o,c), high>=low, vol>=0, checked=  125,325 violations=      0
+[PASS] V6   sec_master ids unique, contiguous from 1; (security_id,ticker_ checked=      503 violations=      0
+[PASS] V7   coverage: per-security session counts; list n_sessions < 0.5*t checked=      503 violations=      0
+[PASS] V8   format: field count == header count, no raw '|', missing = emp checked=  377,843 violations=      0
+[PASS] X1   header of every L2 file matches the contract schema            checked=        - violations=      0
+[PASS] X2   filename YYYYMMDD == date column in every row; cax on the sess checked=        - violations=      0
+[PASS] X3   rows sorted by security_id ascending (§2)                      checked=        - violations=      0
+[PASS] X4   no duplicate (date, security_id) across the whole pv set       checked=  125,325 violations=      0
+[PASS] X5   cax: split_ratio==num/den, div_amount>0, fields mutually exclu checked=    1,614 violations=      0
+[PASS] X6   coverage recomputed from pv == _meta.json coverage_full/covera checked=      503 violations=      0
+[PASS] X7   ticker in pv/cax matches sec_master                            checked=  126,939 violations=      0
+[PASS] X8   calendar internal consistency (session ids, dates, n_securitie checked=      250 violations=      0
+[PASS] X9   cax events reconcile with raw vendor payload events            checked=    1,614 violations=      0
+[PASS] X10  adj_factor recomputed from the cax event log (§7.3)            checked=  124,822 violations=      0
+[PASS] X11  _meta.json splits_vendor_had_not_applied == observed (§7.1)    checked=       17 violations=      0
+[PASS] X12  industry: sec_master parity, GICS code<->name 1:1, int8 range  checked=  125,327 violations=      0
+[PASS] X13  session axis is GLOBAL across calendar year files (no reset)   checked=      250 violations=      0
+[PASS] X14  sec_master/industry are PIT: row set == {first_trade_date <= d checked=      250 violations=      0
+[PASS] X15  security_id registry: unique, contiguous, superset of the data checked=      503 violations=      0
+[WARN] W1   single-day |return| > 50% on adj_close_vendor (possible missed checked=  124,822 violations=      7
+[PASS] W2   numeric formatting (§2: px 6dp, factor 10dp, volume integer)   checked=  125,325 violations=      0
+[WARN] W3   misc data smells (zero volume, id ordering rule, _meta.json)   checked=        - violations=      0
+
+==============================================================================
+DETAIL
+==============================================================================
+
+[PASS] V1 — adjusted daily RETURNS match the vendor within 1bp per security
+    . EXEMPT MNST (security_id 210) 2026-08-11: |r_ours - r_vendor| = 0.503873 — vendor never back-adjusted the 2:1 split (§7.1, jump=1.9846 vs ratio=2.0000) — our series is right, the vendor's is not
+    . 503 security(ies) with >=2 sessions compared in return space (§7.3: factors are only defined up to a constant, so levels are not compared)
+    . max |r_ours - r_vendor| over all non-exempt pairs = 3.565e-07 (DOC 2025-10-31)
+
+[PASS] V2 — split inversion direction, conditional on vendor-applied state (§7.1)
+    . WARN: storage/data/base/l2/us/cax/2025/10/cax.20251030:2 date=2025-10-30 sid=11 ticker=HON event='split': split_ratio=1.061 is within +/-15% of 1.0 (§7.2 spin-off encoded as a split), so 'jump' and 'no jump' are indistinguishable — the vendor no-jump half is skipped and §7.1 defaults to 'applied'
+    . WARN: storage/data/base/l2/us/cax/2026/01/cax.20260105:2 date=2026-01-05 sid=106 ticker=CMCSA event='split': split_ratio=1.067 is within +/-15% of 1.0 (§7.2 spin-off encoded as a split), so 'jump' and 'no jump' are indistinguishable — the vendor no-jump half is skipped and §7.1 defaults to 'applied'
+    . WARN: storage/data/base/l2/us/cax/2026/06/cax.20260629:2 date=2026-06-29 sid=11 ticker=HON event='split': split_ratio=0.9535 is within +/-15% of 1.0 (§7.2 spin-off encoded as a split), so 'jump' and 'no jump' are indistinguishable — the vendor no-jump half is skipped and §7.1 defaults to 'applied'
+    . WARN: storage/data/base/l2/us/cax/2026/07/cax.20260701:2 date=2026-07-01 sid=65 ticker=SPGI event='split': split_ratio=1.057 is within +/-15% of 1.0 (§7.2 spin-off encoded as a split), so 'jump' and 'no jump' are indistinguishable — the vendor no-jump half is skipped and §7.1 defaults to 'applied'
+    . storage/data/base/l2/us/cax/2026/08/cax.20260811:3 date=2026-08-11 sid=210 ticker=MNST event='split': previous available bar is 2026-08-07, 2 sessions before the ex-date (security did not trade on the adjacent session)
+    . storage/data/base/l2/us/cax/2026/08/cax.20260811:3 date=2026-08-11 sid=210 ticker=MNST event='split': vendor had NOT applied this split (§7.1 jump=1.9846 vs ratio=2.0000); asserting the opposite: raw_close == quote.close and both keep the step
+    . 16 split event(s) classified vendor-applied, 1 not-applied (§7.1)
+    . not-applied events: MNST 2026-08-11 ratio=2
+
+[PASS] V7 — coverage: per-security session counts; list n_sessions < 0.5*total
+    . total sessions in calendar: 250; securities in sec_master: 503
+    . session-count distribution: min=52  p01=250  p05=250  p25=250  p50=250  p75=250  p95=250  max=250  mean=249.2
+    . histogram: [0..0]=0  [1..62]=1  [63..125]=1  [126..225]=1  [226..249]=2  [250..250]=498
+    . 2 security(ies) with n_sessions < 0.5 * 250 = 125:
+    .     security_id=503 ticker_yahoo='HONA' n_sessions=52 (20.8% of the range)
+    .     security_id=502 ticker_yahoo='FDXF' n_sessions=65 (26.0% of the range)
+    . WARN: 2 security(ies) below the 0.5 coverage threshold — listed above (advisory, not a V7 failure)
+
+[PASS] X6 — coverage recomputed from pv == _meta.json coverage_full/coverage_partial
+    . recomputed from pv: 498 security(ies) with full 250-session coverage, 5 partial (FDXF=65, FISV=249, HONA=52, MNST=249, Q=210)
+
+[PASS] X10 — adj_factor recomputed from the cax event log (§7.3)
+    . WARN: DD div 2025-08-29: no usable prior close, term dropped
+    . WARN: HUBB div 2025-08-29: no usable prior close, term dropped
+    . WARN: WY div 2025-08-29: no usable prior close, term dropped
+    . WARN: UNP div 2025-08-29: no usable prior close, term dropped
+    . WARN: DOV div 2025-08-29: no usable prior close, term dropped
+    . WARN: ... 14 more dividend term(s) dropped for lack of a prior close (ex-date at the start of the range)
+
+[PASS] X11 — _meta.json splits_vendor_had_not_applied == observed (§7.1)
+    . declared == observed: [('MNST', '2026-08-11')]
+
+[PASS] X12 — industry: sec_master parity, GICS code<->name 1:1, int8 range
+    . sectors present: 10=Energy, 15=Materials, 20=Industrials, 25=Consumer Discretionary, 30=Consumer Staples, 35=Health Care, 40=Financials, 45=Information Technology, 50=Communication Services, 55=Utilities, 60=Real Estate
+    . 250 PIT industry file(s) reconciled against sec_master session by session
+
+[PASS] X13 — session axis is GLOBAL across calendar year files (no reset)
+    . storage/data/base/l2/us/calendar/2025/calendar.2025: session 0 (2025-08-29) .. 85 (2025-12-31), 86 rows
+    . storage/data/base/l2/us/calendar/2026/calendar.2026: session 86 (2026-01-02) .. 249 (2026-08-27), 164 rows
+    . global axis: 250 sessions, 0 (2025-08-29) .. 249 (2026-08-27) across 2 year file(s)
+    . year files cover only the trading days inside the data window, so a partial first/last year is expected and not asserted against
+
+[PASS] X14 — sec_master/industry are PIT: row set == {first_trade_date <= d}
+    . PIT population over 250 sessions: 2025-08-29=500 -> 2025-10-27=501 -> 2026-05-27=502 -> 2026-06-15=503
+    . 503 distinct securities ever listed; row count runs 500 -> 503
+
+[PASS] X15 — security_id registry: unique, contiguous, superset of the data
+    . 503 security_id(s) used in L2, all resolved; registry holds 503 entry(ies) spanning 1..503
+
+[WARN] W1 — single-day |return| > 50% on adj_close_vendor (possible missed cax)
+    7 violation(s); showing first 7:
+      - storage/data/base/l2/us/pv/2026/07/pv.20260720:211 date=2026-07-20 sid=210 ticker=MNST: adj_close_vendor 97.5 (2026-07-17) -> 47.724998 (2026-07-20) = -51.1% — verify no corp action was missed (real 50% moves do exist)
+      - storage/data/base/l2/us/pv/2026/07/pv.20260723:211 date=2026-07-23 sid=210 ticker=MNST: adj_close_vendor 47.834999 (2026-07-22) -> 93.559998 (2026-07-23) = +95.6% — verify no corp action was missed (real 50% moves do exist)
+      - storage/data/base/l2/us/pv/2026/07/pv.20260731:211 date=2026-07-31 sid=210 ticker=MNST: adj_close_vendor 97.650002 (2026-07-30) -> 48.189999 (2026-07-31) = -50.7% — verify no corp action was missed (real 50% moves do exist)
+      - storage/data/base/l2/us/pv/2026/08/pv.20260803:211 date=2026-08-03 sid=210 ticker=MNST: adj_close_vendor 48.189999 (2026-07-31) -> 93.550003 (2026-08-03) = +94.1% — verify no corp action was missed (real 50% moves do exist)
+      - storage/data/base/l2/us/pv/2026/08/pv.20260806:211 date=2026-08-06 sid=210 ticker=MNST: adj_close_vendor 94.459999 (2026-08-05) -> 47.080002 (2026-08-06) = -50.2% — verify no corp action was missed (real 50% moves do exist)
+      - storage/data/base/l2/us/pv/2026/08/pv.20260807:211 date=2026-08-07 sid=210 ticker=MNST: adj_close_vendor 47.080002 (2026-08-06) -> 90.360001 (2026-08-07) = +91.9% — verify no corp action was missed (real 50% moves do exist)
+      - storage/data/base/l2/us/pv/2026/08/pv.20260819:477 date=2026-08-19 sid=476 ticker=MRNA: adj_close_vendor 62.959999 (2026-08-18) -> 174.380005 (2026-08-19) = +177.0% — verify no corp action was missed (real 50% moves do exist)
+
+[WARN] W3 — misc data smells (zero volume, id ordering rule, _meta.json)
+    . WARN: docs/architecture.md §4.5/§5.1 still show `/data/l2/daily_bar/{date}.parquet|csv` as the L2 source path; the current contract (l2_schema.md §1) delivers `storage/data/base/l2/us/pv.{YYYYMMDD}` and `cax.{YYYYMMDD}` with no extension — the upstream doc is stale
+
+==============================================================================
+contract assertions V1..V8 failing : none
+all blocking checks failing        : none
+advisory (WARN) checks             : W1, W3
+RESULT: PASS
+==============================================================================

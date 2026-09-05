@@ -1,0 +1,502 @@
+date|security_id|ticker|ticker_nasdaq|ticker_cqs|ticker_yahoo|name|exchange|cik|is_etf|round_lot|financial_status|first_trade_date|currency|ref_asof|source
+2026-03-10|1|AEP|AEP||AEP|American Electric Power Company, Inc. - Common Stock|Q|0000004904|0|100|N|1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|2|BA|BA|BA|BA|Boeing Company (The) Common Stock|N|0000012927|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|3|CAT|CAT|CAT|CAT|Caterpillar, Inc. Common Stock|N|0000018230|0|40||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|4|CNP|CNP|CNP|CNP|CenterPoint Energy, Inc (Holding Co) Common Stock|N|0001130310|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|5|CVX|CVX|CVX|CVX|Chevron Corporation Common Stock|N|0000093410|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|6|DIS|DIS|DIS|DIS|Walt Disney Company (The) Common Stock|N|0001744489|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|7|DTE|DTE|DTE|DTE|DTE Energy Company Common Stock|N|0000936340|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|8|ED|ED|ED|ED|Consolidated Edison, Inc. Common Stock|N|0001047862|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|9|GD|GD|GD|GD|General Dynamics Corporation Common Stock|N|0000040533|0|40||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|10|GE|GE|GE|GE|GE Aerospace Common Stock|N|0000040545|0|40||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|11|HON|HON||HON|Honeywell International Inc. - Common Stock|Q|0000773840|0|100|N|1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|12|HPQ|HPQ|HPQ|HPQ|HP Inc. Common Stock|N|0000047217|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|13|IBM|IBM|IBM|IBM|International Business Machines Corporation Common Stock|N|0000051143|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|14|IP|IP|IP|IP|International Paper Company Common Stock|N|0000051434|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|15|JNJ|JNJ|JNJ|JNJ|Johnson & Johnson Common Stock|N|0000200406|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|16|KO|KO|KO|KO|Coca-Cola Company (The) Common Stock|N|0000021344|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|17|KR|KR|KR|KR|Kroger Company (The) Common Stock|N|0000056873|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|18|LMT|LMT|LMT|LMT|Lockheed Martin Corporation Common Stock|N|0000936468|0|40||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|19|MMM|MMM|MMM|MMM|3M Company Common Stock|N|0000066740|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|20|MO|MO|MO|MO|Altria Group, Inc.|N|0000764180|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|21|MRK|MRK|MRK|MRK|Merck & Company, Inc. Common Stock (new)|N|0000310158|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|22|MSI|MSI|MSI|MSI|Motorola Solutions, Inc. Common Stock|N|0000068505|0|40||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|23|PG|PG|PG|PG|Procter & Gamble Company (The) Common Stock|N|0000080424|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|24|XOM|XOM|XOM|XOM|ExxonMobil Holdings Corporation Common Stock|N|0002115436|0|100||1962-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|25|RTX|RTX|RTX|RTX|RTX Corporation Common Stock|N|0000101829|0|100||1962-04-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|26|MCD|MCD|MCD|MCD|McDonald's Corporation Common Stock|N|0000063908|0|40||1966-07-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|27|AXP|AXP|AXP|AXP|American Express Company Common Stock|N|0000004962|0|40||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|28|BMY|BMY|BMY|BMY|Bristol-Myers Squibb Company Common Stock|N|0000014272|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|29|DD|DD|DD|DD|DuPont de Nemours, Inc. Common Stock|N|0001666700|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|30|DE|DE|DE|DE|Deere & Company Common Stock|N|0000315189|0|40||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|31|EMR|EMR|EMR|EMR|Emerson Electric Company Common Stock|N|0000032604|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|32|ETN|ETN|ETN|ETN|Eaton Corporation, PLC Ordinary Shares|N|0001551182|0|40||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|33|ETR|ETR|ETR|ETR|Entergy Corporation Common Stock|N|0000065984|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|34|F|F|F|F|Ford Motor Company Common Stock|N|0000037996|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|35|HAL|HAL|HAL|HAL|Halliburton Company Common Stock|N|0000045012|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|36|LLY|LLY|LLY|LLY|Eli Lilly and Company Common Stock|N|0000059478|0|40||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|37|PCG|PCG|PCG|PCG|Pacific Gas & Electric Co. Common Stock|N|0001004980|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|38|PEP|PEP||PEP|PepsiCo, Inc. - Common Stock|Q|0000077476|0|100|N|1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|39|PFE|PFE|PFE|PFE|Pfizer, Inc. Common Stock|N|0000078003|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|40|TXN|TXN||TXN|Texas Instruments Incorporated - Common Stock|Q|0000097476|0|100|N|1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|41|WFC|WFC|WFC|WFC|Wells Fargo & Company Common Stock|N|0000072971|0|100||1972-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|42|HUBB|HUBB|HUBB|HUBB|Hubbell Inc Common Stock|N|0000048898|0|40||1972-06-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|43|WMT|WMT||WMT|Walmart Inc. - Common Stock|Q|0000104169|0|100|N|1972-08-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|44|AIG|AIG|AIG|AIG|American International Group, Inc. New Common Stock|N|0000005272|0|100||1973-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|45|AVY|AVY|AVY|AVY|Avery Dennison Corporation Common Stock|N|0000008818|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|46|BAC|BAC|BAC|BAC|Bank of America Corporation Common Stock|N|0000070858|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|47|BALL|BALL|BALL|BALL|Ball Corporation Common Stock|N|0000009389|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|48|BDX|BDX|BDX|BDX|Becton, Dickinson and Company Common Stock|N|0000010795|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|49|CLX|CLX|CLX|CLX|Clorox Company (The) Common Stock|N|0000021076|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|50|CMI|CMI|CMI|CMI|Cummins Inc. Common Stock|N|0000026172|0|40||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|51|CMS|CMS|CMS|CMS|CMS Energy Corporation Common Stock|N|0000811156|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|52|CVS|CVS|CVS|CVS|CVS Health Corporation Common Stock|N|0000064803|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|53|ECL|ECL|ECL|ECL|Ecolab Inc. Common Stock|N|0000031462|0|40||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|54|ES|ES|ES|ES|Eversource Energy (D/B/A) Common Stock|N|0000072741|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|55|EVRG|EVRG||EVRG|Evergy, Inc. - Common Stock|Q|0001711269|0|100|N|1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|56|GWW|GWW|GWW|GWW|W.W. Grainger, Inc. Common Stock|N|0000277135|0|10||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|57|LNT|LNT||LNT|Alliant Energy Corporation - Common Stock|Q|0000352541|0|100|N|1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|58|MKC|MKC|MKC|MKC|McCormick & Company, Incorporated Common Stock|N|0000063754|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|59|MRSH|MRSH|MRSH|MRSH|Marsh Common Stock|N|0000062709|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|60|NEE|NEE|NEE|NEE|NextEra Energy, Inc. Common Stock|N|0000753308|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|61|NI|NI|NI|NI|NiSource Inc Common Stock|N|0001111711|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|62|PNW|PNW|PNW|PNW|Pinnacle West Capital Corporation Common Stock|N|0000764622|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|63|RVTY|RVTY|RVTY|RVTY|Revvity, Inc. Common Stock|N|0000031791|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|64|SNA|SNA|SNA|SNA|Snap-On Incorporated Common Stock|N|0000091440|0|40||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|65|SPGI|SPGI|SPGI|SPGI|S&P Global Inc. Common Stock|N|0000064040|0|40||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|66|TER|TER||TER|Teradyne, Inc. - Common Stock|Q|0000097210|0|40|N|1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|67|TGT|TGT|TGT|TGT|Target Corporation Common Stock|N|0000027419|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|68|TXT|TXT|TXT|TXT|Textron Inc. Common Stock|N|0000217346|0|100||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|69|VMC|VMC|VMC|VMC|Vulcan Materials Company (Holding Company) Common Stock|N|0001396009|0|40||1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|70|XEL|XEL||XEL|Xcel Energy Inc. - Common Stock|Q|0000072903|0|100|N|1973-02-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|71|ITW|ITW|ITW|ITW|Illinois Tool Works Inc. Common Stock|N|0000049826|0|40||1973-03-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|72|CL|CL|CL|CL|Colgate-Palmolive Company Common Stock|N|0000021665|0|100||1973-05-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|73|EXC|EXC||EXC|Exelon Corporation - Common Stock|Q|0001109357|0|100|N|1973-05-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|74|MDT|MDT|MDT|MDT|Medtronic plc. Ordinary Shares|N|0001613103|0|100||1973-05-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|75|BNY|BNY|BNY|BNY|The Bank of New York Mellon Corporation Common Stock|N|0001390777|0|100||1973-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|76|EIX|EIX|EIX|EIX|Edison International Common Stock|N|0000827052|0|100||1973-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|77|FRT|FRT|FRT|FRT|Federal Realty Investment Trust Common Stock|N|0000034903|0|100||1973-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|78|PNR|PNR|PNR|PNR|Pentair plc. Ordinary Share|N|0000077360|0|100||1973-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|79|USB|USB|USB|USB|U.S. Bancorp Common Stock|N|0000036104|0|100||1973-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|80|WY|WY|WY|WY|Weyerhaeuser Company Common Stock|N|0000106535|0|100||1973-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|81|SYY|SYY|SYY|SYY|Sysco Corporation Common Stock|N|0000096021|0|100||1973-05-08|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|82|WRB|WRB|WRB|WRB|W.R. Berkley Corporation Common Stock|N|0000011544|0|100||1973-10-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|83|IFF|IFF|IFF|IFF|International Flavors & Fragrances, Inc. Common Stock|N|0000051253|0|100||1974-12-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|84|TAP|TAP|TAP|TAP|Molson Coors Beverage Company Class B Common Stock|N|0000024545|0|100||1975-06-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|85|PNC|PNC|PNC|PNC|PNC Financial Services Group, Inc. (The) Common Stock|N|0000713676|0|100||1975-11-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|86|TRV|TRV|TRV|TRV|The Travelers Companies, Inc. Common Stock|N|0000086312|0|40||1975-11-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|87|C|C|C|C|Citigroup, Inc. Common Stock|N|0000831001|0|100||1977-01-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|88|FDX|FDX|FDX|FDX|FedEx Corporation Common Stock|N|0001048911|0|40||1978-04-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|89|WDC|WDC||WDC|Western Digital Corporation - Common Stock|Q|0000106040|0|40|N|1978-10-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|90|DHR|DHR|DHR|DHR|Danaher Corporation Common Stock|N|0000313616|0|100||1978-12-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|91|APA|APA||APA|APA Corporation - Common Stock|Q|0001841666|0|100|N|1979-05-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|92|LUV|LUV|LUV|LUV|Southwest Airlines Company Common Stock|N|0000092380|0|100||1980-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|93|PEG|PEG|PEG|PEG|Public Service Enterprise Group Incorporated Common Stock|N|0000788784|0|100||1980-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|94|UNP|UNP|UNP|UNP|Union Pacific Corporation Common Stock|N|0000100885|0|100||1980-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|95|ABT|ABT|ABT|ABT|Abbott Laboratories Common Stock|N|0000001800|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|96|ADI|ADI||ADI|Analog Devices, Inc. - Common Stock|Q|0000006281|0|40|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|97|ADM|ADM|ADM|ADM|Archer-Daniels-Midland Company Common Stock|N|0000007084|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|98|ADP|ADP||ADP|Automatic Data Processing, Inc. - Common Stock|Q|0000008670|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|99|AFL|AFL|AFL|AFL|AFLAC Incorporated Common Stock|N|0000004977|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|100|AMAT|AMAT||AMAT|Applied Materials, Inc. - Common Stock|Q|0000006951|0|40|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|101|AMD|AMD||AMD|Advanced Micro Devices, Inc. - Common Stock|Q|0000002488|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|102|APD|APD|APD|APD|Air Products and Chemicals, Inc. Common Stock|N|0000002969|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|103|BF-B|BF.B|BF.B|BF-B|Brown Forman Inc Class B Common Stock|N|0000014693|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|104|CHD|CHD|CHD|CHD|Church & Dwight Company, Inc. Common Stock|N|0000313927|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|105|CINF|CINF||CINF|Cincinnati Financial Corporation - Common Stock|Q|0000020286|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|106|CMCSA|CMCSA||CMCSA|Comcast Corporation - Class A Common Stock|Q|0001166691|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|107|D|D|D|D|Dominion Energy, Inc. Common Stock|N|0000715957|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|108|DOV|DOV|DOV|DOV|Dover Corporation Common Stock|N|0000029905|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|109|DUK|DUK|DUK|DUK|Duke Energy Corporation (Holding Company) Common Stock|N|0001326160|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|110|EFX|EFX|EFX|EFX|Equifax, Inc. Common Stock|N|0000033185|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|111|EQT|EQT|EQT|EQT|EQT Corporation Common Stock|N|0000033213|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|112|FITB|FITB|FITB|FITB|Fifth Third Bancorp Common Stock|N|0000035527|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|113|GIS|GIS|GIS|GIS|General Mills, Inc. Common Stock|N|0000040704|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|114|GPC|GPC|GPC|GPC|Genuine Parts Company Common Stock|N|0000040987|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|115|HAS|HAS||HAS|Hasbro, Inc. - Common Stock|Q|0000046080|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|116|HBAN|HBAN||HBAN|Huntington Bancshares Incorporated - Common Stock|Q|0000049196|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|117|HRL|HRL|HRL|HRL|Hormel Foods Corporation Common Stock|N|0000048465|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|118|HST|HST||HST|Host Hotels & Resorts, Inc. - Common Stock|Q|0001070750|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|119|HSY|HSY|HSY|HSY|The Hershey Company Common Stock|N|0000047111|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|120|INTC|INTC||INTC|Intel Corporation - Common Stock|Q|0000050863|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|121|J|J|J|J|Jacobs Solutions Inc. Common Stock|N|0000052988|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|122|JPM|JPM|JPM|JPM|JP Morgan Chase & Co. Common Stock|N|0000019617|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|123|KMB|KMB||KMB|Kimberly-Clark Corporation - Common Stock|Q|0000055785|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|124|L|L|L|L|Loews Corporation Common Stock|N|0000060086|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|125|LEN|LEN|LEN|LEN|Lennar Corporation Class A Common Stock|N|0000920760|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|126|LOW|LOW|LOW|LOW|Lowe's Companies, Inc. Common Stock|N|0000060667|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|127|MAS|MAS|MAS|MAS|Masco Corporation Common Stock|N|0000062996|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|128|MTB|MTB|MTB|MTB|M&T Bank Corporation Common Stock|N|0000036270|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|129|NEM|NEM|NEM|NEM|Newmont Corporation|N|0001164727|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|130|NTRS|NTRS||NTRS|Northern Trust Corporation - Common Stock|Q|0000073124|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|131|NUE|NUE|NUE|NUE|Nucor Corporation Common Stock|N|0000073309|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|132|OMC|OMC|OMC|OMC|Omnicom Group Inc. Common Stock|N|0000029989|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|133|PCAR|PCAR||PCAR|PACCAR Inc. - Common Stock|Q|0000075362|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|134|PGR|PGR|PGR|PGR|Progressive Corporation (The) Common Stock|N|0000080661|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|135|PH|PH|PH|PH|Parker-Hannifin Corporation Common Stock|N|0000076334|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|136|PHM|PHM|PHM|PHM|PulteGroup, Inc. Common Stock|N|0000822416|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|137|PPG|PPG|PPG|PPG|PPG Industries, Inc. Common Stock|N|0000079879|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|138|PPL|PPL|PPL|PPL|PPL Corporation Common Stock|N|0000922224|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|139|RF|RF|RF|RF|Regions Financial Corporation Common Stock|N|0001281761|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|140|ROL|ROL|ROL|ROL|Rollins, Inc. Common Stock|N|0000084839|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|141|SHW|SHW|SHW|SHW|Sherwin-Williams Company (The) Common Stock|N|0000089800|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|142|STT|STT|STT|STT|State Street Corporation Common Stock|N|0000093751|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|143|SWK|SWK|SWK|SWK|Stanley Black & Decker, Inc. Common Stock|N|0000093556|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|144|SYK|SYK|SYK|SYK|Stryker Corporation Common Stock|N|0000310764|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|145|TMO|TMO|TMO|TMO|Thermo Fisher Scientific Inc Common Stock|N|0000097745|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|146|TPL|TPL|TPL|TPL|Texas Pacific Land Corporation Common Stock|N|0001811074|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|147|TSN|TSN|TSN|TSN|Tyson Foods, Inc. Common Stock|N|0000100493|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|148|TT|TT|TT|TT|Trane Technologies plc|N|0001466258|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|149|TYL|TYL|TYL|TYL|Tyler Technologies, Inc. Common Stock|N|0000860731|0|40||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|150|UDR|UDR|UDR|UDR|UDR, Inc. Common Stock|N|0000074208|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|151|VTRS|VTRS||VTRS|Viatris Inc. - Common Stock|Q|0001792044|0|100|N|1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|152|WEC|WEC|WEC|WEC|WEC Energy Group, Inc. Common Stock|N|0000783325|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|153|WST|WST|WST|WST|West Pharmaceutical Services, Inc. Common Stock|N|0000105770|0|100||1980-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|154|NDSN|NDSN||NDSN|Nordson Corporation - Common Stock|Q|0000072331|0|40|N|1980-03-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|155|TFC|TFC|TFC|TFC|Truist Financial Corporation Common Stock|N|0000092230|0|100||1980-03-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|156|WELL|WELL|WELL|WELL|Welltower Inc. Common Stock|N|0000766704|0|100||1980-03-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|157|AON|AON|AON|AON|Aon plc Class A Ordinary Shares (Ireland)|N|0000315293|0|40||1980-06-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|158|GL|GL|GL|GL|Globe Life Inc. Common Stock|N|0000320335|0|100||1980-10-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|159|OKE|OKE|OKE|OKE|ONEOK, Inc. Common Stock|N|0001039684|0|100||1980-10-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|160|KLAC|KLAC||KLAC|KLA Corporation  - Common Stock|Q|0000319201|0|10|N|1980-10-08|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|161|CSX|CSX||CSX|CSX Corporation - Common Stock|Q|0000277948|0|100|N|1980-11-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|162|PSA|PSA|PSA|PSA|Public Storage Common Stock|N|0001393311|0|40||1980-11-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|163|NKE|NKE|NKE|NKE|Nike, Inc. Common Stock|N|0000320187|0|100||1980-12-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|164|AAPL|AAPL||AAPL|Apple Inc. - Common Stock|Q|0000320193|0|40|N|1980-12-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|165|BRO|BRO|BRO|BRO|Brown & Brown, Inc. Common Stock|N|0000079282|0|100||1981-02-11|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|166|UHS|UHS|UHS|UHS|Universal Health Services, Inc. Common Stock|N|0000352915|0|100||1981-07-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|167|HD|HD|HD|HD|Home Depot, Inc. (The) Common Stock|N|0000354950|0|40||1981-09-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|168|BAX|BAX|BAX|BAX|Baxter International Inc. Common Stock|N|0000010456|0|100||1981-10-27|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|169|COP|COP|COP|COP|ConocoPhillips Common Stock|N|0001163165|0|100||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|170|GLW|GLW|GLW|GLW|Corning Incorporated Common Stock|N|0000024741|0|100||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|171|HUM|HUM|HUM|HUM|Humana Inc. Common Stock|N|0000049071|0|100||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|172|LHX|LHX|LHX|LHX|L3Harris Technologies, Inc. Common Stock|N|0000202058|0|40||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|173|NOC|NOC|NOC|NOC|Northrop Grumman Corporation Common Stock|N|0001133421|0|40||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|174|OXY|OXY|OXY|OXY|Occidental Petroleum Corporation Common Stock|N|0000797468|0|100||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|175|ROK|ROK|ROK|ROK|Rockwell Automation, Inc. Common Stock|N|0001024478|0|40||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|176|SLB|SLB|SLB|SLB|SLB Limited Common Shares|N|0000087347|0|100||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|177|SO|SO|SO|SO|Southern Company (The) Common Stock|N|0000092122|0|100||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|178|WMB|WMB|WMB|WMB|Williams Companies, Inc. (The) Common Stock|N|0000107263|0|100||1981-12-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|179|VLO|VLO|VLO|VLO|Valero Energy Corporation Common Stock|N|0001035002|0|100||1982-01-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|180|CI|CI|CI|CI|The Cigna Group Common Stock|N|0001739940|0|40||1982-03-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|181|NSC|NSC|NSC|NSC|Norfolk Southern Corporation Common Stock|N|0000702165|0|40||1982-06-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|182|COO|COO||COO|The Cooper Companies, Inc.  - Common Stock|Q|0000711404|0|100|N|1983-01-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|183|AMGN|AMGN||AMGN|Amgen Inc. - Common Stock|Q|0000318154|0|40|N|1983-06-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|184|RJF|RJF|RJF|RJF|Raymond James Financial, Inc. Common Stock|N|0000720005|0|100||1983-07-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|185|WSM|WSM|WSM|WSM|Williams-Sonoma, Inc. Common Stock (DE)|N|0000719955|0|100||1983-07-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|186|CAH|CAH|CAH|CAH|Cardinal Health, Inc. Common Stock|N|0000721371|0|100||1983-08-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|187|CTAS|CTAS||CTAS|Cintas Corporation - Common Stock|Q|0000723254|0|100|N|1983-08-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|188|PAYX|PAYX||PAYX|Paychex, Inc. - Common Stock|Q|0000723531|0|100|N|1983-08-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|189|BEN|BEN|BEN|BEN|Franklin Templeton, Inc. Common Stock|N|0000038777|0|100||1983-09-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|190|AOS|AOS|AOS|AOS|A.O. Smith Corporation Common Stock|N|0000091142|0|100||1983-09-30|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|191|CASY|CASY||CASY|Caseys General Stores, Inc. - Common Stock|Q|0000726958|0|40|N|1983-10-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|192|T|T|T|T|AT&T Inc.|N|0000732717|0|100||1983-11-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|193|VZ|VZ|VZ|VZ|Verizon Communications Inc. Common Stock|N|0000732712|0|100||1983-11-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|194|JBHT|JBHT||JBHT|J.B. Hunt Transport Services, Inc. - Common Stock|Q|0000728535|0|100|N|1983-11-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|195|ATO|ATO|ATO|ATO|Atmos Energy Corporation Common Stock|N|0000731802|0|100||1983-12-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|196|LRCX|LRCX||LRCX|Lam Research Corporation - Common Stock|Q|0000707549|0|100|N|1984-05-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|197|MU|MU||MU|Micron Technology, Inc. - Common Stock|Q|0000723125|0|40|N|1984-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|198|AJG|AJG|AJG|AJG|Arthur J. Gallagher & Co. Common Stock|N|0000354190|0|100||1984-06-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|199|AME|AME|AME|AME|AMETEK, Inc.|N|0001037868|0|100||1984-07-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|200|SWKS|SWKS||SWKS|Skyworks Solutions, Inc. - Common Stock|Q|0000004127|0|100|N|1984-09-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|201|EXPD|EXPD|EXPD|EXPD|Expeditors International of Washington, Inc. Common Stock|N|0000746515|0|100||1984-09-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|202|UNH|UNH|UNH|UNH|UnitedHealth Group Incorporated Common Stock (DE)|N|0000731766|0|40||1984-10-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|203|BBY|BBY|BBY|BBY|Best Buy Co., Inc. Common Stock|N|0000764478|0|100||1985-04-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|204|DOC|DOC|DOC|DOC|Healthpeak Properties, Inc. Common Stock|N|0000765880|0|100||1985-05-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|205|ADSK|ADSK||ADSK|Autodesk, Inc. - Common Stock|Q|0000769397|0|100|N|1985-06-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|206|DVN|DVN|DVN|DVN|Devon Energy Corporation Common Stock|N|0001090012|0|100||1985-07-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|207|NVR|NVR|NVR|NVR|NVR, Inc. Common Stock|N|0000906163|0|10||1985-07-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|208|ROST|ROST||ROST|Ross Stores, Inc. - Common Stock|Q|0000745732|0|100|N|1985-08-08|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|209|JKHY|JKHY||JKHY|Jack Henry & Associates, Inc. - Common Stock|Q|0000779152|0|100|N|1985-11-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|210|MNST|MNST||MNST|Monster Beverage Corporation - Common Stock|Q|0000865752|0|100|N|1985-12-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|211|ORCL|ORCL|ORCL|ORCL|Oracle Corporation Common Stock|N|0001341439|0|100||1986-03-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|212|MSFT|MSFT||MSFT|Microsoft Corporation - Common Stock|Q|0000789019|0|40|N|1986-03-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|213|TROW|TROW||TROW|T. Rowe Price Group, Inc. - Common Stock|Q|0001113169|0|100|N|1986-04-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|214|COST|COST||COST|Costco Wholesale Corporation - Common Stock|Q|0000909832|0|40|N|1986-07-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|215|ADBE|ADBE||ADBE|Adobe Inc. - Common Stock|Q|0000796343|0|40|N|1986-08-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|216|FISV|FISV||FISV|Fiserv, Inc. - Common Stock|Q|0000798354|0|100|N|1986-09-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|217|BKR|BKR||BKR|Baker Hughes Company - Common Stock|Q|0001701605|0|100|N|1987-04-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|218|CDNS|CDNS||CDNS|Cadence Design Systems, Inc. - Common Stock|Q|0000813672|0|40|N|1987-06-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|219|TJX|TJX|TJX|TJX|TJX Companies, Inc. (The) Common Stock|N|0000109198|0|100||1987-06-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|220|FICO|FICO|FICO|FICO|Fair Isaac Corporation Common Stock|N|0000814547|0|10||1987-07-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|221|CCL|CCL|CCL|CCL|Carnival Corporation Ltd. Common Shares|N|0000815097|0|100||1987-07-24|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|222|FAST|FAST||FAST|Fastenal Company - Common Stock|Q|0000815556|0|100|N|1987-08-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|223|SCHW|SCHW|SCHW|SCHW|Charles Schwab Corporation (The) Common Stock|N|0000316709|0|100||1987-09-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|224|JCI|JCI|JCI|JCI|Johnson Controls International plc Ordinary Share|N|0000833444|0|100||1987-09-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|225|COHR|COHR|COHR|COHR|Coherent Corp. Common Stock|N|0000820318|0|40||1987-10-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|226|KEY|KEY|KEY|KEY|KeyCorp Common Stock|N|0000091576|0|100||1987-11-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|227|MOS|MOS|MOS|MOS|Mosaic Company (The) Common Stock|N|0001285785|0|100||1988-01-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|228|MGM|MGM|MGM|MGM|MGM Resorts International Common Stock|N|0000789570|0|100||1988-05-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|229|WM|WM|WM|WM|Waste Management, Inc. Common Stock|N|0000823768|0|100||1988-06-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|230|TECH|TECH||TECH|Bio-Techne Corp - Common Stock|Q|0000842023|0|100|N|1989-02-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|231|IEX|IEX|IEX|IEX|IDEX Corporation Common Stock|N|0000832101|0|100||1989-06-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|232|GEN|GEN||GEN|Gen Digital Inc. - Common Stock|Q|0000849399|0|100|N|1989-06-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|233|CRH|CRH|CRH|CRH|CRH PLC Ordinary Shares|N|0000849395|0|100||1989-07-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|234|EOG|EOG|EOG|EOG|EOG Resources, Inc. Common Stock|N|0000821189|0|100||1989-10-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|235|PTC|PTC||PTC|PTC Inc. - Common Stock|Q|0000857005|0|100|N|1989-12-08|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|236|CSCO|CSCO||CSCO|Cisco Systems, Inc. - Common Stock|Q|0000858877|0|100|N|1990-02-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|237|LH|LH|LH|LH|Labcorp Holdings Inc. Common Stock|N|0000920148|0|40||1990-03-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|238|TRMB|TRMB||TRMB|Trimble Inc. - Common Stock|Q|0000864749|0|100|N|1990-07-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|239|AZO|AZO|AZO|AZO|AutoZone, Inc. Common Stock|N|0000866787|0|10||1991-04-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|240|REGN|REGN||REGN|Regeneron Pharmaceuticals, Inc. - Common Stock|Q|0000872589|0|40|N|1991-04-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|241|IDXX|IDXX||IDXX|IDEXX Laboratories, Inc. - Common Stock|Q|0000874716|0|40|N|1991-06-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|242|AES|AES|AES|AES|The AES Corporation Common Stock|N|0000874761|0|100||1991-06-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|243|VRTX|VRTX||VRTX|Vertex Pharmaceuticals Incorporated - Common Stock|Q|0000875320|0|40|N|1991-07-24|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|244|ZBRA|ZBRA||ZBRA|Zebra Technologies Corporation - Class A Common Stock|Q|0000877212|0|100|N|1991-08-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|245|BIIB|BIIB||BIIB|Biogen Inc. - Common Stock|Q|0000875045|0|100|N|1991-09-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|246|ODFL|ODFL||ODFL|Old Dominion Freight Line, Inc. - Common Stock|Q|0000878927|0|100|N|1991-10-24|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|247|APH|APH|APH|APH|Amphenol Corporation Common Stock|N|0000820313|0|100||1991-11-08|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|248|KIM|KIM|KIM|KIM|Kimco Realty Corporation (HC) Common Stock|N|0000879101|0|100||1991-11-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|249|QCOM|QCOM||QCOM|QUALCOMM Incorporated - Common Stock|Q|0000804328|0|100|N|1991-12-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|250|GILD|GILD||GILD|Gilead Sciences, Inc. - Common Stock|Q|0000882095|0|100|N|1992-01-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|251|ROP|ROP||ROP|Roper Technologies, Inc. - Common Stock|Q|0000882835|0|40|N|1992-02-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|252|SNPS|SNPS||SNPS|Synopsys, Inc. - Common Stock|Q|0000883241|0|40|N|1992-02-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|253|STZ|STZ|STZ|STZ|Constellation Brands, Inc. Common Stock|N|0000016918|0|100||1992-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|254|BSX|BSX|BSX|BSX|Boston Scientific Corporation Common Stock|N|0000885725|0|100||1992-05-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|255|STE|STE|STE|STE|STERIS plc (Ireland) Ordinary Shares|N|0001757898|0|100||1992-06-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|256|DHI|DHI|DHI|DHI|D.R. Horton, Inc. Common Stock|N|0000882184|0|100||1992-06-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|257|LIN|LIN||LIN|Linde plc - Ordinary Shares|Q|0001707925|0|40|N|1992-06-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|258|SBUX|SBUX||SBUX|Starbucks Corporation - Common Stock|Q|0000829224|0|100|N|1992-06-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|259|MS|MS|MS|MS|Morgan Stanley Common Stock|N|0000895421|0|100||1993-02-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|260|INTU|INTU||INTU|Intuit Inc. - Common Stock|Q|0000896878|0|40|N|1993-03-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|261|MCHP|MCHP||MCHP|Microchip Technology Incorporated - Common Stock|Q|0000827054|0|100|N|1993-03-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|262|CB|CB|CB|CB|Chubb Limited  Common Stock|N|0000896159|0|40||1993-03-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|263|ORLY|ORLY||ORLY|O'Reilly Automotive, Inc. - Common Stock|Q|0000898173|0|100|N|1993-04-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|264|RCL|RCL|RCL|RCL|Royal Caribbean Cruises Ltd. Common Stock|N|0000884887|0|40||1993-04-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|265|JBL|JBL|JBL|JBL|Jabil Inc. Common Stock|N|0000898293|0|40||1993-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|266|ALL|ALL|ALL|ALL|Allstate Corporation (The) Common Stock|N|0000899051|0|100||1993-06-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|267|CPT|CPT|CPT|CPT|Camden Property Trust Common Stock|N|0000906345|0|100||1993-07-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|268|VMRK|VMRK|VMRK|VMRK|Vivmark Residential Common Shares of Beneficial Interest|N|0000906107|0|100||1993-08-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|269|IT|IT|IT|IT|Gartner, Inc. Common Stock|N|0000749251|0|100||1993-10-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|270|DECK|DECK|DECK|DECK|Deckers Outdoor Corporation Common Stock|N|0000910521|0|100||1993-10-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|271|REG|REG||REG|Regency Centers Corporation - Common Stock|Q|0000910606|0|100|N|1993-10-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|272|INCY|INCY||INCY|Incyte Corporation - Common Stock|Q|0000879169|0|100|N|1993-11-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|273|SPG|SPG|SPG|SPG|Simon Property Group, Inc. Common Stock|N|0001063761|0|100||1993-12-14|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|274|MAA|MAA|MAA|MAA|Mid-America Apartment Communities, Inc. Common Stock|N|0000912595|0|100||1994-01-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|275|MLM|MLM|MLM|MLM|Martin Marietta Materials, Inc. Common Stock|N|0000916076|0|40||1994-02-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|276|TSCO|TSCO||TSCO|Tractor Supply Company - Common Stock|Q|0000916365|0|100|N|1994-02-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|277|ALB|ALB|ALB|ALB|Albemarle Corporation Common Stock|N|0000915913|0|100||1994-02-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|278|CPRT|CPRT||CPRT|Copart, Inc. - Common Stock|Q|0000900075|0|100|N|1994-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|279|FLEX|FLEX||FLEX|Flex Ltd. - Ordinary Shares|Q|0000866374|0|100|N|1994-03-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|280|ESS|ESS|ESS|ESS|Essex Property Trust, Inc. Common Stock|N|0000920522|0|100||1994-06-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|281|O|O|O|O|Realty Income Corporation Common Stock|N|0000726728|0|100||1994-10-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|282|MCO|MCO|MCO|MCO|Moody's Corporation Common Stock|N|0001059556|0|40||1994-10-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|283|SJM|SJM|SJM|SJM|The J.M. Smucker Company Common Stock|N|0000091419|0|100||1994-10-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|284|MCK|MCK|MCK|MCK|McKesson Corporation Common Stock|N|0000927653|0|40||1994-11-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|285|COF|COF|COF|COF|Capital One Financial Corporation Common Stock|N|0000927628|0|100||1994-11-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|286|EME|EME|EME|EME|EMCOR Group, Inc. Common Stock|N|0000105634|0|40||1995-01-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|287|DLTR|DLTR||DLTR|Dollar Tree, Inc. - Common Stock|Q|0000935703|0|100|N|1995-03-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|288|COR|COR|COR|COR|Cencora, Inc. Common Stock|N|0001140859|0|40||1995-04-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|289|DRI|DRI|DRI|DRI|Darden Restaurants, Inc. Common Stock|N|0000940944|0|100||1995-05-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|290|RMD|RMD|RMD|RMD|ResMed Inc. Common Stock|N|0000943819|0|100||1995-06-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|291|WAB|WAB|WAB|WAB|Westinghouse Air Brake Technologies Corporation Common Stock|N|0000943452|0|100||1995-06-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|292|FCX|FCX|FCX|FCX|Freeport-McMoRan, Inc. Common Stock|N|0000831259|0|100||1995-07-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|293|IVZ|IVZ|IVZ|IVZ|Invesco Ltd Common Stock|N|0000914208|0|100||1995-08-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|294|ACGL|ACGL||ACGL|Arch Capital Group Ltd. - Common Stock|Q|0000947484|0|100|N|1995-09-14|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|295|ERIE|ERIE||ERIE|Erie Indemnity Company - Class A Common Stock|Q|0000922621|0|100|N|1995-10-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|296|EG|EG|EG|EG|Everest Group, Ltd. Common Stock|N|0001095073|0|40||1995-10-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|297|DVA|DVA|DVA|DVA|DaVita Inc. Common Stock|N|0000927066|0|100||1995-10-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|298|HSIC|HSIC||HSIC|Henry Schein, Inc. - Common Stock|Q|0001000228|0|100|N|1995-11-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|299|EL|EL|EL|EL|Estee Lauder Companies, Inc. (The) Common Stock|N|0001001250|0|100||1995-11-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|300|WAT|WAT|WAT|WAT|Waters Corporation Common Stock|N|0001000697|0|40||1995-11-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|301|NTAP|NTAP||NTAP|NetApp, Inc. - Common Stock|Q|0001002047|0|100|N|1995-11-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|302|HIG|HIG|HIG|HIG|The Hartford Insurance Group, Inc. Common Stock|N|0000874766|0|100||1995-12-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|303|IRM|IRM|IRM|IRM|Iron Mountain Incorporated (Delaware)Common Stock REIT|N|0001020569|0|100||1996-02-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|304|BRK-B|BRK.B|BRK.B|BRK-B|Berkshire Hathaway Inc. New Common Stock|N|0001067983|0|40||1996-05-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|305|FDS|FDS|FDS|FDS|FactSet Research Systems Inc. Common Stock|N|0001013237|0|100||1996-06-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|306|STLD|STLD||STLD|Steel Dynamics, Inc. - Common Stock|Q|0001022671|0|100|N|1996-11-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|307|DGX|DGX|DGX|DGX|Quest Diagnostics Incorporated Common Stock|N|0001022079|0|100||1996-12-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|308|CIEN|CIEN|CIEN|CIEN|Ciena Corporation Common Stock|N|0000936395|0|40||1997-02-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|309|TTWO|TTWO||TTWO|Take-Two Interactive Software, Inc. - Common Stock|Q|0000946581|0|100|N|1997-04-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|310|VTR|VTR|VTR|VTR|Ventas, Inc. Common Stock|N|0000740260|0|100||1997-05-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|311|AMZN|AMZN||AMZN|Amazon.com, Inc. - Common Stock|Q|0001018724|0|100|N|1997-05-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|312|ARE|ARE|ARE|ARE|Alexandria Real Estate Equities, Inc. Common Stock|N|0001035443|0|100||1997-05-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|313|RL|RL|RL|RL|Ralph Lauren Corporation Common Stock|N|0001037038|0|40||1997-06-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|314|BXP|BXP|BXP|BXP|BXP, Inc. Common Stock|N|0001037540|0|100||1997-06-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|315|FIX|FIX|FIX|FIX|Comfort Systems USA, Inc. Common Stock|N|0001035983|0|10||1997-06-27|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|316|YUM|YUM|YUM|YUM|Yum! Brands, Inc.|N|0001041061|0|100||1997-09-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|317|CHRW|CHRW||CHRW|C.H. Robinson Worldwide, Inc. - Common Stock|Q|0001043277|0|100|N|1997-10-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|318|FE|FE|FE|FE|FirstEnergy Corp. Common Stock|N|0001031296|0|100||1997-11-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|319|MTD|MTD|MTD|MTD|Mettler-Toledo International, Inc. Common Stock|N|0001037646|0|10||1997-11-14|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|320|PLD|PLD|PLD|PLD|Prologis, Inc. Common Stock|N|0001045609|0|100||1997-11-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|321|URI|URI|URI|URI|United Rentals, Inc. Common Stock|N|0001067701|0|40||1997-12-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|322|AEE|AEE|AEE|AEE|Ameren Corporation Common Stock|N|0001002910|0|100||1998-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|323|VRSN|VRSN||VRSN|VeriSign, Inc. - Common Stock|Q|0001014473|0|100|N|1998-01-30|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|324|PWR|PWR|PWR|PWR|Quanta Services, Inc. Common Stock|N|0001050915|0|40||1998-02-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|325|AMT|AMT|AMT|AMT|American Tower Corporation (REIT) Common Stock|N|0001053507|0|100||1998-02-27|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|326|MAR|MAR||MAR|Marriott International - Class A Common Stock|Q|0001048286|0|40|N|1998-03-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|327|CTSH|CTSH||CTSH|Cognizant Technology Solutions Corporation - Class A Common Stock|Q|0001058290|0|100|N|1998-06-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|328|SRE|SRE|SRE|SRE|DBA Sempra Common Stock|N|0001032208|0|100||1998-06-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|329|CSGP|CSGP||CSGP|CoStar Group, Inc. - Common Stock|Q|0001057352|0|100|N|1998-07-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|330|RSG|RSG|RSG|RSG|Republic Services, Inc. Common Stock|N|0001060391|0|100||1998-07-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|331|CCI|CCI|CCI|CCI|Crown Castle Inc. Common Stock|N|0001051470|0|100||1998-08-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|332|EBAY|EBAY||EBAY|eBay Inc. - Common Stock|Q|0001065088|0|100|N|1998-09-24|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|333|NVDA|NVDA||NVDA|NVIDIA Corporation - Common Stock|Q|0001045810|0|100|N|1999-01-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|334|BKNG|BKNG||BKNG|Booking Holdings Inc. - Common Stock|Q|0001075531|0|10|N|1999-03-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|335|GS|GS|GS|GS|Goldman Sachs Group, Inc. (The) Common Stock|N|0000886982|0|40||1999-05-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|336|FFIV|FFIV||FFIV|F5, Inc. - Common Stock|Q|0001048695|0|40|N|1999-06-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|337|SBAC|SBAC||SBAC|SBA Communications Corporation - Class A Common Stock|Q|0001034054|0|100|N|1999-06-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|338|LII|LII|LII|LII|Lennox International, Inc. Common Stock|N|0001069202|0|40||1999-07-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|339|BLK|BLK|BLK|BLK|BlackRock, Inc. Common Stock|N|0002012383|0|40||1999-10-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|340|TKO|TKO|TKO|TKO|TKO Group Holdings, Inc. Class A Common Stock|N|0001973266|0|100||1999-10-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|341|AKAM|AKAM||AKAM|Akamai Technologies, Inc. - Common Stock|Q|0001086222|0|100|N|1999-10-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|342|UPS|UPS|UPS|UPS|United Parcel Service, Inc. Common Stock|N|0001090727|0|100||1999-11-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|343|A|A|A|A|Agilent Technologies, Inc. Common Stock|N|0001090872|0|100||1999-11-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|344|TDY|TDY|TDY|TDY|Teledyne Technologies Incorporated Common Stock|N|0001094285|0|40||1999-11-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|345|PKG|PKG|PKG|PKG|Packaging Corporation of America Common Stock|N|0000075677|0|100||2000-01-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|346|EW|EW|EW|EW|Edwards Lifesciences Corporation Common Stock|N|0001099800|0|100||2000-03-27|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|347|MET|MET|MET|MET|MetLife, Inc. Common Stock|N|0001099219|0|100||2000-04-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|348|ON|ON||ON|ON Semiconductor Corporation - Common Stock|Q|0001097864|0|100|N|2000-05-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|349|ISRG|ISRG||ISRG|Intuitive Surgical, Inc. - Common Stock|Q|0001035267|0|40|N|2000-06-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|350|CRL|CRL|CRL|CRL|Charles River Laboratories International, Inc. Common Stock|N|0001100682|0|100||2000-06-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|351|MRVL|MRVL||MRVL|Marvell Technology, Inc. - Common Stock|Q|0001835632|0|100|N|2000-06-30|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|352|EQIX|EQIX||EQIX|Equinix, Inc. - Common Stock|Q|0001101239|0|40|N|2000-08-11|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|353|TPR|TPR|TPR|TPR|Tapestry, Inc. Common Stock|N|0001116132|0|100||2000-10-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|354|GRMN|GRMN|GRMN|GRMN|Garmin Ltd. Common Stock (Switzerland)|N|0001121788|0|100||2000-12-08|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|355|GPN|GPN|GPN|GPN|Global Payments Inc. Common Stock|N|0001123360|0|100||2001-01-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|356|ALGN|ALGN||ALGN|Align Technology, Inc. - Common Stock|Q|0001097149|0|100|N|2001-01-30|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|357|WTW|WTW||WTW|Willis Towers Watson Public Limited Company - Ordinary Shares|Q|0001140536|0|40|N|2001-06-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|358|MDLZ|MDLZ||MDLZ|Mondelez International, Inc. - Class A Common Stock|Q|0001103982|0|100|N|2001-06-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|359|AXON|AXON||AXON|Axon Enterprise, Inc. - Common Stock|Q|0001069183|0|40|N|2001-06-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|360|FIS|FIS|FIS|FIS|Fidelity National Information Services, Inc. Common Stock|N|0001136893|0|100||2001-06-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|361|ACN|ACN|ACN|ACN|Accenture plc Class A Ordinary Shares (Ireland)|N|0001467373|0|100||2001-07-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|362|ZBH|ZBH|ZBH|ZBH|Zimmer Biomet Holdings, Inc. Common Stock|N|0001136869|0|100||2001-07-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|363|BG|BG|BG|BG|Bunge Limited Common Shares|N|0001996862|0|100||2001-08-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|364|PFG|PFG||PFG|Principal Financial Group Inc - Common Stock|Q|0001126328|0|100|N|2001-10-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|365|ELV|ELV|ELV|ELV|Elevance Health, Inc. Common Stock|N|0001156039|0|40||2001-10-30|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|366|CNC|CNC|CNC|CNC|Centene Corporation Common Stock|N|0001071739|0|100||2001-12-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|367|PRU|PRU|PRU|PRU|Prudential Financial, Inc. Common Stock|N|0001137774|0|100||2001-12-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|368|NFLX|NFLX||NFLX|Netflix, Inc. - Common Stock|Q|0001065280|0|100|N|2002-05-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|369|NDAQ|NDAQ||NDAQ|Nasdaq, Inc. - Common Stock|Q|0001120193|0|100|N|2002-07-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|370|WYNN|WYNN||WYNN|Wynn Resorts, Limited - Common Stock|Q|0001174922|0|100|N|2002-10-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|371|CME|CME||CME|CME Group Inc. - Class A Common Stock|Q|0001156375|0|40|N|2002-12-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|372|STX|STX||STX|Seagate Technology Holdings PLC - Ordinary Shares (Ireland)|Q|0001137789|0|40|N|2002-12-11|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|373|NRG|NRG|NRG|NRG|NRG Energy, Inc. Common Stock|N|0001013871|0|100||2003-12-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|374|AIZ|AIZ|AIZ|AIZ|Assurant, Inc. Common Stock|N|0001267238|0|100||2004-02-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|375|CBRE|CBRE|CBRE|CBRE|CBRE Group Inc Common Stock Class A|N|0001138118|0|100||2004-06-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|376|CRM|CRM|CRM|CRM|Salesforce, Inc. Common Stock|N|0001108524|0|100||2004-06-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|377|DPZ|DPZ||DPZ|Domino's Pizza Inc - Common Stock|Q|0001286681|0|40|N|2004-07-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|378|EXR|EXR|EXR|EXR|Extra Space Storage Inc Common Stock|N|0001289490|0|100||2004-08-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|379|GOOG|GOOG||GOOG|Alphabet Inc. - Class C Capital Stock|Q|0001652044|0|40|N|2004-08-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|380|GOOGL|GOOGL||GOOGL|Alphabet Inc. - Class A Common Stock|Q|0001652044|0|40|N|2004-08-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|381|DLR|DLR|DLR|DLR|Digital Realty Trust, Inc. Common Stock|N|0001297996|0|100||2004-10-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|382|MPWR|MPWR||MPWR|Monolithic Power Systems, Inc. - Common Stock|Q|0001280452|0|10|N|2004-11-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|383|LVS|LVS|LVS|LVS|Las Vegas Sands Corp. Common Stock|N|0001300514|0|100||2004-12-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|384|DXCM|DXCM||DXCM|DexCom, Inc. - Common Stock|Q|0001093557|0|100|N|2005-04-14|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|385|BLDR|BLDR|BLDR|BLDR|Builders FirstSource, Inc. Common Stock|N|0001316835|0|100||2005-06-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|386|WBD|WBD||WBD|Warner Bros. Discovery, Inc. - Series A Common Stock|Q|0001437107|0|100|N|2005-07-08|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|387|EXPE|EXPE||EXPE|Expedia Group, Inc. - Common Stock|Q|0001324424|0|100|N|2005-07-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|388|CF|CF|CF|CF|CF Industries Holdings, Inc. Common Stock|N|0001324404|0|100||2005-08-11|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|389|AMP|AMP|AMP|AMP|Ameriprise Financial, Inc. Common Stock|N|0000820027|0|40||2005-09-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|390|ICE|ICE|ICE|ICE|Intercontinental Exchange Inc. Common Stock|N|0001571949|0|100||2005-11-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|391|PSKY|PSKY||PSKY|Paramount Skydance Corporation - Class B Common Stock|Q|0002041610|0|100|N|2005-12-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|392|LYV|LYV|LYV|LYV|Live Nation Entertainment, Inc. Common Stock|N|0001335258|0|100||2005-12-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|393|CMG|CMG|CMG|CMG|Chipotle Mexican Grill, Inc. Common Stock|N|0001058090|0|100||2006-01-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|394|UAL|UAL||UAL|United Airlines Holdings, Inc. - Common Stock|Q|0000100517|0|100|N|2006-02-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|395|TDG|TDG|TDG|TDG|Transdigm Group Incorporated Common Stock|N|0001260221|0|10||2006-03-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|396|MA|MA|MA|MA|Mastercard Incorporated Common Stock|N|0001141391|0|40||2006-05-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|397|LDOS|LDOS|LDOS|LDOS|Leidos Holdings, Inc. Common Stock|N|0001336920|0|100||2006-10-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|398|FSLR|FSLR||FSLR|First Solar, Inc. - Common Stock|Q|0001274494|0|100|N|2006-11-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|399|BR|BR|BR|BR|Broadridge Financial Solutions, Inc. Common Stock|N|0001383312|0|100||2007-03-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|400|SMCI|SMCI||SMCI|Super Micro Computer, Inc. - Common Stock|Q|0001375365|0|100|N|2007-03-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|401|TMUS|TMUS||TMUS|T-Mobile US, Inc. - Common Stock|Q|0001283699|0|100|N|2007-04-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|402|DAL|DAL|DAL|DAL|Delta Air Lines, Inc. Common Stock|N|0000027904|0|100||2007-05-03|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|403|IBKR|IBKR||IBKR|Interactive Brokers Group, Inc. - Class A Common Stock|Q|0001381197|0|100|N|2007-05-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|404|PODD|PODD||PODD|Insulet Corporation - Common Stock|Q|0001145197|0|100|N|2007-05-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|405|TEL|TEL|TEL|TEL|TE Connectivity plc Ordinary Shares|N|0001385157|0|100||2007-06-14|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|406|BX|BX|BX|BX|Blackstone Inc. Common Stock|N|0001393818|0|100||2007-06-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|407|LULU|LULU||LULU|lululemon athletica inc. - Common Stock|Q|0001397187|0|100|N|2007-07-27|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|408|ULTA|ULTA||ULTA|Ulta Beauty, Inc. - Common Stock|Q|0001403568|0|40|N|2007-10-25|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|409|MSCI|MSCI|MSCI|MSCI|MSCI Inc. Common Stock|N|0001408198|0|40||2007-11-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|410|ECHO|ECHO||ECHO|EchoStar Corporation - Common stock|Q|0001415404|0|100|N|2008-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|411|PM|PM|PM|PM|Philip Morris International Inc Common Stock|N|0001413329|0|100||2008-03-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|412|V|V|V|V|Visa Inc.|N|0001403161|0|40||2008-03-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|413|AWK|AWK|AWK|AWK|American Water Works Company, Inc. Common Stock|N|0001410636|0|100||2008-04-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|414|KDP|KDP||KDP|Keurig Dr Pepper Inc. - Common Stock|Q|0001418135|0|100|N|2008-05-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|415|SW|SW|SW|SW|Smurfit WestRock plc Ordinary Shares|N|0002005951|0|100||2008-06-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|416|AVGO|AVGO||AVGO|Broadcom Inc. - Common Stock|Q|0001730168|0|40|N|2009-08-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|417|VRSK|VRSK||VRSK|Verisk Analytics, Inc. - Common Stock|Q|0001442145|0|100|N|2009-10-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|418|DG|DG|DG|DG|Dollar General Corporation Common Stock|N|0000029534|0|100||2009-11-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|419|FTNT|FTNT||FTNT|Fortinet, Inc. - Common Stock|Q|0001262039|0|100|N|2009-11-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|420|CHTR|CHTR||CHTR|Charter Communications, Inc. - Class A Common Stock|Q|0001091667|0|100|N|2010-01-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|421|FERG|FERG|FERG|FERG|Ferguson Enterprises Inc. Common Stock|N|0002011641|0|100||2010-01-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|422|GNRC|GNRC|GNRC|GNRC|Generac Holdlings Inc. Common Stock|N|0001474735|0|100||2010-02-11|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|423|LYB|LYB|LYB|LYB|LyondellBasell Industries NV Ordinary Shares Class A (Netherlands)|N|0001489393|0|100||2010-04-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|424|CBOE|CBOE|CBOE|CBOE|Cboe Global Markets, Inc. Common Stock|Z|0001374310|0|40||2010-06-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|425|TSLA|TSLA||TSLA|Tesla, Inc.  - Common Stock|Q|0001318605|0|40|N|2010-06-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|426|KKR|KKR|KKR|KKR|KKR & Co. Inc. Common Stock|N|0001404912|0|100||2010-07-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|427|NXPI|NXPI||NXPI|NXP Semiconductors N.V. - Common Stock|Q|0001413447|0|100|N|2010-08-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|428|GM|GM|GM|GM|General Motors Company Common Stock|N|0001467858|0|100||2010-11-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|429|TRGP|TRGP|TRGP|TRGP|Targa Resources, Inc. Common Stock|N|0001389170|0|100||2010-12-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|430|CPAY|CPAY|CPAY|CPAY|Corpay, Inc. Common Stock|N|0001175454|0|40||2010-12-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|431|KMI|KMI|KMI|KMI|Kinder Morgan, Inc. Common Stock|N|0001506307|0|100||2011-02-11|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|432|HCA|HCA|HCA|HCA|HCA Healthcare, Inc. Common Stock|N|0000860730|0|40||2011-03-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|433|HII|HII|HII|HII|Huntington Ingalls Industries, Inc. Common Stock|N|0001501585|0|40||2011-03-22|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|434|APO|APO|APO|APO|Apollo Global Management, Inc. (New) Common Stock|N|0001858681|0|100||2011-03-30|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|435|MPC|MPC|MPC|MPC|Marathon Petroleum Corporation Common Stock|N|0001510295|0|100||2011-06-24|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|436|XYL|XYL|XYL|XYL|Xylem Inc. Common Stock New|N|0001524472|0|100||2011-10-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|437|APTV|APTV|APTV|APTV|Aptiv PLC Ordinary Shares|N|0001521332|0|100||2011-11-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|438|PSX|PSX|PSX|PSX|Phillips 66 Common Stock|N|0001534701|0|100||2012-04-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|439|AMCR|AMCR|AMCR|AMCR|Amcor plc Ordinary Shares|N|0001748790|0|100||2012-05-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|440|META|META||META|Meta Platforms, Inc. - Class A Common Stock|Q|0001326801|0|40|N|2012-05-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|441|NOW|NOW|NOW|NOW|ServiceNow, Inc. Common Stock|N|0001373715|0|100||2012-06-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|442|PANW|PANW||PANW|Palo Alto Networks, Inc. - Common Stock|Q|0001327567|0|100|N|2012-07-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|443|FANG|FANG||FANG|Diamondback Energy, Inc. - Common Stock|Q|0001539838|0|100|N|2012-10-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|444|WDAY|WDAY||WDAY|Workday, Inc. - Class A Common Stock|Q|0001327811|0|100|N|2012-10-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|445|ABBV|ABBV|ABBV|ABBV|AbbVie Inc. Common Stock|N|0001551152|0|100||2013-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|446|NCLH|NCLH|NCLH|NCLH|Norwegian Cruise Line Holdings Ltd. Ordinary Shares|N|0001513761|0|100||2013-01-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|447|ZTS|ZTS|ZTS|ZTS|Zoetis Inc. Class A Common Stock|N|0001555280|0|100||2013-02-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|448|IQV|IQV|IQV|IQV|IQVIA Holdings, Inc. Common Stock|N|0001478242|0|100||2013-05-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|449|NWS|NWS||NWS|News Corporation - Class B Common Stock|Q|0001564708|0|100|N|2013-06-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|450|NWSA|NWSA||NWSA|News Corporation - Class A Common Stock|Q|0001564708|0|100|N|2013-06-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|451|CDW|CDW||CDW|CDW Corporation - Common Stock|Q|0001402057|0|100|N|2013-06-27|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|452|VEEV|VEEV|VEEV|VEEV|Veeva Systems Inc. Class A Common Stock|N|0001393052|0|100||2013-10-16|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|453|ALLE|ALLE|ALLE|ALLE|Allegion plc Ordinary Shares|N|0001579241|0|100||2013-11-18|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|454|HLT|HLT|HLT|HLT|Hilton Worldwide Holdings Inc. Common Stock|N|0001585689|0|40||2013-12-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|455|ARES|ARES|ARES|ARES|Ares Management Corporation Class A Common Stock|N|0001176948|0|100||2014-05-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|456|ANET|ANET|ANET|ANET|Arista Networks, Inc. Common Stock|N|0001596532|0|100||2014-06-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|457|SYF|SYF|SYF|SYF|Synchrony Financial Common Stock|N|0001601712|0|100||2014-07-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|458|CFG|CFG|CFG|CFG|Citizens Financial Group, Inc. Common Stock|N|0000759944|0|100||2014-09-24|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|459|KEYS|KEYS|KEYS|KEYS|Keysight Technologies Inc. Common Stock|N|0001601046|0|40||2014-10-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|460|GDDY|GDDY|GDDY|GDDY|GoDaddy Inc. Class A Common Stock|N|0001609711|0|100||2015-03-31|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|461|KHC|KHC||KHC|The Kraft Heinz Company - Common Stock|Q|0001637459|0|100|N|2015-07-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|462|PYPL|PYPL||PYPL|PayPal Holdings, Inc. - Common Stock|Q|0001633917|0|100|N|2015-07-06|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|463|LITE|LITE||LITE|Lumentum Holdings Inc. - Common Stock|Q|0001633978|0|40|N|2015-07-23|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|464|HPE|HPE|HPE|HPE|Hewlett Packard Enterprise Company Common Stock|N|0001645590|0|100||2015-10-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|465|XYZ|XYZ|XYZ|XYZ|Block, Inc. Class A Common Stock,|N|0001512673|0|100||2015-11-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|466|FTV|FTV|FTV|FTV|Fortive Corporation Common Stock|N|0001659166|0|100||2016-07-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|467|DELL|DELL|DELL|DELL|Dell Technologies Inc. Class C Common Stock|N|0001571996|0|100||2016-08-17|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|468|TTD|TTD||TTD|The Trade Desk, Inc. - Class A Common Stock|Q|0001671933|0|100|N|2016-09-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|469|VST|VST|VST|VST|Vistra Corp. Common Stock|N|0001692819|0|100||2016-10-05|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|470|HWM|HWM|HWM|HWM|Howmet Aerospace Inc. Common Stock|N|0000004281|0|100||2016-11-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|471|INVH|INVH|INVH|INVH|Invitation Homes Inc. Common Stock|N|0001687229|0|100||2017-02-01|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|472|CVNA|CVNA|CVNA|CVNA|Carvana Co. Class A Common Stock|N|0001690820|0|40||2017-04-28|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|473|IR|IR|IR|IR|Ingersoll Rand Inc. Common Stock|N|0001699150|0|100||2017-05-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|474|VICI|VICI|VICI|VICI|VICI Properties Inc. Common Stock|N|0001705696|0|100||2018-01-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|475|VRT|VRT|VRT|VRT|Vertiv Holdings, LLC Class A Common Stock|N|0001674101|0|40||2018-08-02|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|476|MRNA|MRNA||MRNA|Moderna, Inc. - Common Stock|Q|0001682852|0|100|N|2018-12-07|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|477|FOXA|FOXA||FOXA|Fox Corporation - Class A Common Stock|Q|0001754301|0|100|N|2019-03-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|478|FOX|FOX||FOX|Fox Corporation - Class B Common Stock|Q|0001754301|0|100|N|2019-03-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|479|DOW|DOW|DOW|DOW|Dow Inc. Common Stock|N|0001751788|0|100||2019-03-20|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|480|UBER|UBER|UBER|UBER|Uber Technologies, Inc. Common Stock|N|0001543151|0|100||2019-05-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|481|CTVA|CTVA|CTVA|CTVA|Corteva, Inc. Common Stock|N|0001755672|0|100||2019-05-24|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|482|CRWD|CRWD||CRWD|CrowdStrike Holdings, Inc. - Class A Common Stock|Q|0001535527|0|40|N|2019-06-12|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|483|DDOG|DDOG||DDOG|Datadog, Inc. - Class A Common Stock|Q|0001561550|0|100|N|2019-09-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|484|CARR|CARR|CARR|CARR|Carrier Global Corporation Common Stock|N|0001783180|0|100||2020-03-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|485|OTIS|OTIS|OTIS|OTIS|Otis Worldwide Corporation Common Stock|N|0001781335|0|100||2020-03-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|486|PLTR|PLTR||PLTR|Palantir Technologies Inc. - Class A Common Stock|Q|0001321655|0|100|N|2020-09-30|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|487|DASH|DASH||DASH|DoorDash, Inc. - Common Stock|Q|0001792789|0|100|N|2020-12-09|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|488|ABNB|ABNB||ABNB|Airbnb, Inc. - Class A Common Stock|Q|0001559720|0|100|N|2020-12-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|489|EXE|EXE||EXE|Expand Energy Corporation - Common Stock|Q|0000895126|0|100|N|2021-02-10|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|490|COIN|COIN||COIN|Coinbase Global, Inc. - Class A Common Stock|Q|0001679788|0|100|N|2021-04-14|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|491|APP|APP||APP|Applovin Corporation - Class A Common Stock|Q|0001751008|0|40|N|2021-04-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|492|HOOD|HOOD||HOOD|Robinhood Markets, Inc. - Class A Common Stock|Q|0001783879|0|100|N|2021-07-29|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|493|CEG|CEG||CEG|Constellation Energy Corporation - Common Stock When-Issued|Q|0001868275|0|40|N|2022-01-19|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|494|GEHC|GEHC||GEHC|GE HealthCare Technologies Inc. - Common Stock|Q|0001932393|0|100|N|2022-12-15|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|495|KVUE|KVUE|KVUE|KVUE|Kenvue Inc. Common Stock|N|0001944048|0|100||2023-05-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|496|VLTO|VLTO|VLTO|VLTO|Veralto Corp Common Stock|N|0001967680|0|100||2023-10-04|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|497|RDDT|RDDT|RDDT|RDDT|Reddit, Inc. Class A Common Stock|N|0001713445|0|100||2024-03-21|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|498|SOLV|SOLV|SOLV|SOLV|Solventum Corporation Common Stock|N|0001964738|0|100||2024-03-26|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|499|GEV|GEV|GEV|GEV|GE Vernova Inc. Common Stock|N|0001996810|0|40||2024-03-27|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|500|SNDK|SNDK||SNDK|Sandisk Corporation - Common Stock When-Issued|Q|0002023554|0|40|N|2025-02-13|USD|2026-08-30|yahoo_v8_chart
+2026-03-10|501|Q|Q|Q|Q|Qnity Electronics, Inc. Common Stock|N|0002058873|0|100||2025-10-27|USD|2026-08-30|yahoo_v8_chart

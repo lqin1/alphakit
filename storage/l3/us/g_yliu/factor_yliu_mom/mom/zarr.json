@@ -1,0 +1,79 @@
+{
+  "shape": [
+    250,
+    1003
+  ],
+  "data_type": "float32",
+  "chunk_grid": {
+    "name": "regular",
+    "configuration": {
+      "chunk_shape": [
+        50,
+        1003
+      ]
+    }
+  },
+  "chunk_key_encoding": {
+    "name": "default",
+    "configuration": {
+      "separator": "/"
+    }
+  },
+  "fill_value": "NaN",
+  "codecs": [
+    {
+      "name": "bytes",
+      "configuration": {
+        "endian": "little"
+      }
+    },
+    {
+      "name": "zstd",
+      "configuration": {
+        "level": 0,
+        "checksum": false
+      }
+    }
+  ],
+  "attributes": {
+    "dims": [
+      "di",
+      "ii"
+    ],
+    "dtype": "f4",
+    "n_cols_covered": 502,
+    "status": "wip",
+    "registered": false,
+    "fingerprint": "sha256:e23ad34e3f558781",
+    "version": 1,
+    "first_session": 64,
+    "last_session": 249,
+    "updated_at": "2026-09-05T02:31:49Z",
+    "deps": [
+      "g_common.field_base_px.adj_close_1500"
+    ],
+    "deps_versions": {
+      "g_common.field_base_px.adj_close_1500": 1
+    },
+    "region": "us",
+    "region_hash": "sha256:9aefe642f8ddef96",
+    "cutoff": "1500",
+    "universe": null,
+    "node": "factor_yliu_mom",
+    "node_dir": "factor_yliu_mom",
+    "repo": "g_yliu",
+    "params": {
+      "window": 60
+    },
+    "sibling_outputs": [
+      "mom"
+    ],
+    "code_ref": {
+      "path": "repos/g_yliu/nodes/factor_yliu_mom/mom.py"
+    },
+    "lookback": 60
+  },
+  "zarr_format": 3,
+  "node_type": "array",
+  "storage_transformers": []
+}

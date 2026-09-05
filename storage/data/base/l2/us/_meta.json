@@ -1,0 +1,149 @@
+{
+ "dataset": "us_daily_pv_pilot",
+ "version": 1,
+ "asof": "2026-08-30",
+ "sd": "2025-08-29",
+ "ed": "2026-08-28",
+ "sd_actual": "2025-08-29",
+ "ed_actual": "2026-08-27",
+ "n_sessions": 250,
+ "n_securities": 503,
+ "sources": {
+  "prices": "yahoo v8 chart",
+  "ref": "nasdaqtrader nasdaqtraded.txt",
+  "gics": "datasets/s-and-p-500-companies",
+  "cik": "SEC company_tickers_exchange"
+ },
+ "known_defects": [
+  "survivorship_bias_no_delisted",
+  "no_vwap",
+  "adj_factor_not_pit"
+ ],
+ "row_counts": {
+  "pv": 125325,
+  "cax": 1614,
+  "sec_master": 125327,
+  "calendar": 250,
+  "industry": 125327
+ },
+ "dropped_null_close_by_date": {
+  "2025-11-12": 1,
+  "2026-08-10": 1,
+  "2026-08-28": 502
+ },
+ "failed_symbols": [],
+ "half_day_notes": [],
+ "trimmed_trailing_sessions": [
+  "2026-08-28"
+ ],
+ "off_axis_events_dropped": {
+  "2026-08-28": [
+   "BAX",
+   "EBAY",
+   "HII",
+   "LH",
+   "NEE",
+   "TAP",
+   "TMUS"
+  ]
+ },
+ "vendor_return_divergence": [
+  {
+   "symbol": "MNST",
+   "worst_return_gap": 0.503873,
+   "date": "2026-08-11"
+  }
+ ],
+ "splits_vendor_had_not_applied": [
+  {
+   "symbol": "MNST",
+   "ex_date": "2026-08-11",
+   "ratio": "2:1",
+   "evidence": "jump=1.9846 vs ratio=2.0000"
+  }
+ ],
+ "unexplained_jumps_gt_40pct": [
+  {
+   "symbol": "MRNA",
+   "date": "2026-08-19",
+   "adj_return": 1.769695
+  },
+  {
+   "symbol": "MNST",
+   "date": "2026-07-23",
+   "adj_return": 0.95589
+  },
+  {
+   "symbol": "MNST",
+   "date": "2026-08-03",
+   "adj_return": 0.941274
+  },
+  {
+   "symbol": "MNST",
+   "date": "2026-08-07",
+   "adj_return": 0.919286
+  },
+  {
+   "symbol": "MNST",
+   "date": "2026-07-20",
+   "adj_return": -0.510513
+  },
+  {
+   "symbol": "MNST",
+   "date": "2026-07-31",
+   "adj_return": -0.506503
+  },
+  {
+   "symbol": "MNST",
+   "date": "2026-08-06",
+   "adj_return": -0.501588
+  },
+  {
+   "symbol": "FISV",
+   "date": "2025-10-29",
+   "adj_return": -0.440438
+  }
+ ],
+ "suspect_securities": [
+  {
+   "symbol": "MNST",
+   "n_unexplained_jumps": 6,
+   "first": "2026-07-20",
+   "last": "2026-08-07"
+  }
+ ],
+ "coverage_full": 498,
+ "coverage_partial": {
+  "HONA": {
+   "security_id": 503,
+   "n_sessions": 52,
+   "first_session": 198,
+   "last_session": 249
+  },
+  "FDXF": {
+   "security_id": 502,
+   "n_sessions": 65,
+   "first_session": 185,
+   "last_session": 249
+  },
+  "Q": {
+   "security_id": 501,
+   "n_sessions": 210,
+   "first_session": 40,
+   "last_session": 249
+  },
+  "MNST": {
+   "security_id": 210,
+   "n_sessions": 249,
+   "first_session": 0,
+   "last_session": 249
+  },
+  "FISV": {
+   "security_id": 216,
+   "n_sessions": 249,
+   "first_session": 0,
+   "last_session": 249
+  }
+ },
+ "validation": "not_run"
+}

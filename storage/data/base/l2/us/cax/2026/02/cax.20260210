@@ -1,0 +1,6 @@
+date|security_id|ticker|event_type|div_amount|split_num|split_den|split_ratio
+2026-02-10|1|AEP|div|0.950000|||
+2026-02-10|13|IBM|div|1.680000|||
+2026-02-10|48|BDX|split||1272|1000|1.2720000000
+2026-02-10|412|V|div|0.670000|||
+2026-02-10|413|AWK|div|0.828000|||

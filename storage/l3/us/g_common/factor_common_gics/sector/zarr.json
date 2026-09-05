@@ -1,0 +1,60 @@
+{
+  "shape": [
+    250,
+    1003
+  ],
+  "data_type": "int8",
+  "chunk_grid": {
+    "name": "regular",
+    "configuration": {
+      "chunk_shape": [
+        50,
+        1003
+      ]
+    }
+  },
+  "chunk_key_encoding": {
+    "name": "default",
+    "configuration": {
+      "separator": "/"
+    }
+  },
+  "fill_value": 0,
+  "codecs": [
+    {
+      "name": "bytes"
+    },
+    {
+      "name": "zstd",
+      "configuration": {
+        "level": 0,
+        "checksum": false
+      }
+    }
+  ],
+  "attributes": {
+    "dims": [
+      "di",
+      "ii"
+    ],
+    "dtype": "i1",
+    "n_cols_covered": 503,
+    "status": "wip",
+    "registered": false,
+    "fingerprint": "sha256:cf0080c1ce0af2e5",
+    "version": 1,
+    "first_session": 0,
+    "last_session": 249,
+    "updated_at": "2026-09-05T02:31:47Z",
+    "region": "us",
+    "source": "l2 base us",
+    "cutoff": "1500",
+    "l2_asof": "2026-08-30",
+    "builder": "pipeline/build_l3_base.py",
+    "desc": "GICS sector \u5b98\u65b9\u7801 10..60; 0 = \u672a\u77e5",
+    "caveat": "\u5f53\u524d\u5feb\u7167\u56de\u586b, \u65e0\u5386\u53f2\u884c\u4e1a\u53d8\u66f4"
+  },
+  "zarr_format": 3,
+  "node_type": "array",
+  "storage_transformers": []
+}

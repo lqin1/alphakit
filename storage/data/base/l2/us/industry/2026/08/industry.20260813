@@ -1,0 +1,504 @@
+date|security_id|ticker|gics_sector_code|gics_sector|gics_sub_industry|ref_asof|source
+2026-08-13|1|AEP|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|2|BA|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|3|CAT|20|Industrials|Construction Machinery & Heavy Transportation Equipment|2026-08-30|sp500_constituents
+2026-08-13|4|CNP|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|5|CVX|10|Energy|Integrated Oil & Gas|2026-08-30|sp500_constituents
+2026-08-13|6|DIS|50|Communication Services|Movies & Entertainment|2026-08-30|sp500_constituents
+2026-08-13|7|DTE|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|8|ED|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|9|GD|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|10|GE|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|11|HON|20|Industrials|Industrial Conglomerates|2026-08-30|sp500_constituents
+2026-08-13|12|HPQ|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|13|IBM|45|Information Technology|IT Consulting & Other Services|2026-08-30|sp500_constituents
+2026-08-13|14|IP|15|Materials|Paper & Plastic Packaging Products & Materials|2026-08-30|sp500_constituents
+2026-08-13|15|JNJ|35|Health Care|Pharmaceuticals|2026-08-30|sp500_constituents
+2026-08-13|16|KO|30|Consumer Staples|Soft Drinks & Non-alcoholic Beverages|2026-08-30|sp500_constituents
+2026-08-13|17|KR|30|Consumer Staples|Food Retail|2026-08-30|sp500_constituents
+2026-08-13|18|LMT|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|19|MMM|20|Industrials|Industrial Conglomerates|2026-08-30|sp500_constituents
+2026-08-13|20|MO|30|Consumer Staples|Tobacco|2026-08-30|sp500_constituents
+2026-08-13|21|MRK|35|Health Care|Pharmaceuticals|2026-08-30|sp500_constituents
+2026-08-13|22|MSI|45|Information Technology|Communications Equipment|2026-08-30|sp500_constituents
+2026-08-13|23|PG|30|Consumer Staples|Personal Care Products|2026-08-30|sp500_constituents
+2026-08-13|24|XOM|10|Energy|Integrated Oil & Gas|2026-08-30|sp500_constituents
+2026-08-13|25|RTX|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|26|MCD|25|Consumer Discretionary|Restaurants|2026-08-30|sp500_constituents
+2026-08-13|27|AXP|40|Financials|Consumer Finance|2026-08-30|sp500_constituents
+2026-08-13|28|BMY|35|Health Care|Pharmaceuticals|2026-08-30|sp500_constituents
+2026-08-13|29|DD|20|Industrials|Industrial Conglomerates|2026-08-30|sp500_constituents
+2026-08-13|30|DE|20|Industrials|Agricultural & Farm Machinery|2026-08-30|sp500_constituents
+2026-08-13|31|EMR|20|Industrials|Electrical Components & Equipment|2026-08-30|sp500_constituents
+2026-08-13|32|ETN|20|Industrials|Electrical Components & Equipment|2026-08-30|sp500_constituents
+2026-08-13|33|ETR|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|34|F|25|Consumer Discretionary|Automobile Manufacturers|2026-08-30|sp500_constituents
+2026-08-13|35|HAL|10|Energy|Oil & Gas Equipment & Services|2026-08-30|sp500_constituents
+2026-08-13|36|LLY|35|Health Care|Pharmaceuticals|2026-08-30|sp500_constituents
+2026-08-13|37|PCG|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|38|PEP|30|Consumer Staples|Soft Drinks & Non-alcoholic Beverages|2026-08-30|sp500_constituents
+2026-08-13|39|PFE|35|Health Care|Pharmaceuticals|2026-08-30|sp500_constituents
+2026-08-13|40|TXN|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|41|WFC|40|Financials|Diversified Banks|2026-08-30|sp500_constituents
+2026-08-13|42|HUBB|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|43|WMT|30|Consumer Staples|Consumer Staples Merchandise Retail|2026-08-30|sp500_constituents
+2026-08-13|44|AIG|40|Financials|Multi-line Insurance|2026-08-30|sp500_constituents
+2026-08-13|45|AVY|15|Materials|Paper & Plastic Packaging Products & Materials|2026-08-30|sp500_constituents
+2026-08-13|46|BAC|40|Financials|Diversified Banks|2026-08-30|sp500_constituents
+2026-08-13|47|BALL|15|Materials|Metal, Glass & Plastic Containers|2026-08-30|sp500_constituents
+2026-08-13|48|BDX|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|49|CLX|30|Consumer Staples|Household Products|2026-08-30|sp500_constituents
+2026-08-13|50|CMI|20|Industrials|Construction Machinery & Heavy Transportation Equipment|2026-08-30|sp500_constituents
+2026-08-13|51|CMS|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|52|CVS|35|Health Care|Health Care Services|2026-08-30|sp500_constituents
+2026-08-13|53|ECL|15|Materials|Specialty Chemicals|2026-08-30|sp500_constituents
+2026-08-13|54|ES|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|55|EVRG|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|56|GWW|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|57|LNT|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|58|MKC|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|59|MRSH|40|Financials|Insurance Brokers|2026-08-30|sp500_constituents
+2026-08-13|60|NEE|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|61|NI|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|62|PNW|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|63|RVTY|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|64|SNA|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|65|SPGI|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|66|TER|45|Information Technology|Semiconductor Materials & Equipment|2026-08-30|sp500_constituents
+2026-08-13|67|TGT|30|Consumer Staples|Consumer Staples Merchandise Retail|2026-08-30|sp500_constituents
+2026-08-13|68|TXT|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|69|VMC|15|Materials|Construction Materials|2026-08-30|sp500_constituents
+2026-08-13|70|XEL|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|71|ITW|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|72|CL|30|Consumer Staples|Household Products|2026-08-30|sp500_constituents
+2026-08-13|73|EXC|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|74|MDT|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|75|BNY|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|76|EIX|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|77|FRT|60|Real Estate|Retail REITs|2026-08-30|sp500_constituents
+2026-08-13|78|PNR|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|79|USB|40|Financials|Diversified Banks|2026-08-30|sp500_constituents
+2026-08-13|80|WY|60|Real Estate|Timber REITs|2026-08-30|sp500_constituents
+2026-08-13|81|SYY|30|Consumer Staples|Food Distributors|2026-08-30|sp500_constituents
+2026-08-13|82|WRB|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|83|IFF|15|Materials|Specialty Chemicals|2026-08-30|sp500_constituents
+2026-08-13|84|TAP|30|Consumer Staples|Brewers|2026-08-30|sp500_constituents
+2026-08-13|85|PNC|40|Financials|Diversified Banks|2026-08-30|sp500_constituents
+2026-08-13|86|TRV|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|87|C|40|Financials|Diversified Banks|2026-08-30|sp500_constituents
+2026-08-13|88|FDX|20|Industrials|Air Freight & Logistics|2026-08-30|sp500_constituents
+2026-08-13|89|WDC|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|90|DHR|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|91|APA|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|92|LUV|20|Industrials|Passenger Airlines|2026-08-30|sp500_constituents
+2026-08-13|93|PEG|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|94|UNP|20|Industrials|Rail Transportation|2026-08-30|sp500_constituents
+2026-08-13|95|ABT|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|96|ADI|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|97|ADM|30|Consumer Staples|Agricultural Products & Services|2026-08-30|sp500_constituents
+2026-08-13|98|ADP|20|Industrials|Human Resource & Employment Services|2026-08-30|sp500_constituents
+2026-08-13|99|AFL|40|Financials|Life & Health Insurance|2026-08-30|sp500_constituents
+2026-08-13|100|AMAT|45|Information Technology|Semiconductor Materials & Equipment|2026-08-30|sp500_constituents
+2026-08-13|101|AMD|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|102|APD|15|Materials|Industrial Gases|2026-08-30|sp500_constituents
+2026-08-13|103|BF-B|30|Consumer Staples|Distillers & Vintners|2026-08-30|sp500_constituents
+2026-08-13|104|CHD|30|Consumer Staples|Household Products|2026-08-30|sp500_constituents
+2026-08-13|105|CINF|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|106|CMCSA|50|Communication Services|Cable & Satellite|2026-08-30|sp500_constituents
+2026-08-13|107|D|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|108|DOV|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|109|DUK|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|110|EFX|20|Industrials|Research & Consulting Services|2026-08-30|sp500_constituents
+2026-08-13|111|EQT|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|112|FITB|40|Financials|Regional Banks|2026-08-30|sp500_constituents
+2026-08-13|113|GIS|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|114|GPC|25|Consumer Discretionary|Distributors|2026-08-30|sp500_constituents
+2026-08-13|115|HAS|25|Consumer Discretionary|Leisure Products|2026-08-30|sp500_constituents
+2026-08-13|116|HBAN|40|Financials|Regional Banks|2026-08-30|sp500_constituents
+2026-08-13|117|HRL|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|118|HST|60|Real Estate|Hotel & Resort REITs|2026-08-30|sp500_constituents
+2026-08-13|119|HSY|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|120|INTC|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|121|J|20|Industrials|Construction & Engineering|2026-08-30|sp500_constituents
+2026-08-13|122|JPM|40|Financials|Diversified Banks|2026-08-30|sp500_constituents
+2026-08-13|123|KMB|30|Consumer Staples|Household Products|2026-08-30|sp500_constituents
+2026-08-13|124|L|40|Financials|Multi-line Insurance|2026-08-30|sp500_constituents
+2026-08-13|125|LEN|25|Consumer Discretionary|Homebuilding|2026-08-30|sp500_constituents
+2026-08-13|126|LOW|25|Consumer Discretionary|Home Improvement Retail|2026-08-30|sp500_constituents
+2026-08-13|127|MAS|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|128|MTB|40|Financials|Regional Banks|2026-08-30|sp500_constituents
+2026-08-13|129|NEM|15|Materials|Gold|2026-08-30|sp500_constituents
+2026-08-13|130|NTRS|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|131|NUE|15|Materials|Steel|2026-08-30|sp500_constituents
+2026-08-13|132|OMC|50|Communication Services|Advertising|2026-08-30|sp500_constituents
+2026-08-13|133|PCAR|20|Industrials|Construction Machinery & Heavy Transportation Equipment|2026-08-30|sp500_constituents
+2026-08-13|134|PGR|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|135|PH|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|136|PHM|25|Consumer Discretionary|Homebuilding|2026-08-30|sp500_constituents
+2026-08-13|137|PPG|15|Materials|Specialty Chemicals|2026-08-30|sp500_constituents
+2026-08-13|138|PPL|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|139|RF|40|Financials|Regional Banks|2026-08-30|sp500_constituents
+2026-08-13|140|ROL|20|Industrials|Environmental & Facilities Services|2026-08-30|sp500_constituents
+2026-08-13|141|SHW|15|Materials|Specialty Chemicals|2026-08-30|sp500_constituents
+2026-08-13|142|STT|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|143|SWK|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|144|SYK|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|145|TMO|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|146|TPL|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|147|TSN|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|148|TT|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|149|TYL|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|150|UDR|60|Real Estate|Multi-Family Residential REITs|2026-08-30|sp500_constituents
+2026-08-13|151|VTRS|35|Health Care|Pharmaceuticals|2026-08-30|sp500_constituents
+2026-08-13|152|WEC|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|153|WST|35|Health Care|Health Care Supplies|2026-08-30|sp500_constituents
+2026-08-13|154|NDSN|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|155|TFC|40|Financials|Diversified Banks|2026-08-30|sp500_constituents
+2026-08-13|156|WELL|60|Real Estate|Health Care REITs|2026-08-30|sp500_constituents
+2026-08-13|157|AON|40|Financials|Insurance Brokers|2026-08-30|sp500_constituents
+2026-08-13|158|GL|40|Financials|Life & Health Insurance|2026-08-30|sp500_constituents
+2026-08-13|159|OKE|10|Energy|Oil & Gas Storage & Transportation|2026-08-30|sp500_constituents
+2026-08-13|160|KLAC|45|Information Technology|Semiconductor Materials & Equipment|2026-08-30|sp500_constituents
+2026-08-13|161|CSX|20|Industrials|Rail Transportation|2026-08-30|sp500_constituents
+2026-08-13|162|PSA|60|Real Estate|Self-Storage REITs|2026-08-30|sp500_constituents
+2026-08-13|163|NKE|25|Consumer Discretionary|Apparel, Accessories & Luxury Goods|2026-08-30|sp500_constituents
+2026-08-13|164|AAPL|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|165|BRO|40|Financials|Insurance Brokers|2026-08-30|sp500_constituents
+2026-08-13|166|UHS|35|Health Care|Health Care Facilities|2026-08-30|sp500_constituents
+2026-08-13|167|HD|25|Consumer Discretionary|Home Improvement Retail|2026-08-30|sp500_constituents
+2026-08-13|168|BAX|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|169|COP|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|170|GLW|45|Information Technology|Electronic Components|2026-08-30|sp500_constituents
+2026-08-13|171|HUM|35|Health Care|Managed Health Care|2026-08-30|sp500_constituents
+2026-08-13|172|LHX|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|173|NOC|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|174|OXY|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|175|ROK|20|Industrials|Electrical Components & Equipment|2026-08-30|sp500_constituents
+2026-08-13|176|SLB|10|Energy|Oil & Gas Equipment & Services|2026-08-30|sp500_constituents
+2026-08-13|177|SO|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|178|WMB|10|Energy|Oil & Gas Storage & Transportation|2026-08-30|sp500_constituents
+2026-08-13|179|VLO|10|Energy|Oil & Gas Refining & Marketing|2026-08-30|sp500_constituents
+2026-08-13|180|CI|35|Health Care|Health Care Services|2026-08-30|sp500_constituents
+2026-08-13|181|NSC|20|Industrials|Rail Transportation|2026-08-30|sp500_constituents
+2026-08-13|182|COO|35|Health Care|Health Care Supplies|2026-08-30|sp500_constituents
+2026-08-13|183|AMGN|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|184|RJF|40|Financials|Investment Banking & Brokerage|2026-08-30|sp500_constituents
+2026-08-13|185|WSM|25|Consumer Discretionary|Homefurnishing Retail|2026-08-30|sp500_constituents
+2026-08-13|186|CAH|35|Health Care|Health Care Distributors|2026-08-30|sp500_constituents
+2026-08-13|187|CTAS|20|Industrials|Diversified Support Services|2026-08-30|sp500_constituents
+2026-08-13|188|PAYX|20|Industrials|Human Resource & Employment Services|2026-08-30|sp500_constituents
+2026-08-13|189|BEN|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|190|AOS|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|191|CASY|30|Consumer Staples|Food Retail|2026-08-30|sp500_constituents
+2026-08-13|192|T|50|Communication Services|Integrated Telecommunication Services|2026-08-30|sp500_constituents
+2026-08-13|193|VZ|50|Communication Services|Integrated Telecommunication Services|2026-08-30|sp500_constituents
+2026-08-13|194|JBHT|20|Industrials|Cargo Ground Transportation|2026-08-30|sp500_constituents
+2026-08-13|195|ATO|55|Utilities|Gas Utilities|2026-08-30|sp500_constituents
+2026-08-13|196|LRCX|45|Information Technology|Semiconductor Materials & Equipment|2026-08-30|sp500_constituents
+2026-08-13|197|MU|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|198|AJG|40|Financials|Insurance Brokers|2026-08-30|sp500_constituents
+2026-08-13|199|AME|20|Industrials|Electrical Components & Equipment|2026-08-30|sp500_constituents
+2026-08-13|200|SWKS|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|201|EXPD|20|Industrials|Air Freight & Logistics|2026-08-30|sp500_constituents
+2026-08-13|202|UNH|35|Health Care|Managed Health Care|2026-08-30|sp500_constituents
+2026-08-13|203|BBY|25|Consumer Discretionary|Computer & Electronics Retail|2026-08-30|sp500_constituents
+2026-08-13|204|DOC|60|Real Estate|Health Care REITs|2026-08-30|sp500_constituents
+2026-08-13|205|ADSK|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|206|DVN|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|207|NVR|25|Consumer Discretionary|Homebuilding|2026-08-30|sp500_constituents
+2026-08-13|208|ROST|25|Consumer Discretionary|Apparel Retail|2026-08-30|sp500_constituents
+2026-08-13|209|JKHY|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|210|MNST|30|Consumer Staples|Soft Drinks & Non-alcoholic Beverages|2026-08-30|sp500_constituents
+2026-08-13|211|ORCL|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|212|MSFT|45|Information Technology|Systems Software|2026-08-30|sp500_constituents
+2026-08-13|213|TROW|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|214|COST|30|Consumer Staples|Consumer Staples Merchandise Retail|2026-08-30|sp500_constituents
+2026-08-13|215|ADBE|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|216|FISV|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|217|BKR|10|Energy|Oil & Gas Equipment & Services|2026-08-30|sp500_constituents
+2026-08-13|218|CDNS|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|219|TJX|25|Consumer Discretionary|Apparel Retail|2026-08-30|sp500_constituents
+2026-08-13|220|FICO|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|221|CCL|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|222|FAST|20|Industrials|Trading Companies & Distributors|2026-08-30|sp500_constituents
+2026-08-13|223|SCHW|40|Financials|Investment Banking & Brokerage|2026-08-30|sp500_constituents
+2026-08-13|224|JCI|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|225|COHR|45|Information Technology|Electronic Components|2026-08-30|sp500_constituents
+2026-08-13|226|KEY|40|Financials|Regional Banks|2026-08-30|sp500_constituents
+2026-08-13|227|MOS|15|Materials|Fertilizers & Agricultural Chemicals|2026-08-30|sp500_constituents
+2026-08-13|228|MGM|25|Consumer Discretionary|Casinos & Gaming|2026-08-30|sp500_constituents
+2026-08-13|229|WM|20|Industrials|Environmental & Facilities Services|2026-08-30|sp500_constituents
+2026-08-13|230|TECH|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|231|IEX|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|232|GEN|45|Information Technology|Systems Software|2026-08-30|sp500_constituents
+2026-08-13|233|CRH|15|Materials|Construction Materials|2026-08-30|sp500_constituents
+2026-08-13|234|EOG|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|235|PTC|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|236|CSCO|45|Information Technology|Communications Equipment|2026-08-30|sp500_constituents
+2026-08-13|237|LH|35|Health Care|Health Care Services|2026-08-30|sp500_constituents
+2026-08-13|238|TRMB|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|239|AZO|25|Consumer Discretionary|Automotive Retail|2026-08-30|sp500_constituents
+2026-08-13|240|REGN|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|241|IDXX|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|242|AES|55|Utilities|Independent Power Producers & Energy Traders|2026-08-30|sp500_constituents
+2026-08-13|243|VRTX|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|244|ZBRA|45|Information Technology|Electronic Equipment & Instruments|2026-08-30|sp500_constituents
+2026-08-13|245|BIIB|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|246|ODFL|20|Industrials|Cargo Ground Transportation|2026-08-30|sp500_constituents
+2026-08-13|247|APH|45|Information Technology|Electronic Components|2026-08-30|sp500_constituents
+2026-08-13|248|KIM|60|Real Estate|Retail REITs|2026-08-30|sp500_constituents
+2026-08-13|249|QCOM|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|250|GILD|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|251|ROP|45|Information Technology|Electronic Equipment & Instruments|2026-08-30|sp500_constituents
+2026-08-13|252|SNPS|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|253|STZ|30|Consumer Staples|Distillers & Vintners|2026-08-30|sp500_constituents
+2026-08-13|254|BSX|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|255|STE|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|256|DHI|25|Consumer Discretionary|Homebuilding|2026-08-30|sp500_constituents
+2026-08-13|257|LIN|15|Materials|Industrial Gases|2026-08-30|sp500_constituents
+2026-08-13|258|SBUX|25|Consumer Discretionary|Restaurants|2026-08-30|sp500_constituents
+2026-08-13|259|MS|40|Financials|Investment Banking & Brokerage|2026-08-30|sp500_constituents
+2026-08-13|260|INTU|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|261|MCHP|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|262|CB|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|263|ORLY|25|Consumer Discretionary|Automotive Retail|2026-08-30|sp500_constituents
+2026-08-13|264|RCL|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|265|JBL|45|Information Technology|Electronic Manufacturing Services|2026-08-30|sp500_constituents
+2026-08-13|266|ALL|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|267|CPT|60|Real Estate|Multi-Family Residential REITs|2026-08-30|sp500_constituents
+2026-08-13|268|VMRK|60|Real Estate|Multi-Family Residential REITs|2026-08-30|sp500_constituents
+2026-08-13|269|IT|45|Information Technology|IT Consulting & Other Services|2026-08-30|sp500_constituents
+2026-08-13|270|DECK|25|Consumer Discretionary|Footwear|2026-08-30|sp500_constituents
+2026-08-13|271|REG|60|Real Estate|Retail REITs|2026-08-30|sp500_constituents
+2026-08-13|272|INCY|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|273|SPG|60|Real Estate|Retail REITs|2026-08-30|sp500_constituents
+2026-08-13|274|MAA|60|Real Estate|Multi-Family Residential REITs|2026-08-30|sp500_constituents
+2026-08-13|275|MLM|15|Materials|Construction Materials|2026-08-30|sp500_constituents
+2026-08-13|276|TSCO|25|Consumer Discretionary|Other Specialty Retail|2026-08-30|sp500_constituents
+2026-08-13|277|ALB|15|Materials|Specialty Chemicals|2026-08-30|sp500_constituents
+2026-08-13|278|CPRT|20|Industrials|Diversified Support Services|2026-08-30|sp500_constituents
+2026-08-13|279|FLEX|45|Information Technology|Electronic Manufacturing Services|2026-08-30|sp500_constituents
+2026-08-13|280|ESS|60|Real Estate|Multi-Family Residential REITs|2026-08-30|sp500_constituents
+2026-08-13|281|O|60|Real Estate|Retail REITs|2026-08-30|sp500_constituents
+2026-08-13|282|MCO|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|283|SJM|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|284|MCK|35|Health Care|Health Care Distributors|2026-08-30|sp500_constituents
+2026-08-13|285|COF|40|Financials|Consumer Finance|2026-08-30|sp500_constituents
+2026-08-13|286|EME|20|Industrials|Construction & Engineering|2026-08-30|sp500_constituents
+2026-08-13|287|DLTR|30|Consumer Staples|Consumer Staples Merchandise Retail|2026-08-30|sp500_constituents
+2026-08-13|288|COR|35|Health Care|Health Care Distributors|2026-08-30|sp500_constituents
+2026-08-13|289|DRI|25|Consumer Discretionary|Restaurants|2026-08-30|sp500_constituents
+2026-08-13|290|RMD|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|291|WAB|20|Industrials|Construction Machinery & Heavy Transportation Equipment|2026-08-30|sp500_constituents
+2026-08-13|292|FCX|15|Materials|Copper|2026-08-30|sp500_constituents
+2026-08-13|293|IVZ|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|294|ACGL|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|295|ERIE|40|Financials|Insurance Brokers|2026-08-30|sp500_constituents
+2026-08-13|296|EG|40|Financials|Reinsurance|2026-08-30|sp500_constituents
+2026-08-13|297|DVA|35|Health Care|Health Care Services|2026-08-30|sp500_constituents
+2026-08-13|298|HSIC|35|Health Care|Health Care Distributors|2026-08-30|sp500_constituents
+2026-08-13|299|EL|30|Consumer Staples|Personal Care Products|2026-08-30|sp500_constituents
+2026-08-13|300|WAT|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|301|NTAP|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|302|HIG|40|Financials|Property & Casualty Insurance|2026-08-30|sp500_constituents
+2026-08-13|303|IRM|60|Real Estate|Other Specialized REITs|2026-08-30|sp500_constituents
+2026-08-13|304|BRK-B|40|Financials|Multi-Sector Holdings|2026-08-30|sp500_constituents
+2026-08-13|305|FDS|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|306|STLD|15|Materials|Steel|2026-08-30|sp500_constituents
+2026-08-13|307|DGX|35|Health Care|Health Care Services|2026-08-30|sp500_constituents
+2026-08-13|308|CIEN|45|Information Technology|Communications Equipment|2026-08-30|sp500_constituents
+2026-08-13|309|TTWO|50|Communication Services|Interactive Home Entertainment|2026-08-30|sp500_constituents
+2026-08-13|310|VTR|60|Real Estate|Health Care REITs|2026-08-30|sp500_constituents
+2026-08-13|311|AMZN|25|Consumer Discretionary|Broadline Retail|2026-08-30|sp500_constituents
+2026-08-13|312|ARE|60|Real Estate|Office REITs|2026-08-30|sp500_constituents
+2026-08-13|313|RL|25|Consumer Discretionary|Apparel, Accessories & Luxury Goods|2026-08-30|sp500_constituents
+2026-08-13|314|BXP|60|Real Estate|Office REITs|2026-08-30|sp500_constituents
+2026-08-13|315|FIX|20|Industrials|Construction & Engineering|2026-08-30|sp500_constituents
+2026-08-13|316|YUM|25|Consumer Discretionary|Restaurants|2026-08-30|sp500_constituents
+2026-08-13|317|CHRW|20|Industrials|Air Freight & Logistics|2026-08-30|sp500_constituents
+2026-08-13|318|FE|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|319|MTD|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|320|PLD|60|Real Estate|Industrial REITs|2026-08-30|sp500_constituents
+2026-08-13|321|URI|20|Industrials|Trading Companies & Distributors|2026-08-30|sp500_constituents
+2026-08-13|322|AEE|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|323|VRSN|45|Information Technology|Internet Services & Infrastructure|2026-08-30|sp500_constituents
+2026-08-13|324|PWR|20|Industrials|Construction & Engineering|2026-08-30|sp500_constituents
+2026-08-13|325|AMT|60|Real Estate|Telecom Tower REITs|2026-08-30|sp500_constituents
+2026-08-13|326|MAR|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|327|CTSH|45|Information Technology|IT Consulting & Other Services|2026-08-30|sp500_constituents
+2026-08-13|328|SRE|55|Utilities|Multi-Utilities|2026-08-30|sp500_constituents
+2026-08-13|329|CSGP|60|Real Estate|Real Estate Services|2026-08-30|sp500_constituents
+2026-08-13|330|RSG|20|Industrials|Environmental & Facilities Services|2026-08-30|sp500_constituents
+2026-08-13|331|CCI|60|Real Estate|Telecom Tower REITs|2026-08-30|sp500_constituents
+2026-08-13|332|EBAY|25|Consumer Discretionary|Broadline Retail|2026-08-30|sp500_constituents
+2026-08-13|333|NVDA|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|334|BKNG|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|335|GS|40|Financials|Investment Banking & Brokerage|2026-08-30|sp500_constituents
+2026-08-13|336|FFIV|45|Information Technology|Communications Equipment|2026-08-30|sp500_constituents
+2026-08-13|337|SBAC|60|Real Estate|Telecom Tower REITs|2026-08-30|sp500_constituents
+2026-08-13|338|LII|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|339|BLK|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|340|TKO|50|Communication Services|Movies & Entertainment|2026-08-30|sp500_constituents
+2026-08-13|341|AKAM|45|Information Technology|Internet Services & Infrastructure|2026-08-30|sp500_constituents
+2026-08-13|342|UPS|20|Industrials|Air Freight & Logistics|2026-08-30|sp500_constituents
+2026-08-13|343|A|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|344|TDY|45|Information Technology|Electronic Equipment & Instruments|2026-08-30|sp500_constituents
+2026-08-13|345|PKG|15|Materials|Paper & Plastic Packaging Products & Materials|2026-08-30|sp500_constituents
+2026-08-13|346|EW|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|347|MET|40|Financials|Life & Health Insurance|2026-08-30|sp500_constituents
+2026-08-13|348|ON|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|349|ISRG|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|350|CRL|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|351|MRVL|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|352|EQIX|60|Real Estate|Data Center REITs|2026-08-30|sp500_constituents
+2026-08-13|353|TPR|25|Consumer Discretionary|Apparel, Accessories & Luxury Goods|2026-08-30|sp500_constituents
+2026-08-13|354|GRMN|25|Consumer Discretionary|Consumer Electronics|2026-08-30|sp500_constituents
+2026-08-13|355|GPN|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|356|ALGN|35|Health Care|Health Care Supplies|2026-08-30|sp500_constituents
+2026-08-13|357|WTW|40|Financials|Insurance Brokers|2026-08-30|sp500_constituents
+2026-08-13|358|MDLZ|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|359|AXON|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|360|FIS|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|361|ACN|45|Information Technology|IT Consulting & Other Services|2026-08-30|sp500_constituents
+2026-08-13|362|ZBH|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|363|BG|30|Consumer Staples|Agricultural Products & Services|2026-08-30|sp500_constituents
+2026-08-13|364|PFG|40|Financials|Life & Health Insurance|2026-08-30|sp500_constituents
+2026-08-13|365|ELV|35|Health Care|Managed Health Care|2026-08-30|sp500_constituents
+2026-08-13|366|CNC|35|Health Care|Managed Health Care|2026-08-30|sp500_constituents
+2026-08-13|367|PRU|40|Financials|Life & Health Insurance|2026-08-30|sp500_constituents
+2026-08-13|368|NFLX|50|Communication Services|Movies & Entertainment|2026-08-30|sp500_constituents
+2026-08-13|369|NDAQ|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|370|WYNN|25|Consumer Discretionary|Casinos & Gaming|2026-08-30|sp500_constituents
+2026-08-13|371|CME|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|372|STX|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|373|NRG|55|Utilities|Independent Power Producers & Energy Traders|2026-08-30|sp500_constituents
+2026-08-13|374|AIZ|40|Financials|Multi-line Insurance|2026-08-30|sp500_constituents
+2026-08-13|375|CBRE|60|Real Estate|Real Estate Services|2026-08-30|sp500_constituents
+2026-08-13|376|CRM|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|377|DPZ|25|Consumer Discretionary|Restaurants|2026-08-30|sp500_constituents
+2026-08-13|378|EXR|60|Real Estate|Self-Storage REITs|2026-08-30|sp500_constituents
+2026-08-13|379|GOOG|50|Communication Services|Interactive Media & Services|2026-08-30|sp500_constituents
+2026-08-13|380|GOOGL|50|Communication Services|Interactive Media & Services|2026-08-30|sp500_constituents
+2026-08-13|381|DLR|60|Real Estate|Data Center REITs|2026-08-30|sp500_constituents
+2026-08-13|382|MPWR|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|383|LVS|25|Consumer Discretionary|Casinos & Gaming|2026-08-30|sp500_constituents
+2026-08-13|384|DXCM|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|385|BLDR|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|386|WBD|50|Communication Services|Broadcasting|2026-08-30|sp500_constituents
+2026-08-13|387|EXPE|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|388|CF|15|Materials|Fertilizers & Agricultural Chemicals|2026-08-30|sp500_constituents
+2026-08-13|389|AMP|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|390|ICE|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|391|PSKY|50|Communication Services|Movies & Entertainment|2026-08-30|sp500_constituents
+2026-08-13|392|LYV|50|Communication Services|Movies & Entertainment|2026-08-30|sp500_constituents
+2026-08-13|393|CMG|25|Consumer Discretionary|Restaurants|2026-08-30|sp500_constituents
+2026-08-13|394|UAL|20|Industrials|Passenger Airlines|2026-08-30|sp500_constituents
+2026-08-13|395|TDG|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|396|MA|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|397|LDOS|20|Industrials|Diversified Support Services|2026-08-30|sp500_constituents
+2026-08-13|398|FSLR|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|399|BR|20|Industrials|Data Processing & Outsourced Services|2026-08-30|sp500_constituents
+2026-08-13|400|SMCI|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|401|TMUS|50|Communication Services|Wireless Telecommunication Services|2026-08-30|sp500_constituents
+2026-08-13|402|DAL|20|Industrials|Passenger Airlines|2026-08-30|sp500_constituents
+2026-08-13|403|IBKR|40|Financials|Investment Banking & Brokerage|2026-08-30|sp500_constituents
+2026-08-13|404|PODD|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|405|TEL|45|Information Technology|Electronic Manufacturing Services|2026-08-30|sp500_constituents
+2026-08-13|406|BX|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|407|LULU|25|Consumer Discretionary|Apparel, Accessories & Luxury Goods|2026-08-30|sp500_constituents
+2026-08-13|408|ULTA|25|Consumer Discretionary|Other Specialty Retail|2026-08-30|sp500_constituents
+2026-08-13|409|MSCI|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|410|ECHO|50|Communication Services|Wireless Telecommunication Services|2026-08-30|sp500_constituents
+2026-08-13|411|PM|30|Consumer Staples|Tobacco|2026-08-30|sp500_constituents
+2026-08-13|412|V|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|413|AWK|55|Utilities|Water Utilities|2026-08-30|sp500_constituents
+2026-08-13|414|KDP|30|Consumer Staples|Soft Drinks & Non-alcoholic Beverages|2026-08-30|sp500_constituents
+2026-08-13|415|SW|15|Materials|Paper & Plastic Packaging Products & Materials|2026-08-30|sp500_constituents
+2026-08-13|416|AVGO|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|417|VRSK|20|Industrials|Research & Consulting Services|2026-08-30|sp500_constituents
+2026-08-13|418|DG|30|Consumer Staples|Consumer Staples Merchandise Retail|2026-08-30|sp500_constituents
+2026-08-13|419|FTNT|45|Information Technology|Systems Software|2026-08-30|sp500_constituents
+2026-08-13|420|CHTR|50|Communication Services|Cable & Satellite|2026-08-30|sp500_constituents
+2026-08-13|421|FERG|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|422|GNRC|20|Industrials|Heavy Electrical Equipment|2026-08-30|sp500_constituents
+2026-08-13|423|LYB|15|Materials|Specialty Chemicals|2026-08-30|sp500_constituents
+2026-08-13|424|CBOE|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|425|TSLA|25|Consumer Discretionary|Automobile Manufacturers|2026-08-30|sp500_constituents
+2026-08-13|426|KKR|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|427|NXPI|45|Information Technology|Semiconductors|2026-08-30|sp500_constituents
+2026-08-13|428|GM|25|Consumer Discretionary|Automobile Manufacturers|2026-08-30|sp500_constituents
+2026-08-13|429|TRGP|10|Energy|Oil & Gas Storage & Transportation|2026-08-30|sp500_constituents
+2026-08-13|430|CPAY|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|431|KMI|10|Energy|Oil & Gas Storage & Transportation|2026-08-30|sp500_constituents
+2026-08-13|432|HCA|35|Health Care|Health Care Facilities|2026-08-30|sp500_constituents
+2026-08-13|433|HII|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|434|APO|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|435|MPC|10|Energy|Oil & Gas Refining & Marketing|2026-08-30|sp500_constituents
+2026-08-13|436|XYL|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|437|APTV|25|Consumer Discretionary|Automotive Parts & Equipment|2026-08-30|sp500_constituents
+2026-08-13|438|PSX|10|Energy|Oil & Gas Refining & Marketing|2026-08-30|sp500_constituents
+2026-08-13|439|AMCR|15|Materials|Paper & Plastic Packaging Products & Materials|2026-08-30|sp500_constituents
+2026-08-13|440|META|50|Communication Services|Interactive Media & Services|2026-08-30|sp500_constituents
+2026-08-13|441|NOW|45|Information Technology|Systems Software|2026-08-30|sp500_constituents
+2026-08-13|442|PANW|45|Information Technology|Systems Software|2026-08-30|sp500_constituents
+2026-08-13|443|FANG|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|444|WDAY|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|445|ABBV|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|446|NCLH|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|447|ZTS|35|Health Care|Pharmaceuticals|2026-08-30|sp500_constituents
+2026-08-13|448|IQV|35|Health Care|Life Sciences Tools & Services|2026-08-30|sp500_constituents
+2026-08-13|449|NWS|50|Communication Services|Publishing|2026-08-30|sp500_constituents
+2026-08-13|450|NWSA|50|Communication Services|Publishing|2026-08-30|sp500_constituents
+2026-08-13|451|CDW|45|Information Technology|Technology Distributors|2026-08-30|sp500_constituents
+2026-08-13|452|VEEV|35|Health Care|Health Care Technology|2026-08-30|sp500_constituents
+2026-08-13|453|ALLE|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|454|HLT|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|455|ARES|40|Financials|Asset Management & Custody Banks|2026-08-30|sp500_constituents
+2026-08-13|456|ANET|45|Information Technology|Communications Equipment|2026-08-30|sp500_constituents
+2026-08-13|457|SYF|40|Financials|Consumer Finance|2026-08-30|sp500_constituents
+2026-08-13|458|CFG|40|Financials|Regional Banks|2026-08-30|sp500_constituents
+2026-08-13|459|KEYS|45|Information Technology|Electronic Equipment & Instruments|2026-08-30|sp500_constituents
+2026-08-13|460|GDDY|45|Information Technology|Internet Services & Infrastructure|2026-08-30|sp500_constituents
+2026-08-13|461|KHC|30|Consumer Staples|Packaged Foods & Meats|2026-08-30|sp500_constituents
+2026-08-13|462|PYPL|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|463|LITE|45|Information Technology|Communications Equipment|2026-08-30|sp500_constituents
+2026-08-13|464|HPE|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|465|XYZ|40|Financials|Transaction & Payment Processing Services|2026-08-30|sp500_constituents
+2026-08-13|466|FTV|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|467|DELL|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|468|TTD|50|Communication Services|Advertising|2026-08-30|sp500_constituents
+2026-08-13|469|VST|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|470|HWM|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents
+2026-08-13|471|INVH|60|Real Estate|Single-Family Residential REITs|2026-08-30|sp500_constituents
+2026-08-13|472|CVNA|25|Consumer Discretionary|Automotive Retail|2026-08-30|sp500_constituents
+2026-08-13|473|IR|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|474|VICI|60|Real Estate|Hotel & Resort REITs|2026-08-30|sp500_constituents
+2026-08-13|475|VRT|20|Industrials|Electrical Components & Equipment|2026-08-30|sp500_constituents
+2026-08-13|476|MRNA|35|Health Care|Biotechnology|2026-08-30|sp500_constituents
+2026-08-13|477|FOXA|50|Communication Services|Broadcasting|2026-08-30|sp500_constituents
+2026-08-13|478|FOX|50|Communication Services|Broadcasting|2026-08-30|sp500_constituents
+2026-08-13|479|DOW|15|Materials|Commodity Chemicals|2026-08-30|sp500_constituents
+2026-08-13|480|UBER|20|Industrials|Passenger Ground Transportation|2026-08-30|sp500_constituents
+2026-08-13|481|CTVA|15|Materials|Fertilizers & Agricultural Chemicals|2026-08-30|sp500_constituents
+2026-08-13|482|CRWD|45|Information Technology|Systems Software|2026-08-30|sp500_constituents
+2026-08-13|483|DDOG|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|484|CARR|20|Industrials|Building Products|2026-08-30|sp500_constituents
+2026-08-13|485|OTIS|20|Industrials|Industrial Machinery & Supplies & Components|2026-08-30|sp500_constituents
+2026-08-13|486|PLTR|45|Information Technology|Application Software|2026-08-30|sp500_constituents
+2026-08-13|487|DASH|25|Consumer Discretionary|Specialized Consumer Services|2026-08-30|sp500_constituents
+2026-08-13|488|ABNB|25|Consumer Discretionary|Hotels, Resorts & Cruise Lines|2026-08-30|sp500_constituents
+2026-08-13|489|EXE|10|Energy|Oil & Gas Exploration & Production|2026-08-30|sp500_constituents
+2026-08-13|490|COIN|40|Financials|Financial Exchanges & Data|2026-08-30|sp500_constituents
+2026-08-13|491|APP|50|Communication Services|Advertising|2026-08-30|sp500_constituents
+2026-08-13|492|HOOD|40|Financials|Investment Banking & Brokerage|2026-08-30|sp500_constituents
+2026-08-13|493|CEG|55|Utilities|Electric Utilities|2026-08-30|sp500_constituents
+2026-08-13|494|GEHC|35|Health Care|Health Care Equipment|2026-08-30|sp500_constituents
+2026-08-13|495|KVUE|30|Consumer Staples|Personal Care Products|2026-08-30|sp500_constituents
+2026-08-13|496|VLTO|20|Industrials|Environmental & Facilities Services|2026-08-30|sp500_constituents
+2026-08-13|497|RDDT|50|Communication Services|Interactive Media & Services|2026-08-30|sp500_constituents
+2026-08-13|498|SOLV|35|Health Care|Health Care Technology|2026-08-30|sp500_constituents
+2026-08-13|499|GEV|20|Industrials|Heavy Electrical Equipment|2026-08-30|sp500_constituents
+2026-08-13|500|SNDK|45|Information Technology|Technology Hardware, Storage & Peripherals|2026-08-30|sp500_constituents
+2026-08-13|501|Q|45|Information Technology|Semiconductor Materials & Equipment|2026-08-30|sp500_constituents
+2026-08-13|502|FDXF|20|Industrials|Cargo Ground Transportation|2026-08-30|sp500_constituents
+2026-08-13|503|HONA|20|Industrials|Aerospace & Defense|2026-08-30|sp500_constituents

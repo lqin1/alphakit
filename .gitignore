@@ -219,14 +219,17 @@ __marimo__/
 
 
 # ============================== alphakit ==============================
-# README「布局」与 manual §2.2 都写着「storage/ 整体在 .gitignore 内, 由 pipeline
-# 完全可重建」——在此之前那是一句空头支票: 头一次 `git add .` 就会把 60 MB 引导数据
-# 连同 zarr 分块一起写进历史, 而它本来就是三条命令能重造的东西。
-# registry/ 故意不在此列: 它是 append-only 的 security_id 注册表, storage/ 可以整个
-# 删掉, 它不行——删了历史 ID 的含义就没了。
-storage/
+# storage/ **入库**（此前一度被排除, 现已反转）。
+# 理由是 pipeline/ 将来要独立成单独的 repo: 一旦它搬走, 本 repo 里就再没有任何
+# 东西能重建 storage/, "由 pipeline 完全可重建"这条前提当场失效。届时 clone
+# 下来若没有数据, 连一个 alpha 都跑不起来——所以数据必须跟着引擎走, 开箱即用。
+#   l1 18 MB  厂商原始载荷: 唯一的溯源记录, L2 是怎么推出来的全靠它
+#   l2 41 MB  交付层, 重建 L3 的输入
+#   l3  5 MB  引擎的唯一输入输出, 直接可跑
+# 合计约 63 MB / 1584 个文件, 无单个大文件（最大 0.95 MB）, gzip 后约 19 MB。
 
-# `alphakit pnl` 的四交付物落地处, 每次评估整目录重写, 与 storage/ 同理
+# `alphakit pnl` 的四交付物落地处, 每次评估整目录重写——这个仍然不入库:
+# 它是 storage/ 加一条命令就能再生的结果, 而且每跑一次全变, diff 毫无意义。
 pnl_out/
 
 # 上面「Distribution / packaging」段里的 `lib/` 本意是 build 产物, 但这个模式匹配任意

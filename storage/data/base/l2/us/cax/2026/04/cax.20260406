@@ -1,0 +1,5 @@
+date|security_id|ticker|event_type|div_amount|split_num|split_den|split_ratio
+2026-04-06|122|JPM|div|1.500000|||
+2026-04-06|251|ROP|div|0.910000|||
+2026-04-06|307|DGX|div|0.860000|||
+2026-04-06|334|BKNG|split||25|1|25.0000000000
