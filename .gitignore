@@ -224,6 +224,7 @@ __marimo__/
 # 连同 zarr 分块一起写进历史, 而它本来就是三条命令能重造的东西。
 # registry/ 故意不在此列: 它是 append-only 的 security_id 注册表, storage/ 可以整个
 # 删掉, 它不行——删了历史 ID 的含义就没了。
+storage/
 
 # `alphakit pnl` 的四交付物落地处, 每次评估整目录重写, 与 storage/ 同理
 pnl_out/
