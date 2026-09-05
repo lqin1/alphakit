@@ -25,7 +25,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..core import freshness
 from ..core import rank as rk
+from ..core.naming import expand_wildcard
 from ..core.config import CS_OPS, KINDS, ConfigError, Spec, is_wildcard, parse_ref
 
 ERROR = "error"
@@ -193,9 +195,12 @@ class _Cat:
     def dtype(self, ref: str) -> str:
         return str(self.meta(ref).get("dtype") or "")
 
+    @property
+    def axes(self):
+        return self.store.axes
+
     def expand(self, pattern: str) -> list[str]:
-        stem = pattern[:-1]                       # 含末尾的 '-' 或 '.'
-        return sorted(r for r in self.known if r.startswith(stem))
+        return expand_wildcard(pattern, self.known)
 
 
 # ------------------------------------------------------------------- 源码 AST
@@ -514,9 +519,9 @@ def _window_checks(spec: Spec, store, cat: _Cat, deps: set[str],
                    sd: str | None, ed: str | None, path: str) -> list[Diagnostic]:
     """sd / ed 落在 session 轴上，且 ed 不越过数据的边界（§7.3）。
 
-    这里刻意**复刻**了 `node.effective_ed` 的那几行而不是调用它：预检要多说一句
-    「是谁卡住的」，而那个函数只回一个日期；更要紧的是预检必须能在不导入 runner
-    （及其 numpy/pandas）的前提下跑完——它的定位是"读任何数据之前"。
+    新鲜度那几行与 runner 共用 `core.freshness`：预检要多说一句「是谁卡住的」, 所以
+    `freshness.cap` 连 binder 一起返回。它不 import numpy/pandas, 预检"读任何数据
+    之前"就能跑完这一条仍然成立——曾经为了这条理由把实现抄了一份, 然后两份分叉了。
     """
     out: list[Diagnostic] = []
     axes = store.axes
@@ -540,15 +545,14 @@ def _window_checks(spec: Spec, store, cat: _Cat, deps: set[str],
 
     # ed 的可用性由数据新鲜度决定（§7.3）：任一依赖的最新 session 未落地则回退。
     # run() 把 return_metric 也算进去，这里照做，否则报出来的 effective_ed 会偏乐观。
-    cap_i, binder = axes.n_sessions - 1, None
+    # 与 runner 共用同一份实现（core.freshness）。此前这里抄了一份, 而两份真的分叉过:
+    # runner 在算封顶前把通配 dep 整个丢掉, 这里用的却是展开后的集合, 于是同一个 yaml
+    # 被算出两个 effective_ed——而这段代码存在的全部理由就是让那个日期只有一个答案。
     watch = set(deps) | ({spec.return_metric} if spec.return_metric else set())
-    for r in sorted(watch):
-        if not cat.exists(r):
-            continue
-        ls = int(cat.meta(r).get("last_session", cap_i))
-        if ls < cap_i:
-            cap_i, binder = ls, r
-    cap = axes.date(max(0, cap_i))
+    if spec.universe:
+        watch.add(spec.universe)
+    cap_i, binder = freshness.cap(cat, watch)
+    cap = axes.date(cap_i)
     if binder is not None and (ed is None or ed > cap):
         # 「绝不静默算半截数据」——回退本身是对的，不出声才是错的。
         want = ed or f"{axes.sessions[-1]} (ed defaults to the last session on the axis)"

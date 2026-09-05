@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from ..core.config import NodeSpec, Spec, is_wildcard
+from ..core.freshness import effective_ed
 from ..core.store import Store, StoreError
 from .ctx import Ctx, PanelLoader, UniverseView
 
@@ -25,19 +26,6 @@ def load_module(path: Path):
     sys.modules[spec.name] = mod
     spec.loader.exec_module(mod)
     return mod
-
-
-def effective_ed(store: Store, ed: str | None, deps: set[str]) -> str:
-    """ed 的可用性由数据新鲜度决定：任一依赖最新 session 未落地则回退（§7.3）。
-
-    绝不静默算半截数据。
-    """
-    last = store.axes.n_sessions - 1
-    for d in deps:
-        if store.exists(d):
-            last = min(last, int(store.meta(d).get("last_session", last)))
-    cap = store.axes.date(last)
-    return cap if ed is None else min(ed, cap)
 
 
 def warmup(declared: int, node: NodeSpec) -> int:
@@ -90,7 +78,6 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
                 f"`store status` lists what has landed.")
 
     i_sd, i_ed = store.axes.pos(sd), store.axes.pos(ed)
-    from .ops import ops_lookback
     has_ops = any(o.ops for o in node.outputs.values())
     lookback = warmup(spec.lookback, node)
     i_start = max(0, i_sd - lookback)
@@ -185,8 +172,22 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
         tag = f"probe({probe})" if probe is not None else "wrote"
         print(f"  {node.name:<34} {len(dates)} days (warmup {i_sd - i_start}) "
               f"{tag} {len(written)} outputs  {time.time()-t0:.2f}s")
+    # 空账日必须随记录一起走。OpChain 把它们攒在 degenerate_scale 里, 注释写着
+    # "供 runner 汇报", 但此前没有任何人读——一个只在第一天出声、之后只累计的告警,
+    # 如果最终没人汇总, 等于整段区间只喊了一次。Σ|w|=0 的日子会被原样写进库,
+    # 而 pnl 的 dropna 删不掉 0.0, 它们会被当成"收益恰好为零"算进 Sharpe。
+    # 无 ops 的节点这里是个恒等 lambda, 没有 degenerate_scale
+    # **只算落库区间内的**。预热段也会走完整条链, 那一段 Σ|w|=0 是正常的（缓冲还没
+    # 填满、上游还没有值）, 而且它根本不落库——把它一起报出来, 那句"这些以 0.0 写进
+    # 库、pnl 删不掉"就是假的, 而一个会喊狼来了的告警很快就没人看了。
+    degenerate = sorted({t for c in chains.values()
+                         for t in getattr(c, "degenerate_scale", ())
+                         if t >= i_sd})
     return {"node": node.name, "written": written, "deps": deps,
             "seconds": round(time.time() - t0, 3),
+            "warmup": lookback, "sd": sd, "ed": ed,
+            "degenerate_days": len(degenerate),
+            "degenerate_first": (store.axes.date(degenerate[0]) if degenerate else None),
             "rows": {k: len(v) for k, v in rows.items()}}
 
 

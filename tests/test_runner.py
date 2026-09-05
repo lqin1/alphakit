@@ -17,12 +17,10 @@ import traceback
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from alpha_kit.core import rank as rk                      # noqa: E402
 from alpha_kit.core.config import load_spec                # noqa: E402
 from alpha_kit.core.panels import Panels                   # noqa: E402
 from alpha_kit.core.store import Store                     # noqa: E402

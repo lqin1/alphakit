@@ -404,37 +404,12 @@ def metrics(res, *, market_ret=None, meta: dict | None = None,
     return _jsonable(out)
 
 
-def format_report(m: dict) -> str:
-    """`--pnl` 末尾那一屏。七道闸门逐条打印状态与数字，末行是 readiness。"""
-    s, au = m["scalar"], m["audit"]
-    L = []
-    L.append(f"{'period':<10}{m['snapshot']['sd']} → {m['snapshot']['ed']}  "
-             f"{m['snapshot']['n_sessions']} sessions × {m['snapshot']['n_securities']} names  "
-             f"booksize={m['snapshot']['booksize']:,.0f}")
-    L.append(f"{'metrics':<10}Sharpe {_fmt(s['sharpe'], '.3f')}   Ret {_fmt((s['ann_return'] or 0) * 100, '.2f')}%   "
-             f"TO {_fmt((s['turnover'] or 0) * 100, '.2f')}%   Margin {_fmt(s['margin_bps'], '.2f')}bps   "
-             f"Fitness {_fmt(s['fitness'], '.3f')}   MaxDD {_fmt((s['max_drawdown'] or 0) * 100, '.2f')}%")
-    L.append(f"{'book':<10}long {_fmt(s['avg_long_value'], ',.0f')}({_fmt(s['avg_long_count'], '.0f')})  "
-             f"short {_fmt(s['avg_short_value'], ',.0f')}({_fmt(s['avg_short_count'], '.0f')})  "
-             f"L/S {_fmt(s['long_short_ratio'], '.3f')}  cost/gross {_fmt((s['cost_share_of_gross'] or 0) * 100, '.1f')}%")
-    L.append(f"{'audit':<10}ghost_detection={au['ghost_detection']}  ghost_days={au['ghost_days']}  "
-             f"delist_source={au['delist_source']}  delist_events={au['delist_events']}  "
-             f"frozen_value_avg={_fmt(au['frozen_value_avg'], ',.0f')}  "
-             f"realloc_TO={_fmt((au['realloc_turnover_avg'] or 0) * 100, '.3f')}%  "
-             f"cash_avg={_fmt(au['cash_avg'], ',.0f')}")
-    if m["by_year"]:
-        L.append("by year   " + "  ".join(
-            f"{y}: Sh {_fmt(v['sharpe'], '.2f')} Ret {_fmt((v['ann_return'] or 0) * 100, '.1f')}% "
-            f"({v['days']}d)" for y, v in sorted(m["by_year"].items())))
-    L.append("")
-    for i, g in enumerate(m["gates"], 1):
-        nums = "  ".join(
-            f"{k}={v if isinstance(v, (bool, str)) else _fmt(v, '.4g')}"
-            for k, v in g["numbers"].items()
-            if not isinstance(v, (list, dict)) and v is not None)
-        L.append(f"[gate {i}/7] {g['gate']:<18} {g['state']:<8} {nums}")
-        if g["note"]:
-            L.append(f"{'':>13} └ {g['note']}")
-    L.append("")
-    L.append(m["summary"])
-    return "\n".join(L)
+def format_report(m: dict, name: str = "", by: str = "year") -> str:
+    """报表只有一份实现——转调 `report.render`。
+
+    此前这里是第二个渲染器, 而 `tests/test_simulate.py` 测的正是它、CLI 打的却是
+    `report._print`: 被测的从来不是发出去的那一份, 改一边就会悄悄分叉。
+    延迟 import: report 依赖 metrics 的 compute_metrics, 顶层互相 import 会成环。
+    """
+    from .report import render
+    return render(name or (m.get("snapshot") or {}).get("node", "-"), m, by=by)

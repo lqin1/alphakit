@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import json
 import sys
 import time
 import warnings
@@ -71,6 +72,7 @@ def cmd_run(a) -> int:
     from .runner.preflight import config_error, n_errors, preflight, report
     store = Store(a.store, a.region)
     rc = 0
+    records: list[dict] = []
     for f in _specs(a.path):
         try:
             spec = load_spec(f)
@@ -88,8 +90,10 @@ def cmd_run(a) -> int:
             rc = 1; continue        # 有 error 就不进引擎——不让人等到第 12 秒
 
         try:
-            run(spec, store, a.sd or store.axes.sessions[0], a.ed,
-                only=a.only, rebuild=a.rebuild, probe=a.probe)
+            recs = run(spec, store, a.sd or store.axes.sessions[0], a.ed,
+                       only=a.only, rebuild=a.rebuild, probe=a.probe)
+            records.extend(recs)
+            rc = _report_degenerate(recs) or rc
         except (ConfigError, StoreError, ValueError, KeyError, TypeError) as e:
             # ConfigError 是 ValueError 的子类, 但引擎运行期抛的多数是**裸**的
             # ValueError/KeyError/TypeError: ctx._coerce 的形状不符（作者最常犯的
@@ -98,7 +102,30 @@ def cmd_run(a) -> int:
             # 指回作者自己那一行"从不执行, 而且异常直接冲出 for 循环——glob 里后面
             # 九个 yaml 连预检都跑不到, 与 cmd_run 开头写明的契约相反。
             report([_runtime_error(f, e)]); rc = 1
+    if getattr(a, "record", None):
+        Path(a.record).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.record).write_text(json.dumps(
+            {"argv": sys.argv[1:], "region": a.region, "store": a.store,
+             "finished_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+             "rc": rc, "nodes": records}, indent=1, ensure_ascii=False))
+        print(f"  run record -> {a.record}")
     return rc
+
+
+def _report_degenerate(recs: list[dict]) -> int:
+    """空账日必须在**运行结束时**再说一次, 而不是只在第一天喊一声。
+
+    OpChain 只对第一个 Σ|w|=0 的日子发告警, 之后只累计——那条注释写着"供 runner
+    汇报", 但此前没有任何人读它。一次跑几百天、前面几十天全是空账的情形, 使用者
+    只会看到一行早已滚出屏幕的 warning, 然后把一串 0.0 权重当成正常结果落进库,
+    而 pnl 的 dropna 删不掉 0.0——那些天会被当作"收益恰好为零"算进 Sharpe。
+    """
+    bad = [r for r in recs if r.get("degenerate_days")]
+    for r in bad:
+        print(f"  warn  {r['node']}: {r['degenerate_days']} day(s) produced an empty book "
+              f"(Sigma|w|=0), first {r['degenerate_first']} -- these are written as 0.0 and "
+              f"pnl cannot drop them")
+    return 0                       # 不改退出码: 空账未必是错, 但绝不能不出声
 
 
 def cmd_store(a) -> int:
@@ -166,6 +193,8 @@ def main(argv=None) -> int:
     r.add_argument("--probe", nargs="?", type=int, const=20, default=None,
                    help="trial-run the warmed tail; does not write the store")
     r.add_argument("--rebuild", action="store_true", help="full rebuild, bumping version")
+    r.add_argument("--record", default=None,
+                   help="write a machine-readable run record (JSON) to this path")
     r.set_defaults(fn=cmd_run)
 
     s = sub.add_parser("store", parents=[common], help="query tool, not an executor")

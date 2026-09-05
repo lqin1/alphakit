@@ -1,5 +1,5 @@
 alphakit L2 validation report
-generated   : 2026-09-05T04:14:00+00:00
+generated   : 2026-09-05T04:29:19+00:00
 contract    : docs/l2_schema.md §8 (V1..V8) + X-series structural checks
 l2_dir      : /home/ubuntu/workspace/alphakit/storage/data/base/l2/us
 raw_dir     : /home/ubuntu/workspace/alphakit/storage/data/base/l1/yahoo/chart

@@ -100,6 +100,18 @@ def is_wildcard(ref: str) -> bool:
     return ref.endswith("-*") or ref.endswith(".*")
 
 
+def expand_wildcard(pattern: str, known) -> list[str]:
+    """通配 → 匹配到的 ref, 按名字排序。非通配名原样返回。
+
+    `store.expand` 与预检的 `_Cat.expand` 此前各写一份同样的前缀匹配。算法只有一个,
+    差别只在候选集来自磁盘还是来自预检的目录缓存, 所以候选集当参数传。
+    """
+    if not is_wildcard(pattern):
+        return [pattern]
+    stem = pattern[:-1]                      # 去掉末尾星号, 保留 '-' 或 '.'
+    return sorted(r for r in known if r.startswith(stem))
+
+
 def check_name(s: str, what: str) -> None:
     if not NAME_RE.match(s):
         raise ConfigError(f"{what} is malformed (must start lowercase, use [a-z0-9_], no dot/hyphen/uppercase): {s}")

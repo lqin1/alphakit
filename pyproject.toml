@@ -49,3 +49,26 @@ packages = [
 
 [tool.setuptools.dynamic]
 version = { attr = "alpha_kit.__version__" }
+
+[tool.ruff]
+# 只针对引擎与测试。pipeline/ 将来独立成 repo, 到时带走自己的配置。
+target-version = "py311"      # 与 requires-python 同一个下界: 承诺要能被机器检查
+line-length = 100
+
+[tool.ruff.lint]
+# 选的是**会咬人的**那些, 不是风格。这个仓库的排版是有意的（对齐的注释块、
+# 刻意的换行位置）, 把 UP/I/Q 一类打开只会得到几百条无意义的改动, 然后没人再看
+# lint 的输出——一个总是红的检查等于没有检查。
+#   F   pyflakes: 未用的导入/变量、名字拼错
+#   E9  语法错（含"这个语法你的 requires-python 还不支持"）
+#   B   bugbear: 循环变量闭包、可变默认值这类真 bug
+#   PLE pylint 的 error 档
+select = ["F", "E9", "B", "PLE"]
+ignore = [
+    "B905",   # zip(strict=) —— 3.10+ 才有, 且此处长度相等由轴保证
+    "B028",   # warnings.warn 不带 stacklevel: 引擎的告警面向使用者而非调用栈
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试里 sys.path 插入必须在 import 之前, 且断言计数用模块级 global
+"tests/*" = ["E402", "B011"]

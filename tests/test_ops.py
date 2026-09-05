@@ -319,7 +319,7 @@ def test_reset_gives_identical_results():
     check(not np.array_equal(polluted.to_numpy(), first[0].to_numpy()),
           "the same result without reset -- this chain has no op-state, so the test is vacuous")
     check(near(first[-1].abs().sum(), 1.0), "Sigma|w| != 1 at the end of the seven-op chain")
-    return f"7 ops x 8 days agree bit for bit; without reset they differ from day one"
+    return "7 ops x 8 days agree bit for bit; without reset they differ from day one"
 
 
 def test_cursor_must_advance_by_one():

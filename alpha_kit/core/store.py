@@ -11,7 +11,6 @@
 """
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 
@@ -21,7 +20,7 @@ import zarr
 
 from .axes import Axes
 from . import rank as rk
-from .naming import ConfigError, Ref, is_wildcard, parse_ref
+from .naming import ConfigError, Ref, expand_wildcard, parse_ref
 
 def _covered(z, dims: list[str], n: int, i0: int, i1: int) -> int:
     """本次写入的这一段里, 有数据的列数（秩-1 没有列轴, 记 0）。
@@ -117,10 +116,7 @@ class Store:
 
     def expand(self, pattern: str) -> list[str]:
         """通配 → 该节点当时的全部输出（§3.2）。折叠形写 `{repo}.{node_dir}.*`。"""
-        if not is_wildcard(pattern):
-            return [pattern]
-        stem = pattern[:-1]                      # 含末尾的 '-' 或 '.'
-        hits = sorted(r for r in self.list_refs() if r.startswith(stem))
+        hits = expand_wildcard(pattern, self.list_refs())
         if not hits:
             raise StoreError(f"wildcard {pattern} expanded to nothing -- that node has not produced any output yet")
         return hits

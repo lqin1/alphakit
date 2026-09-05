@@ -119,6 +119,22 @@ def run_pnl(a) -> int:
     return 0
 
 
+def render(name: str, m: dict, out=None, by: str = "both") -> str:
+    """报表的文本形态——**就是 `_print` 打出去的那些字**, 由构造保证逐字相同。
+
+    此前 `metrics.format_report` 是第二个渲染器, 而 test_simulate 测的正是它、CLI 打的
+    却是 `_print`: 被测的从来不是发出去的那一份, 两边改一边就会悄悄分叉。与其把 _print
+    重写成拼字符串（那次改写本身就容易出错）, 不如直接把它的输出捕下来: 只有一份实现,
+    也就没有第二份可以分叉。
+    """
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        _print(name, m, out if out is not None else Path("-"), by=by)
+    return buf.getvalue()
+
+
 def _print(name: str, m: dict, out: Path, by: str = "both") -> None:
     """控制台是这条命令的**主要**输出面。
 

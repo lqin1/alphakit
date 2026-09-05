@@ -22,7 +22,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: python -m pip install --upgrade pip && pip install -e .
+      - run: python -m pip install --upgrade pip && pip install -e . ruff
+      - name: lint
+        # 只选会咬人的规则（F/E9/B/PLE）, 不管风格——一个总是红的检查等于没有检查。
+        # E9 顺带守住 requires-python: 用了 3.12 才有的语法会在 3.11 这一格直接现形
+        # （PEP 701 的 f-string 就这么混进来过一次, 而 pyproject 承诺的是 3.11+）。
+        run: ruff check alpha_kit tests
       - name: engine + data self-check
         # run_all.py 非零退出即失败; 它把五套串起来跑
         run: python tests/run_all.py

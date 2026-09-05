@@ -2263,9 +2263,11 @@ class Validator:
                     c.violation(
                         f"coverage_partial[{name!r}].{k} = {want.get(k)!r} but "
                         f"recomputed {got[k]} from pv")
+        # 内层表达式提出来: f-string 里复用外层引号是 PEP 701, 3.12 才有, 而本项目
+        # 承诺 3.11+（pyproject.requires-python 与 manual §2.1）
+        detail = ", ".join(f"{k}={v['n_sessions']}" for k, v in sorted(partial.items()))
         c.note(f"recomputed from pv: {len(full)} security(ies) with full "
-               f"{total}-session coverage, {len(partial)} partial "
-               f"({', '.join(f'{k}={v['n_sessions']}' for k, v in sorted(partial.items()))})")
+               f"{total}-session coverage, {len(partial)} partial ({detail})")
 
     # -- X12: industry table (§3.2), now PIT ---------------------------------
     def check_x12(self) -> None:
@@ -2616,9 +2618,9 @@ class Validator:
             c.n_violations += len(missing) - self.rep.max_show
         extra = sorted(set(ids) - used)
         if extra:
+            sample = [f"{s}:{yahoo.get(s, '')}" for s in extra[:10]]
             c.note(f"{len(extra)} registry entry(ies) carry no data in this delivery "
-                   f"(allowed — retired securities keep their id): "
-                   f"{[f'{s}:{yahoo.get(s,'')}' for s in extra[:10]]}")
+                   f"(allowed — retired securities keep their id): {sample}")
         # the registry is the id authority: its ticker must match the master's
         mism = 0
         for sid, info in sorted(self.sec_union.items()):

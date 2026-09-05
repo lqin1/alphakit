@@ -16,7 +16,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
@@ -39,7 +38,7 @@ def check(name: str, cond: bool, detail: str = "") -> None:
 
 def main() -> int:
     from alpha_kit.core.store import Store
-    from alpha_kit.core.config import load_spec, ConfigError, parse_ref
+    from alpha_kit.core.config import ConfigError, parse_ref
 
     print("=== 1. dependencies ===")
     for m in ("pandas", "numpy", "zarr", "yaml"):

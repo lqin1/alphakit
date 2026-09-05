@@ -45,10 +45,10 @@
     "status": "wip",
     "registered": false,
     "fingerprint": "sha256:b7000f2ebeaeaba2",
-    "version": 1,
+    "version": 2,
     "first_session": 64,
     "last_session": 249,
-    "updated_at": "2026-09-05T04:13:56Z",
+    "updated_at": "2026-09-05T04:29:15Z",
     "deps": [
       "g_common.field_base_px.adj_close_1500",
       "g_common.factor_common_gics.sector"

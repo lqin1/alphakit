@@ -48,16 +48,16 @@
     "version": 1,
     "first_session": 64,
     "last_session": 249,
-    "updated_at": "2026-09-05T04:13:59Z",
+    "updated_at": "2026-09-05T04:29:18Z",
     "deps": [
       "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight",
       "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight",
       "g_lqin.alpha_lqin_senti.weight"
     ],
     "deps_versions": {
-      "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight": 1,
-      "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight": 1,
-      "g_lqin.alpha_lqin_senti.weight": 1
+      "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight": 2,
+      "g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight": 2,
+      "g_lqin.alpha_lqin_senti.weight": 2
     },
     "region": "us",
     "region_hash": "sha256:9aefe642f8ddef96",

@@ -737,7 +737,7 @@ def test_check_name_rejects_reserved_and_unsafe():
         "a" * 41: "longer than 40 characters",
         "": "an empty name",
     }
-    for s, why in bad.items():
+    for s, _why in bad.items():
         raises(ConfigError, check_name, s, "output name")
     for good in ("adv20", "adj_close_1500", "mkt_beta_w250", "weight", "rv_5m"):
         check(check_name(good, "output name") is None, f"a legal name was rejected: {good}")
@@ -895,7 +895,7 @@ def test_op_arg_types():
         ("exp_decay", "true", "a bool"), ("neutralize", "sector", "a bare name is not a full ref"),
         ("neutralize", "3", "not a name"), ("rank", "3", "rank takes no argument"),
     ]
-    for op, arg, why in bad:
+    for op, arg, _why in bad:
         raises(ConfigError, spec_from,
                f"nodes:\n  factor_yliu_m:\n    ops: [{{{op}: {arg}}}]\n",
                node_dir="o2", stem="o2")
@@ -1250,7 +1250,7 @@ def test_real_repo_specs_load():
             check(node.repo == f.parents[2].name, f"{f}: repo inferred incorrectly as {node.repo}")
             check(node.node_dir == f.parent.name, f"{f}: node_dir inferred incorrectly as {node.node_dir}")
             check(node.kind in KINDS, f"{f}: kind={node.kind}")
-            for k, o in node.outputs.items():
+            for k, _o in node.outputs.items():
                 # 折叠规则（§4.11）：node_name 与 node_dir 同名时中间那段省略
                 want = k if node.name == node.node_dir else f"{node.name}-{k}"
                 check(str(node.ref(k)).endswith(want), f"{f}: ref assembled incorrectly")
