@@ -117,7 +117,7 @@ g_yliu/  g_lqin/                 ← 个人 repo, 本人说了算, 无需 review
 
 **alpha_kit 是纯引擎**——数据定义与研究口径全部下沉到 g_common，引擎升级与数据口径变更彻底解耦。registry 跟着数据走（日更是数据生产的事），也在 g_common。
 
-**ns 与 repo 解耦**：g_common 拥有全部共享 ns（`base` / 各 dataset / `common`），个人 repo 拥有自己的 ns。保留 `base` 这个 ns 是有理由的——field 的 ns 本来就是 dataset 名，而 `g_common.field_base_px.field_base_px-*` 通配要能精确地只拉基础行情，不能把所有 dataset 的 field 都卷进来。物理上合并（同一 repo、同一套 review），逻辑上 ns 保持原样。
+**ns 与 repo 解耦**：g_common 拥有全部共享 ns（`base` / 各 dataset / `common`），个人 repo 拥有自己的 ns。保留 `base` 这个 ns 是有理由的——field 的 ns 本来就是 dataset 名，而 `g_common.field_base_px.*` 通配要能精确地只拉基础行情，不能把所有 dataset 的 field 都卷进来。物理上合并（同一 repo、同一套 review），逻辑上 ns 保持原样。
 
 写权限按 repo 分组，误覆盖在物理上不可能：
 
@@ -183,7 +183,7 @@ L3 路径   storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/
 **引用名与路径是一一对应的纯字符串关系**，不需要索引就能互推：
 
 ```
-g_yliu.factor_yliu_liq.factor_yliu_liq-adv20
+g_yliu.factor_yliu_liq.adv20
    ↕
 storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/
 ```
@@ -209,10 +209,10 @@ storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/
 
 ```yaml
 deps:
-  - g_common.field_base_px.field_base_px-*        # 通配: 编译期展开为该节点当时全部输出
-  - g_common.field_base_px.field_base_px-adj_close_tc
-  - g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20
-  - g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight    # 吃别人的 alpha
+  - g_common.field_base_px.*        # 通配: 编译期展开为该节点当时全部输出
+  - g_common.field_base_px.adj_close_tc
+  - g_yliu.factor_yliu_liq.rvol20
+  - g_lqin.alpha_lqin_senti.weight    # 吃别人的 alpha
 ```
 
 **通配 `{repo}.{node_dir}.{node_name}-*` 在编译期展开**为该节点当时的全部输出，展开清单写进权重 meta——config 保持一行、新增输出自动可见，同时历史运行的依赖集被冻结、可复现。引擎按 handle 实际 `ctx.f/win` 调用过的名字**惰性加载**：声明是全集、加载是子集。
@@ -244,7 +244,7 @@ storage/l3/{region}/
 
 ```json
 {"kind":"factor","ns":"yliu","version":3,"dtype":"f4","cutoff":"1500",
- "deps":["g_common.field_base_px.field_base_px-adj_close_1500"],"lookback":250,
+ "deps":["g_common.field_base_px.adj_close_1500"],"lookback":250,
  "first_session":1250,"last_session":4021,     ← 各自独立的 watermark
  "n_cols_covered":5820,"registered":true,"updated_at":"...",
  "code_ref":{"repo":"g_yliu","commit":"f3a9c1","path":"factors/..."}}
@@ -309,7 +309,7 @@ store.meta(name) / store.catalog()
 
 ### 3.5 Universe：一个名字，三个角色
 
-alpha config 只写 `universe: g_common.field_common_univ.field_common_univ-us_top3000`——它就是 store 里一个 bool field（写全 ref 的理由见 §4.11.6；放 `univ` ns 而非 `base`，是因为 `g_common.field_base_px.field_base_px-*` 是 template 的默认 deps，放进 base 会被展开进每一个节点的冻结依赖列表）。引擎用它做三件事：① handle 交付的数据中**当日池外的列整列 NaN**（截面统计天然限定池内，非 skipna 的写法会立刻得到 NaN 报警——吵闹地失败）；② CS 类 ops 的默认 scope；③ 权重掩码。
+alpha config 只写 `universe: g_common.field_common_univ.us_top3000`——它就是 store 里一个 bool field（写全 ref 的理由见 §4.11.6；放 `univ` ns 而非 `base`，是因为 `g_common.field_base_px.*` 是 template 的默认 deps，放进 base 会被展开进每一个节点的冻结依赖列表）。引擎用它做三件事：① handle 交付的数据中**当日池外的列整列 NaN**（截面统计天然限定池内，非 skipna 的写法会立刻得到 NaN 报警——吵闹地失败）；② CS 类 ops 的默认 scope；③ 权重掩码。
 
 **掩码作用点**：ops 链之前池外强制 NaN、`scale` 之后池外强制 0——两端夹住，中间自由。
 
@@ -329,9 +329,9 @@ alpha config 只写 `universe: g_common.field_common_univ.field_common_univ-us_t
 
 | 秩 | `dims` | 形状 | 典型节点 | 单节点满仓体积（f4） |
 |---|---|---|---|---|
-| 1 | `[di]` | `(D,)` | `g_common.field_macro_cpi.field_macro_cpi-yoy`、`g_common.field_macro_rates.field_macro_rates-rf_1m` | 4000 × 4B = **16 KB** |
+| 1 | `[di]` | `(D,)` | `g_common.field_macro_cpi.yoy`、`g_common.field_macro_rates.rf_1m` | 4000 × 4B = **16 KB** |
 | 2 | `[di, ii]` | `(D, N)` | 绝大多数 field / factor / **全部 alpha** | 4000 × 6000 × 4B = **96 MB** |
-| 3 | `[di, ii, ti]` | `(D, N, T)` | `g_common.field_taq_rv.field_taq_rv-rv_5m`、`g_common.field_taq_rv.field_taq_rv-spread_5m` | 见下 |
+| 3 | `[di, ii, ti]` | `(D, N, T)` | `g_common.field_taq_rv.rv_5m`、`g_common.field_taq_rv.spread_5m` | 见下 |
 
 **首轴恒为 `di` 不是美学选择**：引擎逐日推进，日期在首轴才能让"按日 append 只写末块"这条 O(1) 性质对三种秩同时成立（§3.3）。
 
@@ -353,8 +353,8 @@ alpha config 只写 `universe: g_common.field_common_univ.field_common_univ-us_t
 
 ```python
 def handle(ctx):
-    rf  = ctx.f("g_common.field_macro_rates.field_macro_rates-rf_1m")          # 秩-1 -> 标量
-    ret = ctx.f("g_common.field_base_px.field_base_px-ret_1d_1500")     # 秩-2 -> Series(N)
+    rf  = ctx.f("g_common.field_macro_rates.rf_1m")          # 秩-1 -> 标量
+    ret = ctx.f("g_common.field_base_px.ret_1d_1500")     # 秩-2 -> Series(N)
     return ret - rf / 252                     # 广播, 无需对齐代码
 ```
 
@@ -385,11 +385,11 @@ alpha 只是"universe 写了具体池子、ops 写了链"的普通节点。
 
 ```yaml
 region: us                # 环境: 见 §4.1.1; alpha 可覆盖其中 booksize / sim.*
-universe: g_common.field_common_univ.field_common_univ-us_top3000   # 缺省 all; 数据节点通常不写
+universe: g_common.field_common_univ.us_top3000   # 缺省 all; 数据节点通常不写
 lookback: 30
-return_metric: g_common.field_base_px.field_base_px-vwap_return_1500_1530   # alpha 必填
+return_metric: g_common.field_base_px.vwap_return_1500_1530   # alpha 必填
 booksize: 20000000        # 可选, 覆盖 region。不要写 20e6, 见 §4.1.1
-cost_model: g_common.field_common_cost.field_common_cost-bps_liquidity_v1          # 可选
+cost_model: g_common.field_common_cost.bps_liquidity_v1          # 可选
 sim: {participation: 0.10}                                            # 可选
 
 nodes:
@@ -418,10 +418,10 @@ nodes:
 ```yaml
 calendar: nyse
 time_cutoff: "1500"       # `_tc` 模板的缺省替换值 (§4.9.5)
-return_metric: g_common.field_base_px.field_base_px-vwap_return_1500_1530
-universe: g_common.field_common_univ.field_common_univ-us_top3000
+return_metric: g_common.field_base_px.vwap_return_1500_1530
+universe: g_common.field_common_univ.us_top3000
 booksize: 20000000        # 必须是整数字面量
-cost_model: g_common.field_common_cost.field_common_cost-bps_liquidity_v1
+cost_model: g_common.field_common_cost.bps_liquidity_v1
 sim:
   participation: 0.10     # cap = participation × adv_dollar (§8.2)
   halt_proxy: null        # 无 is_halted field 时的降级口径 (§九)
@@ -500,8 +500,8 @@ lookback: 250
 nodes:
   factor_yliu_beta_decomp:                        # {kind}_{ns}_{name}
     deps:                                         # code: 省略 -> 同目录 factor_yliu_beta_decomp.py
-      - g_common.field_base_px.field_base_px-adj_close_tc
-      - g_common.field_base_px.field_base_px-market_ret
+      - g_common.field_base_px.adj_close_tc
+      - g_common.field_base_px.market_ret
     params: {window: 250}
     outputs:
       mkt_beta_w250:  {dtype: f4}
@@ -512,8 +512,8 @@ nodes:
 # g_yliu/nodes/factor_yliu_beta_decomp/beta_decomp.py
 def handle(ctx):
     w = ctx.params["window"]
-    px  = ctx.win("g_common.field_base_px.field_base_px-adj_close_tc", w + 1)
-    mkt = ctx.win("g_common.field_base_px.field_base_px-market_ret", w + 1)
+    px  = ctx.win("g_common.field_base_px.adj_close_tc", w + 1)
+    mkt = ctx.win("g_common.field_base_px.market_ret", w + 1)
     ret, mr = px.pct_change(), mkt.pct_change()   # ret 是 (w,N); mr 是 (w,) 秩-1
 
     if ret.iloc[1:].isna().all().all():                    # 历史不足
@@ -535,7 +535,7 @@ region: us
 nodes:
   factor_yliu_intraday_vol:                       # code: 省略 -> 同目录 intraday_vol.py
     deps: 
-        - g_common.field_taq_bar.field_taq_bar-ret_5m     # v0 只吃 L3 (§七)
+        - g_common.field_taq_bar.ret_5m     # v0 只吃 L3 (§七)
     params: {cutoff: "1500"}                      # cutoff 是参数, 不是独立字段
     # 无 outputs -> 单输出, 输出名 = 节点名去掉 {kind}_{ns}_ 前缀 = intraday_vol
     #   落 storage/l3/us/g_yliu/intraday_vol/factor_yliu_intraday_vol-intraday_vol/
@@ -546,7 +546,7 @@ nodes:
 import numpy as np, pandas as pd
 
 def handle(ctx):
-    r = ctx.f("g_common.field_taq_bar.field_taq_bar-ret_5m")        # 秩-3 当日片 (N, T)
+    r = ctx.f("g_common.field_taq_bar.ret_5m")        # 秩-3 当日片 (N, T)
     return pd.Series(np.sqrt((r ** 2).sum(axis=1)), index=ctx.cols)   # 裸值, 压回秩-2
 ```
 
@@ -561,7 +561,7 @@ region: us
 nodes:
   field_macro_cpi:
     deps: 
-        - g_common.field_macro_cpi.field_macro_cpi-index
+        - g_common.field_macro_cpi.index
     outputs:
       yoy: {dtype: f4, dims: [di]}         # 秩-1: 无 ii 轴 -> …/field_macro_cpi-yoy/
 ```
@@ -569,7 +569,7 @@ nodes:
 ```python
 # g_common/nodes/field_macro_cpi/cpi.py
 def handle(ctx):
-    ix = ctx.win("g_common.field_macro_cpi.field_macro_cpi-index", 253)   # 秩-1 依赖 -> Series(253)
+    ix = ctx.win("g_common.field_macro_cpi.index", 253)   # 秩-1 依赖 -> Series(253)
     return ix.loc[0] / ix.loc[-252] - 1          # 标量
 ```
 
@@ -583,7 +583,7 @@ region: us
 
 nodes:
   field_taq_rv:
-    deps: [g_common.field_taq_bar.field_taq_bar-ret_5m]
+    deps: [g_common.field_taq_bar.ret_5m]
     outputs:
       rv_5m:    {dtype: f4, dims: [di, ii, ti], grid: m5}   # 秩-3, 78 槽
       rv_daily: {dtype: f4}                                  # 缺省 [di, ii] -> 秩-2
@@ -592,30 +592,30 @@ nodes:
 ```python
 # g_common/nodes/field_taq_rv/rv.py
 def handle(ctx):
-    r = ctx.f("g_common.field_taq_bar.field_taq_bar-ret_5m")            # 秩-3 当日片 -> DataFrame(N x 78)
+    r = ctx.f("g_common.field_taq_bar.ret_5m")            # 秩-3 当日片 -> DataFrame(N x 78)
     return ctx.multi_outputs(
         rv_5m    = r ** 2,                   # (N, 78) 落秩-3
         rv_daily = (r ** 2).sum(axis=1),     # (N,)    落秩-2
     )
 ```
 
-**同一节点可以同时产出不同秩的输出**——这正是「TAQ 作为原料」在存储层的落地方式：细网格留给少数确实需要日内形态的研究，日频聚合供绝大多数节点消费，两者出自同一份代码、同一次遍历，不会漂移。绝大多数下游只 `deps: [g_common.field_taq_rv.field_taq_rv-rv_daily]`，按 §3.2 的惰性加载根本不会碰到那 7.5 GB 的秩-3 数组。
+**同一节点可以同时产出不同秩的输出**——这正是「TAQ 作为原料」在存储层的落地方式：细网格留给少数确实需要日内形态的研究，日频聚合供绝大多数节点消费，两者出自同一份代码、同一次遍历，不会漂移。绝大多数下游只 `deps: [g_common.field_taq_rv.rv_daily]`，按 §3.2 的惰性加载根本不会碰到那 7.5 GB 的秩-3 数组。
 
 ### 4.8 例 4：alpha 与 combo
 
 ```yaml
 # g_yliu/nodes/alpha_yliu_rev/rev.yaml
 region: us                        # kind 缺省 alpha, ns 由 repo 目录推导
-universe: g_common.field_common_univ.field_common_univ-us_top3000   # 数据节点不写 = 全集; alpha 写具体池子
+universe: g_common.field_common_univ.us_top3000   # 数据节点不写 = 全集; alpha 写具体池子
 lookback: 30
 
 nodes:
   alpha_yliu_rev_w005:
     params: {days: 5}
-    deps: [g_common.field_base_px.field_base_px-*]
+    deps: [g_common.field_base_px.*]
     ops:
       - rank
-      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
+      - neutralize: g_common.factor_common_gics.sector
       - linear_decay: 3
       - truncate: 0.02
       - scale: book
@@ -624,10 +624,10 @@ nodes:
 ```yaml
 # g_yliu/nodes/alpha_yliu_rev/rev_senti_mix.yaml
 region: us
-universe: g_common.field_common_univ.field_common_univ-us_top3000
+universe: g_common.field_common_univ.us_top3000
 nodes:
   alpha_yliu_rev_senti_mix:       # combo = deps 含 alpha 的普通节点, 不是特殊 kind
-    deps: [g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight, g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight]
+    deps: [g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight, g_lqin.alpha_lqin_senti.weight]
     ops:
       - truncate: 0.02
       - scale: book
@@ -637,12 +637,12 @@ nodes:
 # g_yliu/nodes/alpha_yliu_rev/rev.py
 def handle(ctx):
     n  = ctx.params["days"]
-    px = ctx.win("g_common.field_base_px.field_base_px-adj_close_tc", n + 1)
+    px = ctx.win("g_common.field_base_px.adj_close_tc", n + 1)
     return -(px.loc[0] / px.loc[-n] - 1)                  # 单输出, 裸值
 
 # g_yliu/nodes/alpha_yliu_rev/rev_senti_mix.py
 def handle(ctx):
-    return 0.6 * ctx.f("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight") + 0.4 * ctx.f("g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight")
+    return 0.6 * ctx.f("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight") + 0.4 * ctx.f("g_lqin.alpha_lqin_senti.weight")
 ```
 
 ```bash
@@ -658,7 +658,7 @@ run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01 --pnl
 3. **成本模型 = 有版本的 L3 field**，换模型 = 换 field 名，pnl 一行不改。
 4. **多参数变体手写展开**，每个变体独立节点独立评估；Jinja 暂缓（原则"渲染前置"）。
 5. **time_cutoff 模板**：`*_tc` 统一替换；前视静态检查一行：`time_cutoff ≤ return_metric 执行起点`。
-   **`deps` 里的 `_tc` 按消费节点自身的有效 cutoff 解析**（节点级 > 文件级 > region 的 `time_cutoff`），而不是按生产者的。这条必须写死：ingestion 产出的 `field_base_px` 在**节点级**写了 `cutoff: "1500"`、产出 `adj_close_1500`，而 §4.5 的 `beta_decomp` 依赖 `g_common.field_base_px.field_base_px-adj_close_tc` 却自身没有 `cutoff`——不定规则的话，消费者会**静默绑到另一个 cutoff 的数据上**，而这正是本节第 2 道闸门要防的那类错误、却发生在闸门的上游。解析后**断言展开出的名字确实存在于 store**，不存在则报错并列出该 ns 下可用的 cutoff。
+   **`deps` 里的 `_tc` 按消费节点自身的有效 cutoff 解析**（节点级 > 文件级 > region 的 `time_cutoff`），而不是按生产者的。这条必须写死：ingestion 产出的 `field_base_px` 在**节点级**写了 `cutoff: "1500"`、产出 `adj_close_1500`，而 §4.5 的 `beta_decomp` 依赖 `g_common.field_base_px.adj_close_tc` 却自身没有 `cutoff`——不定规则的话，消费者会**静默绑到另一个 cutoff 的数据上**，而这正是本节第 2 道闸门要防的那类错误、却发生在闸门的上游。解析后**断言展开出的名字确实存在于 store**，不存在则报错并列出该 ns 下可用的 cutoff。
 6. **return_metric 对齐约定**：第 t 行 = 昨执行价 → 今执行价收益，`pnl_t = Σ value_{t-1} · ret_t`。
 
 ---
@@ -679,9 +679,9 @@ lookback: 20
 nodes:
   factor_yliu_liq:
     deps:
-      - g_common.field_base_px.field_base_px-adj_close_tc
-      - g_common.field_base_px.field_base_px-volume_tc
-      - g_common.field_base_px.field_base_px-ret_1d_tc
+      - g_common.field_base_px.adj_close_tc
+      - g_common.field_base_px.volume_tc
+      - g_common.field_base_px.ret_1d_tc
     params: {window: 20}
     outputs:
       adv20:   {dtype: f4}      # 20 日平均成交额 (美元)
@@ -695,9 +695,9 @@ import numpy as np
 
 def handle(ctx):
     w   = ctx.params["window"]
-    px  = ctx.win("g_common.field_base_px.field_base_px-adj_close_tc", w)      # (w, N)
-    vol = ctx.win("g_common.field_base_px.field_base_px-volume_tc",    w)
-    ret = ctx.win("g_common.field_base_px.field_base_px-ret_1d_tc",    w)
+    px  = ctx.win("g_common.field_base_px.adj_close_tc", w)      # (w, N)
+    vol = ctx.win("g_common.field_base_px.volume_tc",    w)
+    ret = ctx.win("g_common.field_base_px.ret_1d_tc",    w)
 
     dollar = px * vol                                 # (w, N) 逐日成交额
     return ctx.multi_outputs(
@@ -722,7 +722,7 @@ storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/    -illiq20/    -rvol20/
 ```yaml
 # g_yliu/nodes/alpha_yliu_rev/rev.yaml      ← 一个 yaml 装整族; node_dir = rev
 region: us                          # kind 缺省 alpha, ns 由 repo 目录推导 (§4.11.6)
-universe: g_common.field_common_univ.field_common_univ-us_top3000     # 全 ref, 不是裸名 (§4.11.6)
+universe: g_common.field_common_univ.us_top3000     # 全 ref, 不是裸名 (§4.11.6)
 lookback: 30
 
 nodes:
@@ -730,12 +730,12 @@ nodes:
     code: rev.py                    # 全族共用一份代码
     params: {days: 5}               # 与名字里的 w005 编译期校验一致
     deps:
-      - g_common.field_base_px.field_base_px-adj_close_tc
-      - g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20          # 吃例 5 的产出
-      - g_common.factor_common_gics.factor_common_gics-sector        # 供 neutralize 用, 见下
+      - g_common.field_base_px.adj_close_tc
+      - g_yliu.factor_yliu_liq.rvol20          # 吃例 5 的产出
+      - g_common.factor_common_gics.sector        # 供 neutralize 用, 见下
     ops:
       - rank
-      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
+      - neutralize: g_common.factor_common_gics.sector
       - linear_decay: 3
       - truncate: 0.02
       - scale: book
@@ -746,10 +746,10 @@ nodes:
   alpha_yliu_rev_w020:              # 变体手写展开 (§4.9.4), 同一个 yaml
     code: rev.py                    # 同一份代码
     params: {days: 20}
-    deps: [g_common.field_base_px.field_base_px-adj_close_tc, g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20, g_common.factor_common_gics.factor_common_gics-sector]
+    deps: [g_common.field_base_px.adj_close_tc, g_yliu.factor_yliu_liq.rvol20, g_common.factor_common_gics.sector]
     ops:
       - rank
-      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
+      - neutralize: g_common.factor_common_gics.sector
       - linear_decay: 3
       - truncate: 0.02
       - scale: book
@@ -759,12 +759,12 @@ nodes:
 # g_yliu/nodes/alpha_yliu_rev/rev.py  —— 两个变体共用, 差异全在 params
 def handle(ctx):
     n   = ctx.params["days"]
-    px  = ctx.win("g_common.field_base_px.field_base_px-adj_close_tc", n + 1)
+    px  = ctx.win("g_common.field_base_px.adj_close_tc", n + 1)
     raw = -(px.loc[0] / px.loc[-n] - 1)               # 反转: 跌得多的买
-    return raw / ctx.f("g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20")          # 波动归一, 单输出直接 return
+    return raw / ctx.f("g_yliu.factor_yliu_liq.rvol20")          # 波动归一, 单输出直接 return
 ```
 
-**`ops` 用到的分组 field 也必须写进 `deps`。** `neutralize: g_common.factor_common_gics.factor_common_gics-sector` 由引擎在 ops 链里解析，handle 里根本没提它——但它是**编译期就要能解析、运行期要能加载**的依赖，漏写则 §7.1 的"deps 不存在则报错"兜底会在运行时才炸，而且报错点在算子链里、离 yaml 很远。规则：**凡是这个节点跑起来需要读到的 L3，无论谁去读它，都要出现在 `deps` 里**。
+**`ops` 用到的分组 field 也必须写进 `deps`。** `neutralize: g_common.factor_common_gics.sector` 由引擎在 ops 链里解析，handle 里根本没提它——但它是**编译期就要能解析、运行期要能加载**的依赖，漏写则 §7.1 的"deps 不存在则报错"兜底会在运行时才炸，而且报错点在算子链里、离 yaml 很远。规则：**凡是这个节点跑起来需要读到的 L3，无论谁去读它，都要出现在 `deps` 里**。
 
 落库：`…/g_yliu/rev/alpha_yliu_rev_w005-weight/` 与 `…-rev_w020-weight/`——**单输出 alpha 的输出名缺省为 `weight`**（§3.2）。两个变体是**两个独立节点、独立评估**——这正是 §4.9.4 "多参数变体手写展开"的形态，代价是 yaml 里有重复，换来的是每个变体在 store / catalog / alpha 池里都是一等公民，可以被单独引用、单独去重、单独晋升。
 
@@ -773,14 +773,14 @@ def handle(ctx):
 ```yaml
 # g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml   ← 同一个 node_dir 下的另一个 yaml
 region: us
-universe: g_common.field_common_univ.field_common_univ-us_top3000
+universe: g_common.field_common_univ.us_top3000
 
 nodes:
   alpha_yliu_rev_mix:               # code: 省略 -> 同名的 rev_mix.py
     deps:
       - g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight
       - g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight
-      - g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight            # 吃别人的 alpha
+      - g_lqin.alpha_lqin_senti.weight            # 吃别人的 alpha
     ops:
       - truncate: 0.02
       - scale: book
@@ -791,14 +791,14 @@ nodes:
 def handle(ctx):
     return (0.4 * ctx.f("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight")
           + 0.3 * ctx.f("g_yliu.alpha_yliu_rev.alpha_yliu_rev_w020-weight")
-          + 0.3 * ctx.f("g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight"))
+          + 0.3 * ctx.f("g_lqin.alpha_lqin_senti.weight"))
 ```
 
 三个要点：
 
 1. **combo 不是一种特殊节点**（§附录A：combo 概念取消）。它只是 `deps` 里含 `alpha.*` 的普通节点，走同一条 `run`、同一个内核、同样的 ops 链。要判断某个节点是不是合成层，看它的 deps 有没有 `alpha.*` 即可，不需要命名前缀。
 
-2. **吃别人的 alpha 不需要 clone 对方的 repo**（§二）。`deps` 解析的是 store 里的**数据**，不是代码；想看 `g_lqin.alpha_lqin_senti.alpha_lqin_senti-weight` 是怎么算的，走 catalog 里的 `code_ref`（repo + commit + path）。
+2. **吃别人的 alpha 不需要 clone 对方的 repo**（§二）。`deps` 解析的是 store 里的**数据**，不是代码；想看 `g_lqin.alpha_lqin_senti.weight` 是怎么算的，走 catalog 里的 `code_ref`（repo + commit + path）。
 
 3. **`scale: book` 在 combo 里不是可有可无的收尾。** 三个上游各自满足 `Σ|w| = 1`，混合权重 `0.4 + 0.3 + 0.3` 也正好是 1.0——直觉上组合后应该还是 1。但实测：合成用例上组合后 `Σ|w|` 只有 **0.484**，而在本仓库真实跑出来的三个 alpha 上是 **0.5088**——两者都远小于 1。原因是：不同 alpha 在同一只票上方向相反时会互相抵消，抵消掉的部分不会凭空回到别的票上。少了这一步，账本**只投出去约 51%**，而 Sharpe 看着还挺正常（收益和风险同比例缩水），只有 `daily.long_value + |short_value|` 会露馅。§4.4 把 `scale` 从"自动补"改成"编译期校验必须以 scale 收尾"，防的就是这个。
 
@@ -810,7 +810,7 @@ run 'nodes/alpha_yliu_rev_w*'     --sd 2018-01-01        # alpha: 整族, 一个
 run nodes/alpha_yliu_rev_mix/     --sd 2018-01-01 --pnl  # combo + 评估
 ```
 
-跨 config 的依赖必须**已经在 store 里**（§7.1：v0 不做图分析，引擎唯一兜底是"deps 不存在则报错"），所以顺序不能颠倒。`store status g_yliu.factor_yliu_liq.factor_yliu_liq-rvol20` 可查。
+跨 config 的依赖必须**已经在 store 里**（§7.1：v0 不做图分析，引擎唯一兜底是"deps 不存在则报错"），所以顺序不能颠倒。`store status g_yliu.factor_yliu_liq.rvol20` 可查。
 
 产出的 L3 结构：
 
@@ -953,13 +953,13 @@ nodes:
 ```yaml
 version: 2
 pipelines:
-  - node: g_common.field_base_px.field_base_px-adj_close_1500      # 按 identity 登记, 不按文件路径
+  - node: g_common.field_base_px.adj_close_1500      # 按 identity 登记, 不按文件路径
     repo: g_common
     commit: 7e21ab...                    # 钉死 commit, 永不写分支名
     fingerprint: sha256:4d02...
     owner: infra
     tier: 1
-  - node: g_yliu.factor_yliu_resid_mom.factor_yliu_resid_mom-resid_mom
+  - node: g_yliu.factor_yliu_resid_mom.resid_mom
     repo: g_yliu
     commit: f3a9c1...
     fingerprint: sha256:9c1e...
@@ -1095,14 +1095,14 @@ def run_node(node, spec, sd, ed, flags):
 
 **四处不是风格问题，写错了会静默出错**：
 
-1. **当日产出必须回灌内存面板**（`panels.publish`）。ingestion 产出的 `field_base_px` 读自己昨天的输出（`ctx.win("g_common.field_base_px.field_base_px-adj_close_tc", 2).loc[-1]`）是合法且常见的写法，但面板是在循环**之前**一次性载入的，落库又在循环**之后**——不回灌的话，全量回填时 store 里根本还没有数据，`prev` 每天都是 NaN，`ret_1d_tc` **整段历史全 NaN 且不报错**。增量场景更阴：头几天读到的是上次运行的旧值，"看起来正常"，只有中间某段是错的。
+1. **当日产出必须回灌内存面板**（`panels.publish`）。ingestion 产出的 `field_base_px` 读自己昨天的输出（`ctx.win("g_common.field_base_px.adj_close_tc", 2).loc[-1]`）是合法且常见的写法，但面板是在循环**之前**一次性载入的，落库又在循环**之后**——不回灌的话，全量回填时 store 里根本还没有数据，`prev` 每天都是 NaN，`ret_1d_tc` **整段历史全 NaN 且不报错**。增量场景更阴：头几天读到的是上次运行的旧值，"看起来正常"，只有中间某段是错的。
    自引用节点**必须把自己列进 `deps`**——否则 `panels` 里没有这个键，取值时 KeyError。
 
 2. **增量走 `upsert`，只有 `--rebuild` 才走 `write`。** §3.3 定义 `store.write` 为"全量重建、bump version"。日更是 `run --ed today`，`assemble(r).loc[sd:ed]` 只有**一行**——照 `write` 的字面语义执行就是用一行覆盖整个数组，**历史全毁**，同时 `version` 退化成天数计数器。研究员为了跑得快写 `--sd 2024-01-01` 是同一个地雷的另一种触发方式（§15.7 用 `--probe` 从构造上堵掉它）。
 
 3. **`OpChain` 必须拿到池子。** §3.5 要求掩码**两端夹住**——ops 前池外置 NaN、`scale` 后池外强制 0——且 CS 类算子的默认 scope 就是 universe。只传 `ops` 的话第二道闸门无处落地：池外票会带着非零权重进 dump 与 pnl，`rank` / `neutralize` 的 scope 也悄悄退化成全集。两者都只改变口径、不报错。
 
-4. **面板惰性加载，且按区间读。** template 默认给 `g_common.field_base_px.field_base_px-*`（§3.2），编译期展开成该 ns 下全部 field。eager 全量读入意味着 20 个秩-2 面板约 2 GB 常驻，而 handle 可能只碰 2 个；一旦该 ns 里出现一个秩-3 节点（m5 满仓 7.5 GB，而 §4.7 恰恰鼓励秩-3 与秩-2 同 ns 混放），就是直接 OOM。§3.3 实测区间读 6.6 ms vs 全史读 309 ms，所以 `PanelLoader` 一并带上 `[sd - lookback, ed]` 区间。§十 的"构造 Ctx 前全部预对齐"相应改为"每个面板首次触碰时对齐一次"。
+4. **面板惰性加载，且按区间读。** template 默认给 `g_common.field_base_px.*`（§3.2），编译期展开成该 ns 下全部 field。eager 全量读入意味着 20 个秩-2 面板约 2 GB 常驻，而 handle 可能只碰 2 个；一旦该 ns 里出现一个秩-3 节点（m5 满仓 7.5 GB，而 §4.7 恰恰鼓励秩-3 与秩-2 同 ns 混放），就是直接 OOM。§3.3 实测区间读 6.6 ms vs 全史读 309 ms，所以 `PanelLoader` 一并带上 `[sd - lookback, ed]` 区间。§十 的"构造 Ctx 前全部预对齐"相应改为"每个面板首次触碰时对齐一次"。
 
 **升级路径**：加回 cache 时只把循环起点换成 `watermark+1 / checkpoint`，落库旁加 watermark 推进——主循环结构与其余模块零改动。
 
@@ -1127,9 +1127,9 @@ weights/g_yliu.alpha_yliu_rev.alpha_yliu_rev_senti_mix-weight.feather     # 或 
 ```
 pnl.py --weight weights/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005_h250-weight.feather     # 独立文件入口
 pnl.py --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005_h250-weight --sd ... --ed ...     # 直接读 store 入口
-       [--rm g_common.field_base_px.field_base_px-vwap_return_1500_1530]            # 覆盖收益序列: 执行敏感性
+       [--rm g_common.field_base_px.vwap_return_1500_1530]            # 覆盖收益序列: 执行敏感性
        [--booksize 20e6]                                  # 参与率约束的必备输入
-       [--cost-model g_common.field_common_cost.field_common_cost-bps_liquidity_v1]
+       [--cost-model g_common.field_common_cost.bps_liquidity_v1]
 ```
 
 ### 8.1 账本：单一价值账本
@@ -1178,11 +1178,11 @@ pos_value[delist_today] = 0                            # 退市: 对价已由 re
 
 ```
 pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005_h250-weight/
-  holding.feather   # date × instrument: holding_value + holding_weight(= value/booksize,
+  holding.csv       # date × instrument: holding_value + holding_weight(= value/booksize,
                     #   与目标权重同尺度可逐股对比); 股数视图归未来订单生成模块
-  pnl.feather       # date × instrument 逐股逐日损益 —— 归因("收益集中在哪些票/哪个月/
+  pnl.csv           # date × instrument 逐股逐日损益 —— 归因("收益集中在哪些票/哪个月/
                     #   是否三只退市股贡献一半")变成一行 groupby, 无需重仿真
-  daily.feather     # 日度汇总, 列清单见下
+  daily.csv         # 日度汇总, 列清单见下
   metrics.json      # 标量 + 分年度 + 口径快照(region@ver/rm/booksize/cost/区间/权重hash)
 ```
 
@@ -1262,7 +1262,7 @@ gap_participation / gap_realloc / gap_reprice     # 目标 vs 实现的三分解
 
 **内部规则**：
 
-- **面板首次触碰时对齐一次**：`Ctx` 持有的是 loader 而非数据，首次 `ctx.f/win` 才 `store.read` 该面板的 `[sd - lookback, ed]` 区间并 reindex 到同一（日期轴, 列轴），之后 win = 纯 numpy 位置切片，O(1)/日。全局共享轴让对齐通常是零操作。**不能在构造 Ctx 前把 deps 全部读入**——`g_common.field_base_px.field_base_px-*` 展开后 eager 加载是约 2 GB 常驻、且 ns 里一旦混入秩-3 节点就是 OOM（§7.2 第 4 条）。
+- **面板首次触碰时对齐一次**：`Ctx` 持有的是 loader 而非数据，首次 `ctx.f/win` 才 `store.read` 该面板的 `[sd - lookback, ed]` 区间并 reindex 到同一（日期轴, 列轴），之后 win = 纯 numpy 位置切片，O(1)/日。全局共享轴让对齐通常是零操作。**不能在构造 Ctx 前把 deps 全部读入**——`g_common.field_base_px.*` 展开后 eager 加载是约 2 GB 常驻、且 ns 里一旦混入秩-3 节点就是 OOM（§7.2 第 4 条）。
 - **行/窗缓存按日清空**：`_advance(t)` 由 runner 独占调用，推进游标并清缓存；同日重复 `ctx.f("x")` 只构造一次。
 - **永远返回副本**：handle 就地改（`px[px<0]=nan`）不写穿底层面板——写穿会污染后续所有日期与所有 alpha，灾难级且难查。日频拷贝成本无感。
 - **init 期无游标**：`t=None` 时调 `ctx.f` 报友好错误（"数据访问只能在 handle 里"）。
@@ -1290,8 +1290,8 @@ gap_participation / gap_realloc / gap_reprice     # 目标 vs 实现的三分解
 # g_common/registry.yaml
 version: 2
 pipelines:
-  - {node: g_common.field_base_px.field_base_px-adj_close_1500, repo: g_common, commit: 7e21ab..., owner: infra, tier: 1}
-  - {node: g_yliu.factor_yliu_resid_mom.factor_yliu_resid_mom-resid_mom,     repo: g_yliu,   commit: f3a9c1..., owner: yliu,  tier: 2}
+  - {node: g_common.field_base_px.adj_close_1500, repo: g_common, commit: 7e21ab..., owner: infra, tier: 1}
+  - {node: g_yliu.factor_yliu_resid_mom.resid_mom,     repo: g_yliu,   commit: f3a9c1..., owner: yliu,  tier: 2}
 ```
 
 （完整字段与"按 identity 登记、钉 commit 不钉分支"的理由见 §5.2。）
@@ -1442,9 +1442,9 @@ g_yliu/
 
 ```
 store search --tag reversal --dims di,ii
-store search --similar-to g_yliu.factor_yliu_rev.factor_yliu_rev-w005 --min-corr 0.6
-  → g_lqin.factor_lqin_rev.factor_lqin_rev-st     corr 0.93   registered, owner lqin
-  → g_common.factor_common_rev.factor_common_rev-w005 corr 0.88   registered
+store search --similar-to g_yliu.factor_yliu_rev.w005 --min-corr 0.6
+  → g_lqin.factor_lqin_rev.st     corr 0.93   registered, owner lqin
+  → g_common.factor_common_rev.w005 corr 0.88   registered
 ```
 
 为此 §3.3 的 per-node meta 必须补上：`title` / `tags[]` / `status` / `owner`（CI 强制，缺则不给合）· `node` / `config` / `params`（现有 `code_ref` 只指到**文件**，而 §4.10 里两个变体共用一个 `.py`，光靠 path 说不清是哪个节点、哪组参数）· `fingerprint` · **`l2_asof`**（L2 的 `adj_factor` 是向后复权、每次新分红都会改写历史，见 `l2_schema.md` §0.1.3——不记这个，"重建"在原理上就不可复现）· 探针指标与最近邻。
@@ -1489,7 +1489,7 @@ store search --similar-to g_yliu.factor_yliu_rev.factor_yliu_rev-w005 --min-corr
 
 **经验法则：w=250、N=6000 上做一遍全窗口 pandas 运算 ≈ 4 ms/日 ≈ 8 年跑一次多 8 秒。** `ctx.win(250)` 不贵，贵的是在它上面 `pct_change()`。
 
-一次 8 年迭代的构成（短窗口 alpha、`deps: [g_common.field_base_px.field_base_px-*]` 展开约 20 个 field）：进程启动 0.3 s + **读 20 个面板的全史 6.2 s（约 1 GB 常驻）** + handle 循环 0.6 s + ops 链 2.7 s + 落库与 dump 0.7 s + `--pnl` 子进程 3.6 s ≈ **14 秒，其中研究员自己的代码只占 4%**。长窗口 factor 则相反：`beta_decomp` 约 86 秒、95% 在 handle 里。
+一次 8 年迭代的构成（短窗口 alpha、`deps: [g_common.field_base_px.*]` 展开约 20 个 field）：进程启动 0.3 s + **读 20 个面板的全史 6.2 s（约 1 GB 常驻）** + handle 循环 0.6 s + ops 链 2.7 s + 落库与 dump 0.7 s + `--pnl` 子进程 3.6 s ≈ **14 秒，其中研究员自己的代码只占 4%**。长窗口 factor 则相反：`beta_decomp` 约 86 秒、95% 在 handle 里。
 
 **所以最高杠杆的改动不是加 cache。** 没有任何 cache 能把第一种情形压到"进程启动 + I/O + 写产物"这约 10 秒之下；第二种情形的开销是研究员自己的算术，cache 同样跳不过。而且**store 本身就已经是叶子 cache**——每个 field、每个节点输出都是物化的 Zarr 数组；v0 缺的不是存储，是失效判定，而 `--only NODE` 已经是手工替代品。
 
@@ -1556,7 +1556,7 @@ spread                       |   0.47   3.1%  0.24     0.23   2.1% |
 alpha submit nodes/alpha_yliu_rev_mix/ [--dry-run]
 ```
 
-它是**对 `run --pnl` 的一次预设，不是新机器**：① 把研究员的 `regions/us.yaml` 换成模板标准值、重算 `region_hash`、**在该口径下重跑**（§二 允许本地自由修改，正是因为有这一步——工具必须**执行**这次重跑，而不是只校验 hash 然后拒绝）· ② canonical universe 复评，并把 `us_top3000` 与 `us_top1500` **并排打印**（§十一 点名了这个诊断："top3000 Sharpe 2.5 → top1500 掉到 0.8 的基本是小票流动性溢价"），不要等 reviewer 来问 · ③ 对池中已有向量做相关性去重（5000 个 alpha 实测 13 ms，池就是 store 里一个 (K×D) f4 数组、5000 个才 40 MB，不需要 DB），**报告最近的 5 个及其相关系数而非只给判决**——"0.68 vs `g_lqin.alpha_lqin_rev_w003.alpha_lqin_rev_w003-weight`"是可行动的，"拒绝"只会让人瞎猜 · ④ 毒化测试作为提交闸门而非只在 CI · ⑤ 七道闸门全部硬阻断 · ⑥ 冻结提交记录（`code_ref`、config hash、`region_hash`、权重 hash、IS 指标、闸门块、最近邻）· ⑦ 交给 OOS——研究员的环境物理截断于 OOS 边界，他**跑不了**这一步。
+它是**对 `run --pnl` 的一次预设，不是新机器**：① 把研究员的 `regions/us.yaml` 换成模板标准值、重算 `region_hash`、**在该口径下重跑**（§二 允许本地自由修改，正是因为有这一步——工具必须**执行**这次重跑，而不是只校验 hash 然后拒绝）· ② canonical universe 复评，并把 `us_top3000` 与 `us_top1500` **并排打印**（§十一 点名了这个诊断："top3000 Sharpe 2.5 → top1500 掉到 0.8 的基本是小票流动性溢价"），不要等 reviewer 来问 · ③ 对池中已有向量做相关性去重（5000 个 alpha 实测 13 ms，池就是 store 里一个 (K×D) f4 数组、5000 个才 40 MB，不需要 DB），**报告最近的 5 个及其相关系数而非只给判决**——"0.68 vs `g_lqin.alpha_lqin_rev_w003.weight`"是可行动的，"拒绝"只会让人瞎猜 · ④ 毒化测试作为提交闸门而非只在 CI · ⑤ 七道闸门全部硬阻断 · ⑥ 冻结提交记录（`code_ref`、config hash、`region_hash`、权重 hash、IS 指标、闸门块、最近邻）· ⑦ 交给 OOS——研究员的环境物理截断于 OOS 边界，他**跑不了**这一步。
 
 回传的东西刻意很窄：accept/reject、完整的 canonical IS 指标、以及 OOS **只以有界摘要形式**返回（Sharpe 分桶、收益符号、OOS/IS 衰减比、与池中最相关成员及其名字）。**OOS 日收益向量永不回传。** 再加一个**提交次数预算**（如每人每季 6 次，同 `family` 的变体共用一份家族预算）——没有预算，评估器就是一台神谕机，OOS 会以每次提交约一比特的速度退化成 IS，**这才是真正的失效模式，而不是数据泄漏**。
 
@@ -1568,7 +1568,7 @@ alpha submit nodes/alpha_yliu_rev_mix/ [--dry-run]
 
 **数据与存储**：日频主体、TAQ 仅作原料 · L3 三分类 field/factor/alpha，**由节点名 `{kind}_{ns}_{name}` 承载，yaml 里不再声明 kind/ns** · 路径 `storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/`，引用名 `{repo}.{node_dir}.{node_name}-{output}` 与之一一对应、纯字符串可互推；无 `.zarr` 后缀，`ls` 出来就是 catalog · 单输出 alpha 的输出名缺省为 `weight`· **L3 主存 Zarr**：全局共享轴 + per-node meta(zarr attributes) + catalog 派生索引；chunks=(50,N)、默认 zstd、fill_value=NaN、bool/int8 省空间；稀疏免费（成本正比实际数据量）；按日期 append 真 O(1)、按标的 resize 需预留 500 列摊薄成年度维护 · feather 保留于 L2 与 dump 出口 · securities master + 全局轴 append-only 单调分配。
 
-**配置与组织**：**三层 repo：alpha_kit（infra，纯引擎，零数据定义零口径配置）+ g_common（全员贡献，拥有全部共享 ns：base/各 dataset/common，含 registry 与 template）+ g_{user}（个人 region + factor + alpha）** · ns 与 repo 解耦（保留 `base` ns 以保证 `g_common.field_base_px.field_base_px-*` 通配的精确性）· 写权限按 repo 分组（共享 ns 仅 g_common CI 可写 / 个人 ns 直写 / 他人只读），fork 靠 copy · **region 每人一份、可自由修改，规范化内容 hash 进权重 meta；提交 alpha 池时按 hash 校验可比性——自由研究、统一提交**（原 `region@vN` 版本耦合方案由此取消）· **deps 必须显式，通配 `{repo}.{node_dir}.{node_name}-*` 是简写而非豁免**；template 默认给 `g_common.field_base_px.field_base_px-*`，编译期展开进 meta，引擎按实际调用惰性加载 · 成本模型 = 有版本的 L3 field · 多参数变体手写展开（Jinja 暂缓，原则"渲染前置"）· time_cutoff 模板替换 + 一行前视静态检查 · return_metric 显式声明与 t 行对齐约定 · 晋升 = 登记进 g_common 的 registry 日更（**identity 不变**，按 identity 登记、钉 commit 不钉分支，写权限同时翻转给日更用户）。
+**配置与组织**：**三层 repo：alpha_kit（infra，纯引擎，零数据定义零口径配置）+ g_common（全员贡献，拥有全部共享 ns：base/各 dataset/common，含 registry 与 template）+ g_{user}（个人 region + factor + alpha）** · ns 与 repo 解耦（保留 `base` ns 以保证 `g_common.field_base_px.*` 通配的精确性）· 写权限按 repo 分组（共享 ns 仅 g_common CI 可写 / 个人 ns 直写 / 他人只读），fork 靠 copy · **region 每人一份、可自由修改，规范化内容 hash 进权重 meta；提交 alpha 池时按 hash 校验可比性——自由研究、统一提交**（原 `region@vN` 版本耦合方案由此取消）· **deps 必须显式，通配 `{repo}.{node_dir}.{node_name}-*` 是简写而非豁免**；template 默认给 `g_common.field_base_px.*`，编译期展开进 meta，引擎按实际调用惰性加载 · 成本模型 = 有版本的 L3 field · 多参数变体手写展开（Jinja 暂缓，原则"渲染前置"）· time_cutoff 模板替换 + 一行前视静态检查 · return_metric 显式声明与 t 行对齐约定 · 晋升 = 登记进 g_common 的 registry 日更（**identity 不变**，按 identity 登记、钉 commit 不钉分支，写权限同时翻转给日更用户）。
 
 **秩与引擎范围**：**L3 不再恒为 `date × instrument`**，改为节点声明的秩——`[di]`（宏观）/ `[di, ii]`（缺省）/ `[di, ii, ti]`（日内），`di` 恒为首轴以保住"按日 append 真 O(1)"对三种秩同时成立 · `ti` 网格是 `_axes/grids/` 里的注册表条目、定长、半日市留 NaN；换网格 = 换节点名 · 分块 (50,N) / (1,N,T) / (4096,) 按秩取 · **alpha 必须是秩-2**（权重是 `di×ii`），`universe` 仅对秩-2/3 有意义，**CS 类 ops 仅秩-2 合法**（秩-1 无 `ii`；秩-3 的 `ii`/`ti` 二义，与其猜默认值不如编译期报错），TS 类三秩通用 · 同一节点可同时产出不同秩的输出（TAQ 原料模式：细网格 + 日频聚合出自同一次遍历）· 秩-3 体积须先算：m5 网格满仓 7.5 GB/节点、m1 达 37 GB，故「TAQ 只作原料」的建议依然成立 · **v0 引擎只处理 L3 → L3**：`deps` 是唯一输入来源，`source` / `ctx.l2` / `ctx.l1` 移出 v0，L2 → L3 入库归 ingestion 管道（它要背文件格式、路径模板、vendor 容错三副担子，与 alpha 研究无关）。
 

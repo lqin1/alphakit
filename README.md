@@ -8,7 +8,7 @@
 |---|---|
 | [`docs/architecture.md`](docs/architecture.md) | 架构设计 v0.8——统一 Node 模型、Zarr 存储、ops 链、precise 仿真、退市停牌口径 |
 | [`docs/manual.md`](docs/manual.md) | **用户手册**——新机器从零跑通、写你自己的节点、常见报错 |
-| [`docs/l2_schema.md`](docs/l2_schema.md) | **L2 数据契约**——目录布局、五张表 schema、复权反演算法、V1–V8 验收断言 |
+| [`docs/l2_schema.md`](docs/l2_schema.md) | **数据契约**——L2（目录布局、五张表 schema、复权反演、V1–V8 断言）与 **L3**（引用名折叠规则、秩与分块、轴、meta、写入语义、口径锚） |
 
 ## 现状
 
@@ -22,7 +22,7 @@
 `storage/l3/us` 现有 7 个 base 节点 + 三个示例产出的 8 个节点。
 
 ```bash
-.venv/bin/python tests/run_all.py      # 四套自检 170 项断言, 全绿
+.venv/bin/python tests/run_all.py      # 五套自检 213 项断言, 全绿
 ```
 
 三个示例（`architecture.md` §4.10）全部可运行：因子 → alpha（两变体）→ combo（含跨 repo 依赖）。
@@ -43,22 +43,39 @@ pipeline/
   build_l2.py                      复权反演 + 五表写出
   validate_l2.py                   验收闸门, 非零退出即失败
 tests/
-  run_all.py                       四套自检一次跑完, 非零退出即失败
+  run_all.py                       五套自检一次跑完, 非零退出即失败
   test_ops.py  test_simulate.py    算子链 / pnl 仿真器
   smoke.py                         引擎端到端
 docs/
 ```
 
-`storage/` 整体在 `.gitignore` 内——由 pipeline 完全可重建。
-`registry/` **不在**其中：`storage/` 可以整个删掉，注册表不行，删了历史 `security_id` 的含义就没了。
+`storage/` **入库**（约 63 MB）：`pipeline/` 将来要独立成单独的 repo，一旦它搬走，
+本 repo 里就再没有东西能重建 storage/，所以数据跟着引擎走，clone 下来即可跑。
+`registry/` 同样入库：`storage/` 原则上可重建，注册表不行，删了历史 `security_id` 的含义就没了。
+唯一不入库的是 `pnl_out/`——一条命令即可再生，且每跑一次全变。
 
 ## 重建
 
+数据已随仓库入库，clone 完装上就能跑：
+
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -e .   # 系统 python 受 PEP 668 限制
+source .venv/bin/activate                             # 之后可直接敲 ak / run / pnl
+
+run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --sd 2025-12-01
+pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight --sd 2025-12-01
+```
+
+装上四个命令：`alphakit`、`ak`（简写）、`run`、`pnl`。后两个名字很通用，
+只在本 venv 内生效。
+
+要从原始数据重造一遍（`pipeline/` 独立成 repo 之前）：
+
+```bash
 .venv/bin/python pipeline/fetch_yahoo.py     # ~60s, 503 标的
 .venv/bin/python pipeline/build_l2.py        # ~4s
 .venv/bin/python pipeline/validate_l2.py     # ~5s, exit 0 才算交付
+.venv/bin/python pipeline/build_l3_base.py   # ~3s, L2 → L3
 ```
 
 ## 已知缺陷

@@ -1,7 +1,34 @@
 # alphakit 用户手册
 
 面向两类读者：**要在新机器上把它跑起来的人**（§1–§3），以及**要写自己 alpha 的人**（§4–§6）。
-设计原理与取舍见 [`architecture.md`](architecture.md)；数据契约见 [`l2_schema.md`](l2_schema.md)。
+设计原理与取舍见 [`architecture.md`](architecture.md)；数据契约（L2 与 L3）见
+[`l2_schema.md`](l2_schema.md)。
+
+---
+
+## 0. 研究菜单（先看这张表）
+
+装好之后日常只用到四条命令。`ak` 是 `alphakit` 的简写，`run` / `pnl` 是两个动词的直呼。
+
+| 想做什么 | 敲什么 |
+|---|---|
+| 看库里现在有什么 | `ak store status` |
+| 查一个节点的元数据 | `ak store meta <ref>` |
+| 只做编译检查，不跑数 | `run <节点目录> --dry-run` |
+| 跑一个 alpha | `run <节点目录> --sd 2025-12-01` |
+| 评估它 | `pnl --node <ref> --sd 2025-12-01` |
+| 自检整条链 | `.venv/bin/python tests/run_all.py` |
+
+一条完整的研究回路：
+
+```bash
+run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --sd 2025-12-01   # 算
+pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight --sd 2025-12-01   # 评
+```
+
+**`--sd` 要跟依赖的可用区间对齐。** 不给 `--sd` 会从轴的第一天起跑，而上游因子往往
+要晚若干天才有值——前面那些天会算出空仓（`Σ|w|=0`），指标被无声地拖低。
+`ak store status` 的 `first` 列就是每个依赖的起点。
 
 ---
 
@@ -15,9 +42,9 @@ L1  厂商原始落地（json / csv，不改写）
 L2  规整的日频宽表（| 分隔 csv，逐交易日一个文件，全部 PIT）
      ↓  pipeline/build_l3_base.py  —— 一次性
 L3  Zarr 数组，全局共享轴（引擎的唯一输入与唯一输出）
-     ↓  alphakit run   ←── 你写的 yaml + py 只在这一层
+     ↓  run          ←── 你写的 yaml + py 只在这一层
     权重文件
-     ↓  alphakit pnl
+     ↓  pnl
     指标
 ```
 
@@ -42,8 +69,20 @@ python3 -m venv .venv
 ```
 
 四个运行期依赖（pandas / pyarrow / zarr / pyyaml）与它们的下界都写在 `pyproject.toml` 里，
-不用手抄。这一步同时装上 **`alphakit` 命令**（`.venv/bin/alphakit`），下文的 `alphakit run …`
-就是它。`-e` 是可编辑安装：研究期你会改引擎代码，改完不必重装。
+不用手抄。`-e` 是可编辑安装：研究期你会改引擎代码，改完不必重装。
+
+这一步装上**四个命令**，都在 `.venv/bin/` 下：
+
+| 命令 | 等价于 |
+|---|---|
+| `alphakit` | 全名 |
+| `ak` | 同上，简写 |
+| `run` | `alphakit run` |
+| `pnl` | `alphakit pnl` |
+
+`source .venv/bin/activate` 之后直接敲 `run` / `pnl` 即可。`run` 和 `pnl` 是很通用的
+名字，所以它们**只在这个 venv 内生效**——这也正是应当用 venv 而不是 `--user` 装它的理由；
+不想冒名字冲突的风险就一律用 `ak run` / `ak pnl`。
 
 > **系统 Python 装不上包？** 较新的发行版按 PEP 668 锁住了全局 site-packages，
 > 报 `externally-managed-environment`。上面的 venv 就是正解，不要用 `--break-system-packages`。
@@ -72,38 +111,51 @@ python3 -m venv .venv
 
 | 引用名 | 秩 | 内容 |
 |---|---|---|
-| `g_common.field_base_px.field_base_px-adj_close_1500` | di×ii | 复权收盘 |
+| `g_common.field_base_px.adj_close_1500` | di×ii | 复权收盘 |
 | `…-volume_1500` | di×ii | 原始成交股数 |
 | `…-ret_1d_1500` | di×ii | 复权日收益 |
 | `…-adv_dollar` | di×ii | 20 日平均成交额 |
 | `…-market_ret` | **di** | 等权市场收益（秩-1 示例） |
-| `g_common.factor_common_gics.factor_common_gics-sector` | di×ii | GICS sector 码（i1） |
-| `g_common.field_common_univ.field_common_univ-us_top400` | di×ii | 按 ADV 排名的池子（bool） |
+| `g_common.factor_common_gics.sector` | di×ii | GICS sector 码（i1） |
+| `g_common.field_common_univ.us_top400` | di×ii | 按 ADV 排名的池子（bool） |
 
 查看：
 
 ```bash
-.venv/bin/alphakit store status
+.venv/bin/ak store status
 ```
 
 ### 2.4 跑通三个例子
 
-下文一律写 `alphakit`；`source .venv/bin/activate` 之后就是这么敲，没激活则写全 `.venv/bin/alphakit`。
+下文一律写 `run`；没激活 venv 则写全 `.venv/bin/run`。
 
 ```bash
-alphakit run repos/g_yliu/nodes/factor_yliu_liq/            --sd 2025-12-01   # 例5 因子 → 3 个产物
-alphakit run repos/g_lqin/nodes/alpha_lqin_senti/          --sd 2025-12-01   # 他人的 alpha
-alphakit run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml    --sd 2025-12-01   # 例6 两个变体
-alphakit run repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml --sd 2025-12-01  # 例7 combo
+run repos/g_yliu/nodes/factor_yliu_liq/             --sd 2025-12-01   # 例5 因子 → 3 个产物
+run repos/g_yliu/nodes/factor_yliu_mom/             --sd 2025-12-01   # 动量因子
+run repos/g_lqin/nodes/alpha_lqin_senti/            --sd 2025-12-01   # 他人的 alpha
+run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml      --sd 2025-12-01   # 例6 两个变体
+run repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml  --sd 2025-12-01   # 例7 combo
 ```
+
+实际长这样：
+
+```
+preflight OK    repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml  2 节点 / 2 输出 / 6 依赖  0 error 0 warn  5.6 ms
+run alpha_yliu_rev/rev.yaml  2025-12-01..2026-08-27
+  alpha_yliu_rev_w005                216 日 (预热 30) 写入 1 输出  0.65s
+  alpha_yliu_rev_w020                216 日 (预热 30) 写入 1 输出  0.68s
+```
+
+`预热 30` 是 `lookback` 撑出来的：算 2025-12-01 那天要用到之前 30 个 session 的数据，
+引擎自己往前取，不用你操心。
 
 一条命令自证整条链是通的：
 
 ```bash
-.venv/bin/python tests/run_all.py      # 四套 170 项断言, exit 0 才算装好
+.venv/bin/python tests/run_all.py      # 五套 213 项断言, exit 0 才算装好
 ```
 
-它把四套自检串起来跑，红一套即非零退出：
+它把五套自检串起来跑，红一套即非零退出：
 
 | 套件 | 查什么 |
 |---|---|
@@ -130,7 +182,7 @@ alpha_kit/              引擎（pip 包, 纯代码零数据定义）
   pnl/     simulate.py metrics.py report.py  precise 仿真 / 指标与闸门 / 入口
   cli.py                                    run / store / pnl
 pipeline/               ingestion（L1 → L2 → L3），不属于引擎
-tests/                  四套自检: run_all.py 一条命令跑完
+tests/                  五套自检: run_all.py 一条命令跑完
 repos/                  研究仓库（目标架构里是三个独立 repo）
   g_common/  共享 ns：base / common / univ / sector …
   g_yliu/  g_lqin/   个人沙箱
@@ -182,13 +234,13 @@ lookback: 60
 
 nodes:
   factor_yliu_mom:
-    deps: [g_common.field_base_px.field_base_px-adj_close_1500]
+    deps: [g_common.field_base_px.adj_close_1500]
     params: {window: 60}
 ```
 
 ```python
 # repos/g_yliu/nodes/factor_yliu_mom/mom.py
-PX = "g_common.field_base_px.field_base_px-adj_close_1500"
+PX = "g_common.field_base_px.adj_close_1500"
 
 def handle(ctx):
     n  = ctx.params["window"]
@@ -197,7 +249,7 @@ def handle(ctx):
 ```
 
 ```bash
-alphakit run repos/g_yliu/nodes/factor_yliu_mom/ --sd 2025-12-01
+run repos/g_yliu/nodes/factor_yliu_mom/ --sd 2025-12-01
 ```
 
 落到 `storage/l3/us/g_yliu/mom/factor_yliu_mom-mom/`。
@@ -240,7 +292,7 @@ alpha 就是**写了池子和 ops 的普通节点**，没有别的机制：
 
 ```yaml
 region: us
-universe: g_common.field_common_univ.field_common_univ-us_top400
+universe: g_common.field_common_univ.us_top400
 lookback: 30
 
 nodes:
@@ -250,7 +302,7 @@ nodes:
     deps: [...]
     ops:
       - rank
-      - neutralize: g_common.factor_common_gics.factor_common_gics-sector
+      - neutralize: g_common.factor_common_gics.sector
       - linear_decay: 3
       - truncate: 0.02
       - scale: book
@@ -277,8 +329,8 @@ nodes:
 秩-1 的依赖在 handle 里取到标量，直接广播即可，不需要对齐代码：
 
 ```python
-rf  = ctx.f("g_common.field_macro_rates.field_macro_rates-rf_1m")   # 标量
-ret = ctx.f("g_common.field_base_px.field_base_px-ret_1d_1500")  # Series(N)
+rf  = ctx.f("g_common.field_macro_rates.rf_1m")   # 标量
+ret = ctx.f("g_common.field_base_px.ret_1d_1500")  # Series(N)
 return ret - rf / 252
 ```
 
@@ -291,7 +343,7 @@ return ret - rf / 252
 所以一次完整运行不会在第 12 秒才死于一个拼写错误：
 
 ```bash
-alphakit run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --dry-run   # 预检 + 只执行一天, 不落库
+run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --dry-run   # 预检 + 只执行一天, 不落库
 ```
 
 拼错一个 60 字符的引用名，光靠肉眼很难看出来，所以诊断会给出最近的候选：
@@ -313,13 +365,21 @@ universe 是不是秩-2 bool、`sd`/`ed` 在不在轴上、`ed` 有没有越过�
 `--dry-run` 再往前一步：预检通过后**只执行一天**（不预热、不落库），
 用来抓元数据看不出的形状与返回类型错误，比如 `multi_outputs` 漏了一个 key。
 
-### 4.8 评估：`alphakit pnl`
+### 4.8 评估：`pnl`
 
 ```bash
-alphakit pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight --halt-proxy 3
+pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight --sd 2025-12-01
 ```
 
-`--halt-proxy 3` **不是可选的**：本数据集没有 `is_halted` field，而 §九 规定此时要么显式降级、
+ref **要带输出名**。单输出的 alpha 那个输出叫 `weight`，所以是 `…_w005-weight`；
+漏掉后缀会得到一句明确的报错，不会拿错数据。
+
+**`halt_proxy` 现在从 region 文件来**，不必每次在命令行上敲。`repos/*/regions/us.yaml`
+里写着 `sim: {halt_proxy: 3}`，`pnl` 启动时读它；命令行上给 `--halt-proxy` 仍然优先。
+`booksize` / `participation` / `return_metric` / `pnl_out` / `l3_root` 同理——口径归 region 管，
+这样两个人评估同一份权重才会得到可比的数（`region_hash` 会写进 metrics）。
+
+这个降级口径本身**不是可选的**：本数据集没有 `is_halted` field，§九 规定此时要么显式降级、
 要么**拒绝运行**——不允许把 `ghost_days` 记 0 继续跑。仿真器还会拒绝 `K=1`：那会让每个 NaN
 都变成"停牌"、第三类恒空，正是 §九 killed 的那个失效模式。
 
@@ -327,35 +387,59 @@ alphakit pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight --halt-proxy
 `{1: 500, 2: 2, 41: 1, 186: 1, 199: 1}`——长度 1 的 500 段是首个 session（全体收益未定义），
 41/186/199 三段是区间内才上市的 `Q`/`FDXF`/`HONA`，而**真正的盘中缺口只有 2 段、长度都是 2**。
 所以 `K=2` 会把它们判成停牌、`ghost_days` 又回到 0；`K=3` 才让那唯一的幽灵持仓浮出来
-（实测 `ghost_days=1`，2026-08-10 的一笔空头）。`proxy(3)` 表示"连续 ≥3 日 `ret=NaN`
-且未退市视作停牌"，短于 3 日的记为幽灵持仓。这个口径会写进 `metrics.json`。
+（实测 `ghost_days=1`，2026-08-10 的一笔空头）。
 
-产出四交付物到 `pnl_out/{ref}/`：`holding` / `pnl`（逐股逐日，归因是一行 groupby）/
-`daily` / `metrics.json`。终端上还会打**七道闸门**：
+终端上是这样一张报表：
 
 ```
-g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight   2025-12-01..2026-08-27  (186 sessions × 503 names)
-  Sharpe=-0.0364  Ann.Ret=-0.002813  Turnover=0.3814  Margin(bps)=-0.2927  Fitness=-0.003127  MaxDD=0.061
-  ghost_detection=proxy(3)  ghost_days=1  delist_source=none
-  [PASS    ] market beta    beta=0.08843  r2=0.01782  sharpe_hedged=-0.3132
-  [PASS    ] 集中度            total_abs_pnl=6.274e+06  n_names_with_pnl=467  top1_share=0.01617
-  [NO-BASIS] 区间稳定性          sharpe_by_year={'2025': -2.428141097454788, '2026': 0.12603900313400035}  sharpe_first_half=-1.564  sharpe_second_half=1.302
-  [FAIL    ] 成本临界倍数         cost_total=1.419e+06  pnl_gross=1.377e+06  pnl_net=-4.153e+04
-  [PASS    ] 多空平衡           avg_long_value=9.992e+06  avg_short_value=-1.001e+07  avg_long_count=200.3
-  [NO-BASIS] 池子卫生           empty_weight_days=0  weight_gross_dev_max=4.819e-09  coverage_min=399
-  [FAIL    ] 前视状态           ghost_detection=proxy(3)  ghost_days=1  delist_source=none
-  submission readiness: 3/7 gates pass
-  四交付物 → pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight/
+  warn  无 delist_date：`delisted` 恒为 False，退市路径是死代码、delist_events 恒为 0。……
+  warn  幽灵持仓 1 个持仓日（1 个 session，占持仓日 0.001%），已按最后可得价当日平仓。检测口径 proxy(3)。
+
+==============================================================================
+ g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight
+ 2025-12-01 .. 2026-08-27   186 sessions × 503 names   book $20.00M
+==============================================================================
+ 收益   Sharpe=-0.254             年化收益=-2.05%           年化美元=$-410.61K
+        Fitness=-0.05501          命中率=47.85%             日波动=0.51%
+ 成本   换手=43.77%               Margin=-1.861 bps         成本合计=$1.63M
+        成本/毛利=122.87%         毛利=$1.33M               净利=$-303.07K
+ 风险   MaxDD=10.98%              回撤额=$2.20M             回撤区间=2025-12-01→2026-05-13
+ 持仓   多头=$9.99M / 200.3 只    空头=$-10.01M / 199.7 只  多空比=0.9988
+------------------------------------------------------------------------------
+ 七道闸门   3/7 通过
+   [PASS    ] market beta    beta=0.08234  r2=0.01412  sharpe_hedged=-0.5015
+   [PASS    ] 集中度            total_abs_pnl=6.494e+06  n_names_with_pnl=467  top1_share=0.038
+   [NO-BASIS] 区间稳定性          sharpe_by_year={'2025': -5.1156, '2026': 0.1133}  sharpe_first_half=-2.919
+   [FAIL    ] 成本临界倍数         cost_total=1.628e+06  pnl_gross=1.325e+06  pnl_net=-3.031e+05
+   [PASS    ] 多空平衡           avg_long_value=9.994e+06  avg_short_value=-1.001e+07  avg_long_count=200.3
+   [NO-BASIS] 池子卫生           empty_weight_days=0  weight_gross_dev_max=4.511e-09  coverage_min=399
+   [FAIL    ] 前视状态           ghost_detection=proxy(3)  ghost_days=1  delist_source=none
+------------------------------------------------------------------------------
+ 审计   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
+ 缺陷   survivorship_bias_no_delisted, no_vwap, no_shares_outstanding, equal_weighted_market_proxy
+ 结论   submission readiness: 3/7 gates pass
+ 交付   pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight/  →  daily.csv  pnl.csv  holding.csv  metrics.json
+==============================================================================
 ```
+
+四交付物落在 `pnl_out/{ref}/`，**全是纯文本**：`holding.csv` / `pnl.csv`（逐股逐日，
+归因就是一行 groupby）/ `daily.csv` / `metrics.json`。选 CSV 是为了能 grep、能 diff、
+不装 pyarrow 也打得开；代价是体积和读写速度，真要快就别读交付物、直接读 store。
 
 **每道闸门通过也打印数字**，且没有判据时报 `NO-BASIS` 而不是 `PASS`——空白绝不能在
 "干净"与"根本没查"之间有歧义。上面这次运行就很说明问题：
 
-- **成本临界倍数 FAIL** 是真结论：10 bps × 0.38 换手，成本 142 万把 138 万毛利全吃掉了。
-  报 Turnover 回答不了"能不能投"，这个数能。
+- **成本临界倍数 FAIL** 是真结论：10 bps × 0.44 换手，成本 163 万把 133 万毛利全吃掉了，
+  净利 −30 万。报 Turnover 回答不了"能不能投"，这个数能。
 - **前视状态 FAIL** 是因为我们确实在降级口径下跑（无 `is_halted`、无 `delist_date`）。
   它应该 FAIL，直到接入真数据为止。
 - **区间稳定性 NO-BASIS** 是因为 250 个 session 只跨两个**不完整**年份。
+
+外来权重（别人给的、或别的工具算的）走 `--weight FILE`，认 `.csv` / `.feather` / `.parquet`：
+
+```bash
+pnl --weight some_weights.csv --sd 2025-12-01
+```
 
 ---
 

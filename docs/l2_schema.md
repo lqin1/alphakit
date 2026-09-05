@@ -1,4 +1,10 @@
-# L2 数据契约 v1 — 美股日频 PV / cax / sec master
+# 数据契约 — L2 交付层 / L3 派生层
+
+**§0–§9 是 L2**（美股日频 PV / cax / sec master），编号未动——`pipeline/` 里十余处
+注释按号引用本文。**§10 起是 L3**，引擎唯一的输入与输出。
+
+L2 → L3 是一道**单向**边界：L3 由 L2 生成，L2 从不读 L3；引擎只认 L3，从不碰 L2。
+所以这两层的契约可以分开演进，只要这道边界不被跨越。
 
 > 本文件是 pipeline 各部件之间的**唯一共享合同**。改动此文件需同步改 `pipeline/` 与校验器。
 > 上位文档：`docs/architecture.md` §3.1（L2 定义）、§3.4（标的与时间）、§5.1（L2 = 外部文件路径模板）。
@@ -330,3 +336,159 @@ D_raw(e) = D_reported(e) × S(ex_date(e))
  "unexplained_jumps_gt_40pct":[...], "suspect_securities":[{"symbol":"MNST",...}],
  "validation":"PASS"}
 ```
+
+
+---
+
+# 第二部分：L3 派生层
+
+## 10. 定位与边界
+
+L3 是**引擎唯一的输入与输出**。`alphakit run` 读 L3、写 L3；`alphakit pnl` 读 L3。
+引擎不认识 L2，也不认识任何厂商格式——把 L2 变成 L3 是 `pipeline/build_l3_base.py`
+一次性的事。
+
+这条边界的价值在于：L2 的缺陷（§0.1）都被挡在引擎之外，而 L3 的形状只有三种（§12），
+于是逐日主循环、掩码、仿真器都只需要面对这三种，不必为每个数据源分叉。
+
+**L3 完全可重建**——给定 L2 加上 `repos/` 里的 config 与代码，`storage/l3/` 可以整个
+删掉重来（实测约 8 秒）。它入库只是为了开箱即用，不是因为它不可再生。
+
+## 11. 目录布局与引用名
+
+```
+storage/l3/{region}/
+  _axes/{sessions,securities,capacity}.json      轴, 全 region 共享
+  {repo}/{node_dir}/{leaf}/                      一个数组 = 一个输出
+    zarr.json                                    zarr v3 元数据 + 本契约的 meta
+    c/...                                        分块数据
+```
+
+引用名与路径一一对应，**不需要任何索引**即可互相还原：
+
+| | 形态 |
+|---|---|
+| 引用名 | `{repo}.{node_dir}.{leaf}` |
+| 路径 | `storage/l3/{region}/{repo}/{node_dir}/{leaf}/` |
+| `leaf` | `node_name == node_dir` 时为 `{output}`；否则为 `{node_name}-{output}` |
+
+**折叠规则**：`node_name` 与 `node_dir` 同名时中间那段不携带信息，一律省略。
+`g_common.field_base_px.adj_close_1500` 而不是
+`g_common.field_base_px.field_base_px-adj_close_1500`。展开形**会被拒绝**——同一份
+数据留两种拼法，迟早一半代码写这种、一半写那种，而它们 hash 出不同的 fingerprint
+却指向同一个数组。
+
+连字符只允许出现在 `{node_name}-{output}` 这一处接缝上，名字本身不得含连字符——
+否则 `leaf` 无从切分。引用名不得含大写：大小写不敏感的文件系统（macOS APFS 默认）
+上 `MktBeta` 与 `mktbeta` 在一台机器上是同一个目录、在另一台上是两个。
+
+**通配**：`{repo}.{node_dir}.*`（折叠形节点）或 `{repo}.{node_dir}.{node_name}-*`。
+编译期展开为该节点当时的全部输出，展开清单冻结进 meta。
+
+## 12. 秩与存储格式
+
+zarr v3，三种秩，**`di` 恒为第一轴**：
+
+| dims | 形状 | 分块 | 用途 |
+|---|---|---|---|
+| `[di]` | `(D,)` | `(4096,)` | 每个 session 一个标量（如 `market_ret`） |
+| `[di, ii]` | `(D, N)` | `(50, N_alloc)` | 日频截面面板，绝大多数节点 |
+| `[di, ii, ti]` | `(D, N, T)` | `(1, N_alloc, T)` | 日内网格，单日即一块 |
+
+`di` 必须是第一轴，否则日更要重写所有分块，O(1) 追加就不成立。秩-3 取
+`(1, N, T)` 是同一条理由的极端情形：日更只写一个文件。
+
+dtype 由 config 声明，实测在用的有 `f4`（数值）、`bool`（池子）、`i1`（分类，如 sector）。
+
+## 13. 轴
+
+`_axes/` 三个文件，整个 region 共享：
+
+| 文件 | 内容 |
+|---|---|
+| `sessions.json` | 交易日列表，有序、去重 |
+| `securities.json` | `security_id` 列表，与 `registry/security_id.{region}.csv` 同源 |
+| `capacity.json` | `{"n_active": 503, "allocated": 1003}` |
+
+`allocated > n_active` 是有意的：`[di, ii]` 用**全宽分块**，加一列要重写所有分块，
+所以一次预留一批，把按标的扩容从"每次都痛"摊薄成年度维护。追加 session 是 O(1)，
+追加 security 不是。
+
+轴按 region 存：`security_id` 与交易日都是按市场定义的，两个市场不共享列轴、日历也
+不同。轴若放在 region 之上，接第二个市场时要么列轴被迫混装、要么整个 store 推倒重来。
+
+## 14. `zarr.json` 里的 meta
+
+| 字段 | 含义 |
+|---|---|
+| `dims` / `dtype` | 秩与类型，见 §12 |
+| `first_session` / `last_session` | 已覆盖区间的**轴下标**（不是日期） |
+| `n_cols_covered` | 实际写过的列数 |
+| `version` | `--rebuild` 时 bump |
+| `fingerprint` | 定义的 hash，见 §15 |
+| `status` / `registered` | `wip` / 是否已注册进 alpha 池 |
+| `deps` / `deps_versions` | 展开后的依赖清单及其当时的版本，**冻结** |
+| `region` / `region_hash` | 口径锚，见 §16 |
+| `cutoff` | 该节点的有效时点（`_tc` 模板按此解析） |
+| `universe` / `lookback` | 池子引用；预热长度 |
+| `node` / `node_dir` / `repo` / `params` | 身份四件套 |
+| `sibling_outputs` | 同一节点的全部输出 |
+| `code_ref` | handle 源码路径 |
+| `updated_at` | UTC ISO8601 |
+
+`deps_versions` 冻结的是**当时**上游的版本号，所以"这个数是用哪几版依赖算出来的"
+永远可回答。
+
+## 15. 写入语义
+
+**指纹闸门。** `fingerprint` 覆盖 yaml 子树 + 代码字节 + 解析后的依赖 + universe +
+lookback。定义变了而指纹对不上时，写入被拒绝，必须显式 `--rebuild`——否则同一个
+数组里会混着两套定义算出来的行，而事后无从分辨哪行是哪套。
+
+**upsert vs write。** 区间落在已覆盖范围内是 upsert（就地改写），否则扩展区间。
+同日重跑幂等。
+
+**`--rebuild` 不收缩已存区间。** 用更窄的 `--sd` 重建，旧区间之外的行仍留在原地，
+且值可能是 `0.0` 而非 `NaN`——`dropna` 删不掉它们，会一路流进 pnl 指标。窄区间重跑
+之后，评估端要再传一次 `--sd`。
+
+**两道掩码闸门（§3.5）。** 声明了 universe 的节点：ops 之前，当日池外整列 NaN；
+`scale` 之后，池外权重恰为 0。前者让截面统计天然限定池内，后者保证账本里没有池外仓位。
+
+## 16. 口径与可比性
+
+`repos/{repo}/regions/{region}.yaml` 是**可比性的锚**：
+
+```yaml
+calendar: nyse
+time_cutoff: "1500"
+return_metric: g_common.field_base_px.ret_1d_1500
+universe:      g_common.field_common_univ.us_top400
+booksize:      20000000
+l3_root:       storage/l3/us       # CLI --store 的缺省
+pnl_out:       pnl_out             # CLI --out 的缺省
+sim:
+  participation: 0.10
+  halt_proxy:    3
+```
+
+各 repo 各存一份，内容**必须逐字一致**：规范化后的 hash 进权重 meta（`region_hash`），
+提交 alpha 池时按 hash 校验。自由研究、统一提交。`find_region()` 扫到多份不一致时
+直接报错——口径一旦悄悄分叉，两个人算出来的 Sharpe 就不再可比，而这件事没有任何
+别的地方会喊出来。
+
+## 17. L3 验收断言
+
+`tests/test_core.py` 与 `tests/smoke.py` 覆盖，`tests/run_all.py` 一次跑完：
+
+| | 断言 |
+|---|---|
+| L1 | 引用名 ↔ 路径往返一致，且符合 §11 的折叠规则 |
+| L2 | `l3_root` 带不带 region 段都落到同一处 |
+| L3 | 轴不可被静默覆盖；同批次内 session 去重 |
+| L4 | 扩容后读取仍按轴对齐；轴外的列不被静默丢弃 |
+| L5 | 乱序日期被拒 |
+| L6 | 稀疏 bool 写入不得整体变 True（池外会被误判为池内） |
+| L7 | 指纹覆盖 params / deps / code 三项，任一变化都换指纹 |
+| L8 | 同日重跑幂等 |
+| L9 | 两道掩码闸门：池外读到 NaN、`scale` 后池外权重恰为 0 |
