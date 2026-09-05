@@ -15,15 +15,21 @@ from ..core.store import Store, StoreError
 from .metrics import metrics as compute_metrics
 from .simulate import simulate
 
-RET = "g_common.field_base_px.field_base_px-ret_1d_1500"
-ADV = "g_common.field_base_px.field_base_px-adv_dollar"
-MKT = "g_common.field_base_px.field_base_px-market_ret"
+RET = "g_common.field_base_px.ret_1d_1500"
+ADV = "g_common.field_base_px.adv_dollar"
+MKT = "g_common.field_base_px.market_ret"
 
 
 def _load_weights(store: Store, node: str | None, weight_file: str | None,
                   sd, ed) -> pd.DataFrame:
     if weight_file:
-        w = pd.read_feather(weight_file)
+        # 外来权重按扩展名认格式: 交付物现在落 CSV, 但别人递过来的仍可能是 feather/parquet
+        suf = Path(weight_file).suffix.lower()
+        rd = {".csv": pd.read_csv, ".feather": pd.read_feather,
+              ".parquet": pd.read_parquet}.get(suf)
+        if rd is None:
+            raise StoreError(f"不认识的权重文件格式 `{suf}`：{weight_file}（支持 .csv/.feather/.parquet）")
+        w = rd(weight_file)
         return w.set_index(w.columns[0])
     return store.read(node, sd, ed)
 
@@ -72,23 +78,88 @@ def run_pnl(a) -> int:
 
 
 def _print(name: str, m: dict, out: Path) -> None:
-    sc, snap = m.get("scalar", {}), m.get("snapshot", {})
-    print(f"\n{name}   {snap.get('sd','')}..{snap.get('ed','')}  "
-          f"({snap.get('n_sessions','?')} sessions × {snap.get('n_securities','?')} names)")
-    row = [("Sharpe", "sharpe"), ("Ann.Ret", "ann_return"), ("Turnover", "turnover"),
-           ("Margin(bps)", "margin_bps"), ("Fitness", "fitness"), ("MaxDD", "max_drawdown")]
-    print("  " + "  ".join(f"{lbl}={_fmt(sc.get(k))}" for lbl, k in row))
+    """控制台是这条命令的**主要**输出面。
 
-    au = m.get("audit", {})
-    print(f"  ghost_detection={au.get('ghost_detection')}  ghost_days={au.get('ghost_days')}  "
-          f"delist_source={au.get('delist_source')}")
+    metrics.json 有 60 多个字段, 但决定"这个 alpha 还要不要继续做"的就那十来个。
+    全打出来等于没打——真正的信息会淹在里面。所以这里挑三组: 收益 / 成本 / 风险,
+    外加七道闸门的逐条判定。闸门通过也印数字（§15.9）: 空白绝不能在"干净"与
+    "没查"之间有歧义。
+    """
+    sc, snap, au = m.get("scalar", {}), m.get("snapshot", {}), m.get("audit", {})
+    W = 78
+    print("\n" + "=" * W)
+    print(f" {name}")
+    print(f" {snap.get('sd','')} .. {snap.get('ed','')}   "
+          f"{snap.get('n_sessions','?')} sessions × {snap.get('n_securities','?')} names   "
+          f"book {_money(snap.get('booksize'))}")
+    print("=" * W)
 
-    # 七道闸门：通过也打印数字。空白绝不能在"干净"与"没查"之间有歧义（§15.9）
+    rows = [
+        ("收益", [("Sharpe", _num(sc.get("sharpe"))), ("年化收益", _pct(sc.get("ann_return"))),
+                  ("年化美元", _money(sc.get("ann_return_dollar")))]),
+        ("",     [("Fitness", _num(sc.get("fitness"))), ("命中率", _pct(sc.get("hit_rate"))),
+                  ("日波动", _pct(sc.get("return_std_daily")))]),
+        ("成本", [("换手", _pct(sc.get("turnover"))), ("Margin", f"{_num(sc.get('margin_bps'))} bps"),
+                  ("成本合计", _money(sc.get("cost_total")))]),
+        ("",     [("成本/毛利", _pct(sc.get("cost_share_of_gross"))),
+                  ("毛利", _money(sc.get("holding_pnl_total"))),
+                  ("净利", _money(sc.get("pnl_total")))]),
+        ("风险", [("MaxDD", _pct(sc.get("max_drawdown"))),
+                  ("回撤额", _money(sc.get("max_drawdown_dollar"))),
+                  ("回撤区间", f"{sc.get('max_drawdown_from','?')}→{sc.get('max_drawdown_to','?')}")]),
+        ("持仓", [("多头", f"{_money(sc.get('avg_long_value'))} / {_num(sc.get('avg_long_count'))} 只"),
+                  ("空头", f"{_money(sc.get('avg_short_value'))} / {_num(sc.get('avg_short_count'))} 只"),
+                  ("多空比", _num(sc.get("long_short_ratio")))]),
+    ]
+    for head, cells in rows:
+        print(" " + _pad(head, 7) + "".join(_pad(f"{k}={v}", 26) for k, v in cells))
+
+    print("-" * W)
+    print(f" 七道闸门   {m.get('n_pass','?')}/{m.get('n_total','?')} 通过")
     for g in m.get("gates", []):
         nums = "  ".join(f"{k}={_fmt(v)}" for k, v in list((g.get("numbers") or {}).items())[:3])
-        print(f"  [{g.get('state','?'):<8}] {g.get('gate',''):<14} {nums}")
-    print(f"  {m.get('summary','')}")
-    print(f"  四交付物 → {out}/")
+        print(f"   [{g.get('state','?'):<8}] {g.get('gate',''):<14} {nums}")
+    print("-" * W)
+    print(f" 审计   ghost_detection={au.get('ghost_detection')}  ghost_days={au.get('ghost_days')}  "
+          f"delist_source={au.get('delist_source')}")
+    kd = snap.get("known_defects") or []
+    if kd:
+        print(f" 缺陷   {', '.join(kd)}")
+    print(f" 结论   {m.get('summary','')}")
+    print(f" 交付   {out}/  →  daily.csv  pnl.csv  holding.csv  metrics.json")
+    print("=" * W)
+
+
+def _dw(s: str) -> int:
+    """显示宽度：CJK 占两列。终端按列对齐, 按字符数 ljust 会歪掉一半。"""
+    import unicodedata
+    return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
+
+
+def _pad(s: str, n: int) -> str:
+    return s + " " * max(0, n - _dw(s))
+
+
+def _num(v):
+    if v is None or (isinstance(v, float) and not np.isfinite(v)):
+        return "n/a"
+    return f"{v:,.4g}" if isinstance(v, float) else str(v)
+
+
+def _pct(v):
+    if v is None or (isinstance(v, float) and not np.isfinite(v)):
+        return "n/a"
+    return f"{v * 100:.2f}%"
+
+
+def _money(v):
+    if v is None or (isinstance(v, float) and not np.isfinite(v)):
+        return "n/a"
+    a = abs(v)
+    for lim, suf in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
+        if a >= lim:
+            return f"${v / lim:,.2f}{suf}"
+    return f"${v:,.0f}"
 
 
 def _fmt(v):

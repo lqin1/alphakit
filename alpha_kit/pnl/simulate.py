@@ -92,19 +92,26 @@ class SimResult:
     def write(self, outdir) -> dict:
         """落 §8.3 四交付物之三（metrics.json 归 metrics.py）。
 
-        feather 要求列名是字符串，故 MultiIndex 列拍平成 `{块}|{security_id}`。
+        一律 CSV。交付物是给人看、给别的工具读的：纯文本能 grep、能 diff、
+        不装 pyarrow 也打得开, 这几条压过了体积与读写速度上的损失。真要快
+        就别读交付物, 直接读 store。
+
+        MultiIndex 列（holding 是 {块} × {security_id} 两层）拍平成
+        `{块}|{security_id}` 一层。注意 `security_id` 本是整数, 经 CSV 往返后
+        列名一律成字符串——回头要按 id 比对时记得转型。
         """
         from pathlib import Path
         out = Path(outdir)
         out.mkdir(parents=True, exist_ok=True)
-        h = self.holding
+        h = self.holding.copy()
         h.columns = [f"{a}|{b}" for a, b in h.columns]
         paths = {}
         for name, df in (("holding", h), ("pnl", self.pnl), ("daily", self.daily)):
             d = df.copy()
             d.columns = [str(c) for c in d.columns]
-            d.reset_index(names="date").to_feather(out / f"{name}.feather")
-            paths[name] = str(out / f"{name}.feather")
+            f = out / f"{name}.csv"
+            d.reset_index(names="date").to_csv(f, index=False)
+            paths[name] = str(f)
         return paths
 
 

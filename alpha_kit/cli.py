@@ -5,9 +5,10 @@ import argparse
 import glob
 import sys
 import time
+import warnings
 from pathlib import Path
 
-from .core.config import ConfigError, load_spec
+from .core.config import ConfigError, find_region, load_spec
 from .core.store import Store, StoreError
 
 DEFAULT_L3 = "storage/l3"
@@ -161,13 +162,33 @@ def cmd_pnl(a) -> int:
     return run_pnl(a)
 
 
+def _terse_warning(message, category, filename, lineno, line=None):  # noqa: ARG001
+    """警告只留正文。
+
+    默认格式会连源码那一行一起吐出来, 于是 `pnl` 的报表里夹着 `warnings.warn(`
+    这种对使用者毫无意义的残片。警告本身是要留的（§九 的降级必须被看见）,
+    但它该读起来像一句话。
+    """
+    return f"  warn  {' '.join(str(message).split())}\n"
+
+
 def main(argv=None) -> int:
+    warnings.formatwarning = _terse_warning
+    # --store / --region 在顶层和子命令上都认。子命令那一份用 SUPPRESS 作缺省,
+    # 不给时就不会往 namespace 里写, 顶层的值因而不被 None 覆盖——这是 argparse
+    # 里最容易踩空的一处: 两处同名选项、后解析的那个会无条件盖掉先前的值。
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--store", default=argparse.SUPPRESS,
+                        help="L3 根目录; 缺省取 region 的 l3_root")
+    common.add_argument("--region", default=argparse.SUPPRESS)
+
     ap = argparse.ArgumentParser(prog="alphakit")
-    ap.add_argument("--store", default=DEFAULT_L3)
+    ap.add_argument("--store", default=None)
     ap.add_argument("--region", default="us")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    r = sub.add_parser("run", help="唯一执行入口: 数据节点与 alpha 同一条命令")
+    r = sub.add_parser("run", parents=[common],
+                       help="唯一执行入口: 数据节点与 alpha 同一条命令")
     r.add_argument("path", help="节点目录 / yaml / glob")
     r.add_argument("--sd"); r.add_argument("--ed")
     r.add_argument("--only", help="只跑指定节点")
@@ -180,28 +201,63 @@ def main(argv=None) -> int:
     r.add_argument("--pnl", action="store_true")
     r.set_defaults(fn=cmd_run)
 
-    s = sub.add_parser("store", help="查询工具, 不是执行器")
+    s = sub.add_parser("store", parents=[common], help="查询工具, 不是执行器")
     s.add_argument("action", choices=["status", "ls", "meta"])
     s.add_argument("ref", nargs="?")
     s.set_defaults(fn=cmd_store)
 
-    p = sub.add_parser("pnl", help="权重 → 指标")
+    p = sub.add_parser("pnl", parents=[common], help="权重 → 指标")
     p.add_argument("--node", default=None)
     p.add_argument("--sd"); p.add_argument("--ed")
-    p.add_argument("--booksize", type=float, default=20e6)
-    p.add_argument("--rm", default="g_common.field_base_px.field_base_px-ret_1d_1500")
+    p.add_argument("--booksize", type=float, default=None)
+    p.add_argument("--rm", default=None)
     p.add_argument("--cost-bps", dest="cost_bps", type=float, default=10.0,
                    help="常数 bps 成本模型; §4.9.3 说成本模型是有版本的 L3 field, "
                         "常数只是 v0 的诚实近似, 会写进 metrics.json")
-    p.add_argument("--participation", type=float, default=0.10)
+    p.add_argument("--participation", type=float, default=None)
     p.add_argument("--halt-proxy", dest="halt_proxy", type=int, default=None,
                    help="无 is_halted field 时的显式降级: 连续 K 日 ret=NaN 视作停牌 (§九)")
     p.add_argument("--weight", default=None, help="外来权重文件入口")
-    p.add_argument("--out", default="pnl_out")
+    p.add_argument("--out", default=None, help="四交付物落地处; 缺省取 region 的 pnl_out")
     p.set_defaults(fn=cmd_pnl)
 
     a = ap.parse_args(argv)
+
+    # 口径全部落在 region 上（§二）: L3 根、pnl 落地处、仿真参数。命令行显式给的优先,
+    # region 只提供缺省。此前 pnl 完全不读 region, 于是 region 里写着 halt_proxy: 3
+    # 却仍要在命令行上重敲一遍——同一个口径存在两处, 迟早对不上。
+    repo = a.node.split(".")[0] if getattr(a, "node", None) else None
+    try:
+        rdoc, rhash, rfile = find_region(a.region, repo=repo)
+    except ConfigError as e:
+        print(f"error  {e}", file=sys.stderr)
+        return 1
+    a.store = a.store or rdoc.get("l3_root") or DEFAULT_L3
+    if a.cmd == "pnl":
+        sim = rdoc.get("sim") or {}
+        if a.out is None:
+            a.out = rdoc.get("pnl_out") or "pnl_out"
+        if a.halt_proxy is None:
+            a.halt_proxy = sim.get("halt_proxy")
+        if a.participation is None:
+            a.participation = float(sim.get("participation", 0.10))
+        if a.booksize is None:
+            a.booksize = float(rdoc.get("booksize") or 20e6)
+        if a.rm is None:
+            a.rm = rdoc.get("return_metric") or "g_common.field_base_px.ret_1d_1500"
+        a.region_file = str(rfile) if rfile else None
+        a.region_hash = rhash
     return a.fn(a)
+
+
+def main_run(argv=None) -> int:
+    """console script `run` —— 等价于 `alphakit run …`。"""
+    return main(["run"] + list(sys.argv[1:] if argv is None else argv))
+
+
+def main_pnl(argv=None) -> int:
+    """console script `pnl` —— 等价于 `alphakit pnl …`。"""
+    return main(["pnl"] + list(sys.argv[1:] if argv is None else argv))
 
 
 if __name__ == "__main__":
