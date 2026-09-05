@@ -90,7 +90,7 @@ class Store:
         stem = pattern[:-1]                      # 含末尾的 '-' 或 '.'
         hits = sorted(r for r in self.list_refs() if r.startswith(stem))
         if not hits:
-            raise StoreError(f"通配 {pattern} 展开为空——该节点尚未产出任何输出")
+            raise StoreError(f"wildcard {pattern} expanded to nothing -- that node has not produced any output yet")
         return hits
 
     # ---------------------------------------------------------------- 元数据
@@ -115,7 +115,7 @@ class Store:
         """
         p = self.path(ref)
         if not (p / "zarr.json").exists():
-            raise StoreError(f"依赖不存在: {ref}\n  期望路径 {p}")
+            raise StoreError(f"dependency does not exist: {ref}\n  expected path {p}")
         z = zarr.open_array(str(p), mode="r")
         dims = list(z.attrs["dims"])
         i0, i1 = self.axes.slice(sd, ed)
@@ -155,7 +155,7 @@ class Store:
             shape, chunks = (D, N), (CHUNK_DI, N)
         else:
             if not grid_len:
-                raise StoreError(f"{ref}: 秩-3 必须声明 grid")
+                raise StoreError(f"{ref}: a rank-3 output must declare grid")
             shape, chunks = (D, N, grid_len), (1, N, grid_len)
         fill = _fill(dtype)
         return zarr.create_array(store=str(p), shape=shape, chunks=chunks,
@@ -182,18 +182,20 @@ class Store:
         if dates != self.axes.sessions[i0:i1]:
             # 不能只比宽度：错序的索引（01-01, 01-03, 01-02, 01-04）宽度也对得上,
             # 然后按给定顺序落库, 第 2、3 天的值被悄悄互换。必须逐位等于轴上那一段。
-            why = ("日期不连续（有缺口）" if len(dates) != i1 - i0
-                   else "日期顺序错乱（与轴上的顺序不一致）")
+            why = ("dates are not contiguous (there is a gap)" if len(dates) != i1 - i0
+                   else "dates are out of order (they do not match the axis order)")
             raise StoreError(
-                f"{ref}: {why}——交付的必须是 session 轴上连续且同序的一段。\n"
-                f"  给的  {dates[:3]}…{dates[-1:]}（{len(dates)} 行）\n"
-                f"  期望  {self.axes.sessions[i0:i0+3]}…{self.axes.sessions[i1-1:i1]}（{i1-i0} 行）")
+                f"{ref}: {why} -- what is delivered must be a contiguous, same-order run of the "
+                f"session axis.\n"
+                f"  got      {dates[:3]}...{dates[-1:]} ({len(dates)} rows)\n"
+                f"  expected {self.axes.sessions[i0:i0+3]}...{self.axes.sessions[i1-1:i1]} ({i1-i0} rows)")
         if dims == ["di", "ii"]:
             extra = [c for c in getattr(df, "columns", []) if c not in self.axes._sec_pos]
             if extra:
                 raise StoreError(
-                    f"{ref}: 交付的面板含 {len(extra)} 个不在列轴上的标的（如 {extra[:3]}）——"
-                    f"直接 reindex 会让它们无声消失。先把它们加进 securities 轴。")
+                    f"{ref}: the delivered panel holds {len(extra)} names absent from the column axis "
+                    f"(e.g. {extra[:3]}) -- a plain reindex would make them vanish silently. "
+                    f"Add them to the securities axis first.")
 
         # 指纹闸门在这里而不是在调用方：它守的是"同一个名字下的定义变了"，
         # 而这件事与谁在写无关。放在 runner 里的话，ingestion 脚本（build_l3_base）
@@ -242,9 +244,10 @@ class Store:
         if need <= self.axes.allocated:
             return self.axes.allocated
         raise StoreError(
-            f"列轴容量 {self.axes.allocated} 不够放 {need} 个标的。\n"
-            f"  按标的扩容不是 O(1)——全宽 chunk 下要重写所有 chunk，属离线维护，"
-            f"不在日更路径上做。请先重建轴并预留足够列。")
+            f"column-axis capacity {self.axes.allocated} cannot hold {need} names.\n"
+            f"  Growing by name is not O(1): under full-width chunks every chunk must be "
+            f"rewritten. That is offline maintenance and does not belong on the daily path. "
+            f"Rebuild the axis first with enough reserved columns.")
 
     def check_fingerprint(self, ref: str | Ref, fingerprint: str) -> None:
         """写入前比对指纹（§3.3）。
@@ -257,6 +260,7 @@ class Store:
         old = self.meta(ref).get("fingerprint")
         if old and old != fingerprint:
             raise StoreError(
-                f"{ref}: 指纹不符——定义已改变而名字未变。\n"
-                f"  store 中 {old}\n  本次   {fingerprint}\n"
-                f"  改定义请显式 --rebuild（新版本）或换一个 identity。")
+                f"{ref}: fingerprint mismatch -- the definition changed but the name did not.\n"
+                f"  in store  {old}\n  this run  {fingerprint}\n"
+                f"  To change a definition, pass --rebuild explicitly (new version) or use a "
+                f"different identity.")

@@ -48,7 +48,7 @@
     "version": 1,
     "first_session": 64,
     "last_session": 249,
-    "updated_at": "2026-09-05T02:31:50Z",
+    "updated_at": "2026-09-05T02:55:07Z",
     "deps": [
       "g_common.field_base_px.adj_close_1500",
       "g_common.factor_common_gics.sector"

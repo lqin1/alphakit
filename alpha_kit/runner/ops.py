@@ -162,9 +162,10 @@ class _TsOp:
             self._width = x.size
         elif self._width != x.size:
             raise ValueError(
-                f"{type(self).__name__}: 列轴宽度从 {self._width} 变成 {x.size}——"
-                f"TS 缓冲按位置对齐，宽度一变就是按位置错配。ctx 应交付对齐到全局"
-                f"列轴的截面（§十）；确实换了区间请先 reset()。")
+                f"{type(self).__name__}: column-axis width changed from {self._width} to {x.size} -- "
+                f"TS buffers align by position, so a width change is a positional mismatch. "
+                f"ctx should deliver cross-sections aligned to the global column axis (§10); "
+                f"if the period really changed, call reset() first.")
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         raise NotImplementedError
@@ -180,7 +181,7 @@ class LinearDecay(_TsOp):
 
     def __init__(self, n: int):
         if not isinstance(n, int) or isinstance(n, bool) or n < 1:
-            raise ValueError(f"linear_decay 需要正整数窗口，收到 {n!r}")
+            raise ValueError(f"linear_decay needs a positive integer window, got {n!r}")
         self.n = int(n)
         self.w = np.arange(self.n, 0, -1, dtype=float)   # 按 age：[n, n-1, …, 1]
         self.reset()
@@ -219,7 +220,7 @@ class ExpDecay(_TsOp):
 
     def __init__(self, h: int):
         if not isinstance(h, int) or isinstance(h, bool) or h < 1:
-            raise ValueError(f"exp_decay 需要正的半衰期，收到 {h!r}")
+            raise ValueError(f"exp_decay needs a positive half-life, got {h!r}")
         self.h = int(h)
         self.a = 0.5 ** (1.0 / float(self.h))
         self.reset()
@@ -253,7 +254,7 @@ class Delay(_TsOp):
 
     def __init__(self, k: int):
         if not isinstance(k, int) or isinstance(k, bool) or k < 1:
-            raise ValueError(f"delay 需要正整数滞后，收到 {k!r}")
+            raise ValueError(f"delay needs a positive integer lag, got {k!r}")
         self.k = int(k)
         self.reset()
 
@@ -324,25 +325,26 @@ class OpChain:
             elif op == "neutralize":
                 if universe is None:
                     raise ValueError(
-                        f"neutralize: {arg} 需要 universe 视图来取分组字段，但链拿到的是 None。"
-                        f"（§7.2 第 3 条：OpChain 必须拿到池子。）")
+                        f"neutralize: {arg} needs the universe view to fetch the grouping field, but the "
+                        f"chain was given None. (§7.2 item 3: OpChain must receive the pool.)")
                 self._plan.append(self._neutralize_step(str(arg)))
             elif op == "truncate":
                 if not isinstance(arg, (int, float)) or isinstance(arg, bool):
-                    raise ValueError(f"truncate 需要一个数，收到 {arg!r}")
+                    raise ValueError(f"truncate needs a number, got {arg!r}")
                 x = float(arg)
                 if x <= 0.0:
                     raise ValueError(
-                        f"truncate: {arg!r} ——上限 ≤ 0 会把整本账夹成 0。"
-                        f"要的多半是 0.02 这样的比例。")
+                        f"truncate: {arg!r} -- a cap <= 0 would clamp the entire book to 0. "
+                        f"You probably want a fraction such as 0.02.")
                 self._plan.append(lambda v, t, m, x=x: cs_truncate(v, x))
             elif op == "scale":
                 if arg not in (None, "book"):
                     raise ValueError(
-                        f"scale: {arg!r} 未知（可用：book）。静默忽略枚举值等于换了口径不报错。")
+                        f"scale: {arg!r} is unknown (available: book). Silently ignoring an enum value would "
+                        f"change the convention without reporting it.")
                 self._plan.append(self._scale_step)
             else:
-                raise ValueError(f"未知算子 {op}（可用：{sorted(OPS)}）")
+                raise ValueError(f"unknown op {op} (available: {sorted(OPS)})")
 
     # ---- 编译期生成的步骤（闭包捕获参数，执行期零查表）
     def _ts_step(self, state: _TsOp):
@@ -365,8 +367,9 @@ class OpChain:
             self.degenerate_scale.append(int(t))
             if len(self.degenerate_scale) == 1:
                 warnings.warn(
-                    f"scale: t={t} 日 Σ|w|=0（全抵消或全 NaN），跳过归一、当日空仓。"
-                    f"后续同类日只累计不再重复告警，见 OpChain.degenerate_scale。",
+                    f"scale: on t={t}, Sigma|w|=0 (everything cancelled or all NaN); normalisation skipped "
+                    f"and the book is empty for the day. Later days of the same kind are only "
+                    f"counted, not re-warned -- see OpChain.degenerate_scale.",
                     RuntimeWarning, stacklevel=3)
         return cs_scale(v, gross=g)             # mask 已落地, 不再重复夹
 
@@ -374,8 +377,8 @@ class OpChain:
     def __call__(self, v: pd.Series, t: int) -> pd.Series:
         if not isinstance(v, pd.Series):
             raise TypeError(
-                f"OpChain 收截面 Series（秩-2 的一天），收到 {type(v).__name__}。"
-                f"秩-1/秩-3 只有 TS 算子合法（§3.6），其接入由 runner 负责。")
+                f"OpChain takes a cross-section Series (one day of a rank-2 panel), got {type(v).__name__}. "
+                f"For rank-1/rank-3 only TS ops are legal (§3.6); wiring those up is the runner's job.")
         self._advance(t)
         # astype 顺带复制：链内所有算子都可以就地写而不会写穿 ctx 交付的那份（§十）
         v = v.astype(float)
@@ -391,9 +394,10 @@ class OpChain:
         t = int(t)
         if self._last_t is not None and t != self._last_t + 1:
             raise ValueError(
-                f"OpChain 游标跳变：上次 t={self._last_t}，这次 t={t}。"
-                f"decay/delay 的缓冲按调用次数推进，跳日会让滞后与衰减权重整体错位而"
-                f"不报错。预热段也要照常调用（§7.1）；换区间重跑请先 reset()。")
+                f"OpChain cursor jumped: last t={self._last_t}, now t={t}. decay/delay buffers advance "
+                f"per call, so skipping a day shifts every lag and decay weight without raising. "
+                f"The warmup segment must be called through as well (§7.1); to re-run a "
+                f"different period, call reset() first.")
         self._last_t = t
 
     def reset(self) -> None:

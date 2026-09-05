@@ -150,14 +150,16 @@ class Ctx:
     def _require_cursor(self):
         if self._t is None:
             raise RuntimeError(
-                "数据访问只能在 handle 里——init 期还没有游标，此时读到的任何值都是无意义的。")
+                "data access is only legal inside handle -- during init there is no cursor yet, so any "
+                "value read here would be meaningless.")
 
     def _panel(self, ref: str) -> PanelLoader:
         if ref not in self._panels:
             raise KeyError(
-                f"{self._node.name}: `{ref}` 不在 deps 里。\n"
-                f"  凡是这个节点跑起来需要读到的 L3，无论谁去读它，都要写进 deps。\n"
-                f"  已声明: {sorted(self._panels)}")
+                f"{self._node.name}: `{ref}` is not in deps.\n"
+                f"  Every L3 this node needs to read in order to run must be declared in deps, "
+                f"no matter who does the reading.\n"
+                f"  declared: {sorted(self._panels)}")
         return self._panels[ref]
 
     # ------------------------------------------------------------------ 取数
@@ -231,37 +233,38 @@ class Ctx:
         import difflib
         want = self._node.outputs
         if len(want) < 2:
-            raise ValueError(f"{self._node.name} 只有一个输出，直接 return 值即可")
+            raise ValueError(f"{self._node.name} has only one output -- just return the value directly")
         unknown = set(kw) - set(want)
         if unknown:
             hint = difflib.get_close_matches(sorted(unknown)[0], list(want), 1)
-            raise ValueError(f"未声明的输出 {sorted(unknown)}"
-                             + (f"；是否想写 {hint[0]}?" if hint else ""))
+            raise ValueError(f"undeclared output {sorted(unknown)}"
+                             + (f"; did you mean {hint[0]}?" if hint else ""))
         missing = set(want) - set(kw)
         if missing:
             raise ValueError(
-                f"缺少输出 {sorted(missing)}；算不出值请传 NaN，不要漏 key——"
-                f"NaN 是合法值（这天这只票没有值），漏 key 是结构错误（这个节点今天不存在）。")
+                f"missing output {sorted(missing)}; if a value cannot be computed pass NaN rather than "
+                f"omitting the key -- NaN is a legal value (this name has no value today), "
+                f"while a missing key is a structural error (this node does not exist today).")
         return {k: self._coerce(v, want[k]) for k, v in kw.items()}
 
     def _coerce(self, v, out):
         """按声明的秩校验形状，写错在这一行就炸（§4.2）。"""
         if out.dims == ("di",):
             if hasattr(v, "__len__") and not np.isscalar(v):
-                raise ValueError(f"{out.key}: dims=[di] 应返回标量，收到 {type(v).__name__}")
+                raise ValueError(f"{out.key}: dims=[di] must return a scalar, got {type(v).__name__}")
             return float(v)
         if out.dims == ("di", "ii"):
             if isinstance(v, pd.DataFrame):
                 raise ValueError(
-                    f"{out.key}: dims=[di,ii] 应返回**当日截面**（长度 {len(self._cols)} 的 Series），"
-                    f"收到的是 {v.shape} 的 DataFrame——多半是忘了在窗口上做列向聚合"
-                    f"（如 .mean() / .loc[0]）。")
+                    f"{out.key}: dims=[di,ii] must return TODAY'S CROSS-SECTION (a Series of length "
+                    f"{len(self._cols)}), got a {v.shape} DataFrame -- most likely a column-wise "
+                    f"aggregation over the window is missing (e.g. .mean() / .loc[0]).")
             s = v if isinstance(v, pd.Series) else pd.Series(np.asarray(v), index=self._cols)
             if len(s) != len(self._cols):
                 raise ValueError(
-                    f"{out.key}: dims=[di,ii] 应返回长度 {len(self._cols)} 的截面，收到 {len(s)}")
+                    f"{out.key}: dims=[di,ii] must return a cross-section of length {len(self._cols)}, got {len(s)}")
             return s.reindex(self._cols)
         a = np.asarray(v)
         if a.ndim != 2:
-            raise ValueError(f"{out.key}: dims=[di,ii,ti] 应返回 (N, T) 二维，收到 {a.shape}")
+            raise ValueError(f"{out.key}: dims=[di,ii,ti] must return a 2-D (N, T) array, got {a.shape}")
         return a

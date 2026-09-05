@@ -28,7 +28,7 @@ def _load_weights(store: Store, node: str | None, weight_file: str | None,
         rd = {".csv": pd.read_csv, ".feather": pd.read_feather,
               ".parquet": pd.read_parquet}.get(suf)
         if rd is None:
-            raise StoreError(f"不认识的权重文件格式 `{suf}`：{weight_file}（支持 .csv/.feather/.parquet）")
+            raise StoreError(f"unrecognised weight file format `{suf}`: {weight_file} (supported: .csv/.feather/.parquet)")
         w = rd(weight_file)
         return w.set_index(w.columns[0])
     return store.read(node, sd, ed)
@@ -40,7 +40,7 @@ def run_pnl(a) -> int:
     w = _load_weights(store, node, getattr(a, "weight", None), a.sd, a.ed)
     w = w.dropna(how="all")
     if w.empty:
-        raise StoreError(f"{node}: 权重为空——先 run 该节点")
+        raise StoreError(f"{node}: weights are empty -- run that node first")
     sd, ed = w.index[0], w.index[-1]
 
     ret = store.read(a.rm, sd, ed)
@@ -95,38 +95,38 @@ def _print(name: str, m: dict, out: Path) -> None:
     print("=" * W)
 
     rows = [
-        ("收益", [("Sharpe", _num(sc.get("sharpe"))), ("年化收益", _pct(sc.get("ann_return"))),
-                  ("年化美元", _money(sc.get("ann_return_dollar")))]),
-        ("",     [("Fitness", _num(sc.get("fitness"))), ("命中率", _pct(sc.get("hit_rate"))),
-                  ("日波动", _pct(sc.get("return_std_daily")))]),
-        ("成本", [("换手", _pct(sc.get("turnover"))), ("Margin", f"{_num(sc.get('margin_bps'))} bps"),
-                  ("成本合计", _money(sc.get("cost_total")))]),
-        ("",     [("成本/毛利", _pct(sc.get("cost_share_of_gross"))),
-                  ("毛利", _money(sc.get("holding_pnl_total"))),
-                  ("净利", _money(sc.get("pnl_total")))]),
-        ("风险", [("MaxDD", _pct(sc.get("max_drawdown"))),
-                  ("回撤额", _money(sc.get("max_drawdown_dollar"))),
-                  ("回撤区间", f"{sc.get('max_drawdown_from','?')}→{sc.get('max_drawdown_to','?')}")]),
-        ("持仓", [("多头", f"{_money(sc.get('avg_long_value'))} / {_num(sc.get('avg_long_count'))} 只"),
-                  ("空头", f"{_money(sc.get('avg_short_value'))} / {_num(sc.get('avg_short_count'))} 只"),
-                  ("多空比", _num(sc.get("long_short_ratio")))]),
+        ("Return", [("Sharpe", _num(sc.get("sharpe"))), ("AnnRet", _pct(sc.get("ann_return"))),
+                  ("AnnRet$", _money(sc.get("ann_return_dollar")))]),
+        ("",     [("Fitness", _num(sc.get("fitness"))), ("HitRate", _pct(sc.get("hit_rate"))),
+                  ("DailyVol", _pct(sc.get("return_std_daily")))]),
+        ("Cost", [("Turnover", _pct(sc.get("turnover"))), ("Margin", f"{_num(sc.get('margin_bps'))} bps"),
+                  ("CostTotal", _money(sc.get("cost_total")))]),
+        ("",     [("Cost/Gross", _pct(sc.get("cost_share_of_gross"))),
+                  ("Gross", _money(sc.get("holding_pnl_total"))),
+                  ("Net", _money(sc.get("pnl_total")))]),
+        ("Risk", [("MaxDD", _pct(sc.get("max_drawdown"))),
+                  ("MaxDD$", _money(sc.get("max_drawdown_dollar"))),
+                  ("DDWindow", f"{sc.get('max_drawdown_from','?')}→{sc.get('max_drawdown_to','?')}")]),
+        ("Book", [("Long", f"{_money(sc.get('avg_long_value'))} / {_num(sc.get('avg_long_count'))} names"),
+                  ("Short", f"{_money(sc.get('avg_short_value'))} / {_num(sc.get('avg_short_count'))} names"),
+                  ("L/S", _num(sc.get("long_short_ratio")))]),
     ]
     for head, cells in rows:
         print(" " + _pad(head, 7) + "".join(_pad(f"{k}={v}", 26) for k, v in cells))
 
     print("-" * W)
-    print(f" 七道闸门   {m.get('n_pass','?')}/{m.get('n_total','?')} 通过")
+    print(f" Gates     {m.get('n_pass','?')}/{m.get('n_total','?')} passed")
     for g in m.get("gates", []):
         nums = "  ".join(f"{k}={_fmt(v)}" for k, v in list((g.get("numbers") or {}).items())[:3])
-        print(f"   [{g.get('state','?'):<8}] {g.get('gate',''):<14} {nums}")
+        print(f"   [{g.get('state','?'):<8}] {g.get('gate',''):<18} {nums}")
     print("-" * W)
-    print(f" 审计   ghost_detection={au.get('ghost_detection')}  ghost_days={au.get('ghost_days')}  "
+    print(f" Audit   ghost_detection={au.get('ghost_detection')}  ghost_days={au.get('ghost_days')}  "
           f"delist_source={au.get('delist_source')}")
     kd = snap.get("known_defects") or []
     if kd:
-        print(f" 缺陷   {', '.join(kd)}")
-    print(f" 结论   {m.get('summary','')}")
-    print(f" 交付   {out}/  →  daily.csv  pnl.csv  holding.csv  metrics.json")
+        print(f" Defects {', '.join(kd)}")
+    print(f" Verdict {m.get('summary','')}")
+    print(f" Output  {out}/  →  daily.csv  pnl.csv  holding.csv  metrics.json")
     print("=" * W)
 
 
@@ -137,7 +137,8 @@ def _dw(s: str) -> int:
 
 
 def _pad(s: str, n: int) -> str:
-    return s + " " * max(0, n - _dw(s))
+    # 至少留一个空格: 内容超宽时列会挤在一起, 两个字段黏成一个词
+    return s + " " * max(1, n - _dw(s))
 
 
 def _num(v):

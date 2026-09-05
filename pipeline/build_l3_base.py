@@ -54,7 +54,7 @@ def load_l2():
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=L3)
-    ap.add_argument("--top", type=int, default=400, help="universe 取 ADV 前 N 名")
+    ap.add_argument("--top", type=int, default=400, help="universe = top N names by ADV")
     args = ap.parse_args()
 
     cal, sm, ind, bars = load_l2()
@@ -67,8 +67,8 @@ def main() -> int:
     (args.out / REGION).mkdir(parents=True, exist_ok=True)
     Axes.create(args.out / REGION, dates, secs)   # 轴按 region 存
     store = Store(args.out, REGION)
-    print(f"轴: di={store.axes.n_sessions} ii={store.axes.n_securities} "
-          f"(预留至 {store.axes.allocated})")
+    print(f"axes: di={store.axes.n_sessions} ii={store.axes.n_securities} "
+          f"(reserved to {store.axes.allocated})")
 
     # ---- 面板化：一律铺在全局轴上, 无数据处 NaN (§3.3 稀疏免费)
     def panel(col, dtype="f4"):
@@ -103,27 +103,28 @@ def main() -> int:
         ("g_common.field_base_px.adj_close_1500", adj_close, ["di", "ii"], "f4",
          {**common, "desc": "close × adj_factor"}),
         ("g_common.field_base_px.volume_1500", volume, ["di", "ii"], "f4",
-         {**common, "desc": "原始成交股数, 未经拆股调整"}),
+         {**common, "desc": "raw share volume, not split-adjusted"}),
         ("g_common.field_base_px.ret_1d_1500", ret_1d, ["di", "ii"], "f4",
-         {**common, "desc": "复权日收益"}),
+         {**common, "desc": "adjusted daily return"}),
         ("g_common.field_base_px.adv_dollar", adv, ["di", "ii"], "f4",
-         {**common, "desc": "20 日平均成交额(美元)"}),
+         {**common, "desc": "20-day average dollar volume"}),
         ("g_common.field_base_px.market_ret", market_ret, ["di"], "f4",
-         {**common, "desc": "等权市场收益; 无基准序列与股本, 非市值加权", "caveat": "equal_weighted"}),
+         {**common, "desc": "equal-weighted market return; no benchmark series or share count, so not cap-weighted",
+          "caveat": "equal_weighted"}),
         ("g_common.factor_common_gics.sector", sector, ["di", "ii"], "i1",
-         {**common, "desc": "GICS sector 官方码 10..60; 0 = 未知",
-          "caveat": "当前快照回填, 无历史行业变更"}),
+         {**common, "desc": "official GICS sector codes 10..60; 0 = unknown",
+          "caveat": "back-filled from the current snapshot; no historical sector changes"}),
         (f"g_common.field_common_univ.us_top{args.top}", univ, ["di", "ii"], "bool",
-         {**common, "desc": f"按 20 日 ADV 排名前 {args.top}"}),
+         {**common, "desc": f"top {args.top} by 20-day ADV"}),
     ]
     for ref, data, dims, dtype, meta in jobs:
         store.write(ref, data, dims=dims, dtype=dtype, meta=meta,
                     fingerprint=fp, rebuild=True)
         cov = (float(np.isfinite(data.to_numpy(dtype='f8')).mean()) if dims == ["di", "ii"]
                else float(np.isfinite(np.asarray(data, dtype='f8')).mean()))
-        print(f"  {ref:<58} dims={dims} 非空 {cov:6.1%}")
+        print(f"  {ref:<58} dims={dims} non-null {cov:6.1%}")
 
-    print(f"\nL3 → {args.out}/{REGION}/  共 {len(store.list_refs())} 个节点")
+    print(f"\nL3 -> {args.out}/{REGION}/  {len(store.list_refs())} nodes total")
     return 0
 
 

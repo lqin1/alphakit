@@ -155,8 +155,9 @@ def find_region(region: str, repo: str | None = None,
     if len(seen) > 1:
         detail = "\n".join(f"  {h}  {', '.join(str(x) for x in fs)}" for h, fs in seen.items())
         raise ConfigError(
-            f"region `{region}` 在各 repo 下内容不一致——口径已分叉, 跨 repo 结果不再可比:\n"
-            f"{detail}\n  这两份必须逐字一致; 要改口径就一起改。")
+            f"region `{region}` differs between repos -- the convention has forked and cross-repo "
+            f"results are no longer comparable:\n"
+            f"{detail}\n  These copies must be byte-identical; change the convention in all of them together.")
     doc = yaml.safe_load(cands[0].read_text()) or {}
     return doc, next(iter(seen)), cands[0]
 
@@ -172,9 +173,9 @@ def resolve_tc(ref: str, cutoff: str | None) -> str:
         return ref
     if not cutoff:
         raise ConfigError(
-            f"`{ref}` 用了 `_tc` 模板，但没有有效的 cutoff 可替换——"
-            f"请在节点 params.cutoff、文件级 cutoff、或 regions/{{region}}.yaml 的 "
-            f"time_cutoff 里给出一个。")
+            f"`{ref}` uses the `_tc` template but there is no effective cutoff to substitute -- "
+            f"supply one via the node's params.cutoff, a file-level cutoff, or time_cutoff "
+            f"in regions/{{region}}.yaml.")
     return ref[:-3] + "_" + str(cutoff)
 def _norm_ops(raw, where: str) -> list:
     """块状或内联都接受；参数按签名类型校验（§4.11.6 ⑦）。"""
@@ -185,29 +186,29 @@ def _norm_ops(raw, where: str) -> list:
         elif isinstance(item, dict) and len(item) == 1:
             (op, arg), = item.items()
         else:
-            raise ConfigError(f"{where}: 算子写法不合法：{item!r}")
+            raise ConfigError(f"{where}: malformed op entry: {item!r}")
         if op not in OP_TYPES:
-            raise ConfigError(f"{where}: 未知算子 {op}（可用：{sorted(OP_TYPES)}）")
+            raise ConfigError(f"{where}: unknown op {op} (available: {sorted(OP_TYPES)})")
         want = OP_TYPES[op]
         if isinstance(want, tuple):                 # 参数可省
             if arg is not None and not isinstance(arg, want):
-                raise ConfigError(f"{where}: {op} 的参数须是名字或省略，却收到 {arg!r}")
+                raise ConfigError(f"{where}: the argument to {op} must be a name or omitted, got {arg!r}")
             out.append((op, arg))
             continue
         if want is type(None):
             if arg is not None:
-                raise ConfigError(f"{where}: {op} 不接受参数，却收到 {arg!r}")
+                raise ConfigError(f"{where}: {op} takes no argument, got {arg!r}")
         elif want is float:
             if not isinstance(arg, (int, float)) or isinstance(arg, bool):
                 raise ConfigError(
-                    f"{where}: {op} 需要一个数，却收到 {arg!r}（{type(arg).__name__}）。"
-                    f"YAML 会静默把 `- {op}: 0.02,` 里多出的逗号连成字符串。")
+                    f"{where}: {op} needs a number, got {arg!r} ({type(arg).__name__}). YAML will silently "
+                    f"turn a stray comma in `- {op}: 0.02,` into a string.")
         elif want is int:
             if not isinstance(arg, int) or isinstance(arg, bool) or arg <= 0:
-                raise ConfigError(f"{where}: {op} 需要一个正整数，却收到 {arg!r}")
+                raise ConfigError(f"{where}: {op} needs a positive integer, got {arg!r}")
         elif want is str:
             if not isinstance(arg, str):
-                raise ConfigError(f"{where}: {op} 需要一个名字，却收到 {arg!r}")
+                raise ConfigError(f"{where}: {op} needs a name, got {arg!r}")
             if op == "neutralize":
                 parse_ref(arg)          # 必须是全 ref，不能是裸名
         out.append((op, arg))
@@ -228,8 +229,8 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
     bs = pick("booksize")
     if isinstance(bs, str):
         raise ConfigError(
-            f"{path}: booksize={bs!r} 是字符串——YAML 1.1 里 `20e6` / `2.0e7` 都不是数字"
-            f"（指数要带符号）。写成整数字面量 20000000。")
+            f"{path}: booksize={bs!r} is a string -- in YAML 1.1 neither `20e6` nor `2.0e7` is a "
+            f"number (the exponent needs a sign). Write the integer literal 20000000.")
 
     # universe **不从 region 继承**：§4.4 规定数据节点缺省是全集, 而且这是语义必需
     # 而非偷懒——数据若在池内算, 边缘票取不到正确值、进出池处会留下滚动窗口断口。
@@ -251,20 +252,20 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
         kind = name.split("_", 1)[0]
         if kind not in KINDS:
             raise ConfigError(
-                f"{path}: 节点名须以 {'/'.join(KINDS)} 之一开头（{{kind}}_{{ns}}_{{name}}）：{name}")
+                f"{path}: a node name must start with one of {'/'.join(KINDS)} ({{kind}}_{{ns}}_{{name}}): {name}")
         bits = name.split("_")
         if len(bits) < 3:
-            raise ConfigError(f"{path}: 节点名须是 {{kind}}_{{ns}}_{{name}}：{name}")
+            raise ConfigError(f"{path}: a node name must be {{kind}}_{{ns}}_{{name}}: {name}")
         ns, short = bits[1], "_".join(bits[2:])
         if not NS_RE.match(ns):
             raise ConfigError(
-                f"{path}: 节点 {name} 的 ns 段 `{ns}` 不合语法——ns 必须是单段小写标识符"
-                f"（不含下划线），否则 {{kind}}_{{ns}}_{{name}} 无从切分")
-        check_name(short, f"{path}:{name} 的 name 段")
+                f"{path}: the ns segment `{ns}` of node {name} is malformed -- ns must be a single "
+                f"lowercase identifier with no underscore, or {{kind}}_{{ns}}_{{name}} cannot be split")
+        check_name(short, f"the name segment of {path}:{name}")
         if repo.startswith("g_") and repo != "g_common" and ns != repo[2:]:
             raise ConfigError(
-                f"{path}: 节点 {name} 的 ns 段是 `{ns}`，但它住在 {repo} 里——"
-                f"个人 repo 只能写自己的 ns（{repo[2:]}）。")
+                f"{path}: node {name} has ns segment `{ns}` but lives in {repo} -- a personal repo may "
+                f"only write its own ns ({repo[2:]}).")
 
         code = path.parent / (body.get("code") or f"{path.stem}.py")
         node_ops = _norm_ops(body.get("ops"), f"{path}:{name}.ops")
@@ -275,23 +276,24 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
             outs[default] = Output(default, ops=node_ops)
         else:
             if node_ops and any((o or {}).get("ops") for o in raw_out.values()):
-                raise ConfigError(f"{path}:{name}: 节点级 ops 与 outputs.*.ops 不能同时出现")
+                raise ConfigError(f"{path}:{name}: node-level ops and outputs.*.ops cannot both be present")
             if node_ops and len(raw_out) > 1:
                 raise ConfigError(
-                    f"{path}:{name}: 节点级 `ops` 是**单输出的语法糖**，但这里声明了 "
-                    f"{len(raw_out)} 个输出（{sorted(raw_out)}）——该给哪一个用是无解的。"
-                    f"请写在各 outputs.{{key}}.ops 下。")
+                    f"{path}:{name}: node-level `ops` is sugar for the SINGLE-OUTPUT case, but this node "
+                    f"declares {len(raw_out)} outputs ({sorted(raw_out)}) -- which one it should "
+                    f"apply to has no answer. Put it under each outputs.{{key}}.ops instead.")
             if len(raw_out) == 1:
                 default = "weight" if kind == "alpha" else short
                 (only,) = raw_out
                 if only != default:
                     raise ConfigError(
-                        f"{path}:{name}: 单输出的 key 必须等于缺省名 `{default}`，"
-                        f"却写成 `{only}`（§4.11.6 检查③）。要用别的名字就显式声明多个输出，"
-                        f"或改节点名——否则 identity 与它产出的数据对不上号。")
+                        f"{path}:{name}: the single output key must equal the default name `{default}`, but is "
+                        f"written `{only}` (§4.11.6 check 3). To use another name, declare multiple "
+                        f"outputs explicitly or rename the node -- otherwise the identity no longer "
+                        f"matches the data it produces.")
             for k, o in raw_out.items():
                 o = o or {}
-                check_name(k, f"{path}:{name} 的输出名")
+                check_name(k, f"the output name of {path}:{name}")
                 outs[k] = Output(k, dtype=o.get("dtype", "f4"),
                                  dims=tuple(o.get("dims", ("di", "ii"))),
                                  grid=o.get("grid"),
@@ -299,12 +301,12 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
                                      or (node_ops if len(raw_out) == 1 else []))
         for o in outs.values():
             if o.dims == ("di", "ii", "ti") and not o.grid:
-                raise ConfigError(f"{path}:{name}.{o.key}: 秩-3 必须声明 grid")
+                raise ConfigError(f"{path}:{name}.{o.key}: a rank-3 output must declare grid")
             for op, _ in o.ops:
                 if op in CS_OPS and o.dims != ("di", "ii"):
                     raise ConfigError(
-                        f"{path}:{name}.{o.key}: CS 类算子 `{op}` 只对秩-2 合法，"
-                        f"该输出是 dims={list(o.dims)}（§3.6）")
+                        f"{path}:{name}.{o.key}: the CS op `{op}` is legal only for rank-2; this output has "
+                        f"dims={list(o.dims)} (§3.6)")
         # `_tc` 按**本节点**的有效 cutoff 解析（节点 params > 文件级 > region）
         node_cutoff = (body.get("params") or {}).get("cutoff", cutoff)
         deps = [resolve_tc(str(d), node_cutoff) for d in (body.get("deps") or [])]
@@ -322,12 +324,13 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
         if kind == "alpha":
             for o in node.outputs.values():
                 if o.dims != ("di", "ii"):
-                    raise ConfigError(f"{path}:{name}: alpha 必须是秩-2，权重是 di×ii")
+                    raise ConfigError(f"{path}:{name}: an alpha must be rank-2 -- weights are di x ii")
                 if not o.ops or o.ops[-1][0] != "scale":
                     raise ConfigError(
-                        f"{path}:{name}.{o.key}: alpha 的 ops 链必须以 scale 收尾（§4.4）。"
-                        f"少了它，上游各自 Σ|w|=1 的权重线性组合后会因抵消而缩水，"
-                        f"账本投不满而 Sharpe 看着正常。")
+                        f"{path}:{name}.{o.key}: an alpha's ops chain must end in scale (§4.4). Without it, "
+                        f"upstream weights that each satisfy Sigma|w|=1 shrink through "
+                        f"cancellation once combined -- the book is under-deployed while Sharpe "
+                        f"still looks normal.")
     for n in spec.nodes.values():
         _check_tags(n, path, list(spec.nodes))
     return spec
@@ -363,10 +366,11 @@ def _check_tags(node: NodeSpec, path: Path, siblings: list[str]) -> None:
         if not m:
             if family:
                 raise ConfigError(
-                    f"{path}:{node.name}: 这是一族变体中的一个，params 里有 {key}={val}，"
-                    f"名字里却没有 `_{tag}...` 标签（§4.11.4：一族有第 2 个成员即强制带标签）")
+                    f"{path}:{node.name}: this is one of a family of variants and params carries {key}={val}, "
+                    f"but the name has no `_{tag}...` tag (§4.11.4: a tag becomes mandatory as soon "
+                    f"as a family has a second member)")
             continue
         if int(m.group(1)) != int(val):
             raise ConfigError(
-                f"{path}:{node.name}: 名字说 {tag}={m.group(1)}，params 说 {key}={val}——"
-                f"多半是复制了一个变体却只改了 params。")
+                f"{path}:{node.name}: the name says {tag}={m.group(1)} but params says {key}={val} -- "
+                f"most likely a variant was copied and only params was edited.")

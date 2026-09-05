@@ -124,10 +124,10 @@ def _panel(x, index, columns, what: str, default: float) -> np.ndarray:
     if np.isscalar(x):
         return np.full((len(index), len(columns)), float(x), dtype=np.float64)
     if not isinstance(x, pd.DataFrame):
-        raise SimError(f"{what} 必须是标量或 DataFrame，收到 {type(x).__name__}")
+        raise SimError(f"{what} must be a scalar or a DataFrame, got {type(x).__name__}")
     miss = [d for d in index if d not in x.index]
     if miss:
-        raise SimError(f"{what} 缺 {len(miss)} 个 weights 里有的 session（首个 {miss[0]}）")
+        raise SimError(f"{what} is missing {len(miss)} sessions present in weights (first: {miss[0]})")
     return np.asarray(x.reindex(index=index, columns=columns), dtype=np.float64)
 
 
@@ -191,16 +191,16 @@ def simulate(weights: pd.DataFrame,
     """
     # ---- 0. 轴与形状 -----------------------------------------------------
     if not isinstance(weights, pd.DataFrame) or not isinstance(ret, pd.DataFrame):
-        raise SimError("weights 与 ret 必须是 date × security_id 的 DataFrame")
+        raise SimError("weights and ret must both be date x security_id DataFrames")
     if weights.empty:
-        raise SimError("weights 为空——没有可仿真的区间")
+        raise SimError("weights are empty -- there is no period to simulate")
     if not weights.index.is_monotonic_increasing or weights.index.has_duplicates:
-        raise SimError("weights 的日期轴必须严格递增且无重复")
+        raise SimError("the date axis of weights must be strictly increasing with no duplicates")
     booksize = float(booksize)
     if not np.isfinite(booksize) or booksize <= 0:
-        raise SimError(f"booksize 必须是正有限数，收到 {booksize!r}")
+        raise SimError(f"booksize must be a positive finite number, got {booksize!r}")
     if not (0 < participation <= 1):
-        raise SimError(f"participation 应在 (0, 1]，收到 {participation!r}")
+        raise SimError(f"participation must lie in (0, 1], got {participation!r}")
 
     index, cols = weights.index, weights.columns
     T, N = len(index), len(cols)
@@ -222,15 +222,15 @@ def simulate(weights: pd.DataFrame,
     dead = ((np.abs(W) > 0).any(axis=0) & nan_ret.all(axis=0)).nonzero()[0]
     if dead.size:
         raise SimError(
-            f"{dead.size} 只有非零权重的标的在 ret 面板里整列 NaN"
-            f"（如 security_id={cols[dead[0]]}）——多半是列轴/区间没对上。")
+            f"{dead.size} names carry non-zero weight but are all-NaN in the ret panel "
+            f"(e.g. security_id={cols[dead[0]]}) -- most likely the column axis or period does not line up.")
 
     ADV = None if adv_dollar is None else _panel(adv_dollar, index, cols, "adv_dollar", np.nan)
     # 标量成本不铺成 (T,N)：5000×6000 铺出来就是 240 MB 的常数
     cb_flat = float(cost_bps) if np.isscalar(cost_bps) else None
     CB = None if cb_flat is not None else _panel(cost_bps, index, cols, "cost_bps", 0.0)
     if (cb_flat is not None and not np.isfinite(cb_flat)) or (CB is not None and np.isnan(CB).any()):
-        raise SimError("cost_bps 含 NaN——成本缺失须显式补 0 或补模型值，不由仿真器猜")
+        raise SimError("cost_bps contains NaN -- a missing cost must be filled explicitly with 0 or a model value; the simulator will not guess")
     UNI = None if universe is None else _panel(universe, index, cols, "universe", 0.0) > 0
 
     # ---- 1. 退市轴：缺 field 时整条退市路径是死代码，必须可见（§九） --------
@@ -239,9 +239,10 @@ def simulate(weights: pd.DataFrame,
         dl_ord = np.full(N, np.iinfo(np.int64).max, dtype=np.int64)
         delist_source = "none"
         warnings.warn(
-            "无 delist_date：`delisted` 恒为 False，退市路径是死代码、delist_events 恒为 0。"
-            "真实退市会退化成一只永久冻结的票，把 frozen_value 越棚越高地漏掉资金——"
-            "本次结果按'区间内无退市'解读，metrics 记 delist_source=none。")
+            "No delist_date: `delisted` is always False, so the delisting path is dead code and "
+            "delist_events is identically 0. A real delisting would degrade into a permanently "
+            "frozen name, leaking capital as frozen_value grows. Read this run as 'no delistings "
+            "in the period'; metrics record delist_source=none.")
     else:
         d = pd.to_datetime(pd.Series(delist_date).reindex(cols))
         raw = d.to_numpy("datetime64[ns]").astype("int64")     # NaT → int64 最小值
@@ -251,17 +252,19 @@ def simulate(weights: pd.DataFrame,
     # ---- 2. 停牌判据：三分类必须有正向信号（§九） -------------------------
     if is_halted is not None:
         if halt_proxy is not None:
-            warnings.warn("is_halted 与 halt_proxy 同时给出——以 is_halted 为准（正向判据优先）")
+            warnings.warn("both is_halted and halt_proxy were given -- is_halted wins (a positive signal takes precedence)")
         HALT = _panel(is_halted, index, cols, "is_halted", 0.0) > 0
         detection = "field"
     elif halt_proxy is None:
         raise SimError(
-            "拒绝运行：既没有 is_halted 面板，也没有 halt_proxy（§九）。\n"
-            "  NaN 三分类需要一个**正向**的停牌信号；用'非退市即停牌'兜底会让\n"
-            "  幽灵持仓那一类恒为空、ghost_days 恒为 0——一道永远不会触发的告警\n"
-            "  比没有更危险，它给出的是虚假的安全感。\n"
-            "  三选一：① 传 is_halted；② 传 halt_proxy=K（K≥2，降级口径，会漏掉\n"
-            "  真正的一日停牌）；③ 传 halt_proxy=0 显式关闭（metrics 记 disabled）。")
+            "Refusing to run: neither an is_halted panel nor a halt_proxy was given (§9).\n"
+            "  The three-way NaN split needs a POSITIVE halt signal. Falling back on\n"
+            "  'not delisted therefore halted' would leave the ghost-position class always\n"
+            "  empty and ghost_days identically 0 -- a warning that can never fire is worse\n"
+            "  than no warning at all, because it manufactures false confidence.\n"
+            "  Pick one: (1) pass is_halted; (2) pass halt_proxy=K (K>=2, a degraded proxy\n"
+            "  that misses genuine one-day halts); (3) pass halt_proxy=0 to disable it\n"
+            "  explicitly (metrics record disabled).")
     elif int(halt_proxy) == 0:
         # 显式关闭：不做三分类。此时**不许**把 NaN 记成幽灵（那是"检测"的产物），
         # 一律按停牌冻结——即 §九 之前那套口径。代价写在 ghost_detection=disabled 上。
@@ -271,9 +274,10 @@ def simulate(weights: pd.DataFrame,
         k = int(halt_proxy)
         if k < 2:
             raise SimError(
-                f"halt_proxy={k} 不合法。K=1 等于'任何 NaN 都算停牌'，第三类恒空、"
-                f"ghost 检测永不触发——正是 §九 要堵的那个失效模式。K 请取 ≥2；"
-                f"确要关闭检测请显式传 halt_proxy=0。")
+                f"halt_proxy={k} is invalid. K=1 means 'every NaN counts as halted', leaving the "
+                f"third class always empty so ghost detection never fires -- precisely the "
+                f"failure mode §9 exists to block. Use K>=2; to genuinely disable detection, "
+                f"pass halt_proxy=0 explicitly.")
         # 退市后的永久 NaN 不参与连续段计数，否则"停牌接退市"会被当成一段超长停牌
         nan_eff = nan_ret & (date_ord[:, None] <= dl_ord[None, :])
         HALT = _halt_by_proxy(nan_eff, k)
@@ -419,18 +423,22 @@ def simulate(weights: pd.DataFrame,
     ghost_rate = ghost_cells / held_cells if held_cells else 0.0
     if detection != "disabled" and ghost_rate > ghost_tolerance:
         raise SimError(
-            f"幽灵持仓超阈值：{ghost_cells} 个持仓日的 ret=NaN 归不进退市/停牌任一"
-            f"已知原因（占持仓日 {ghost_rate:.2%} > {ghost_tolerance:.2%}）。\n"
-            f"  头几例 (date, security_id, 昨仓): {ghost_examples[:5]}\n"
-            f"  skipna 会让它们无声蒸发——零成本退出，是生存者偏差的后门。\n"
-            f"  先查 ret 面板与 delist_date / is_halted 的对齐，别调阈值。")
+            f"Ghost positions over threshold: {ghost_cells} holding-days have ret=NaN that fits "
+            f"neither the delisted nor the halted class ({ghost_rate:.2%} of holding-days > "
+            f"{ghost_tolerance:.2%}).\n"
+            f"  First few (date, security_id, prior position): {ghost_examples[:5]}\n"
+            f"  skipna would evaporate these silently -- a zero-cost exit, which is a back "
+            f"door for survivorship bias.\n"
+            f"  Check the alignment of the ret panel against delist_date / is_halted before "
+            f"touching the threshold.")
     if ghost_cells:
         warnings.warn(
-            f"幽灵持仓 {ghost_cells} 个持仓日（{ghost_days} 个 session，占持仓日 "
-            f"{ghost_rate:.3%}），已按最后可得价当日平仓。检测口径 {detection}。")
+            f"Ghost positions: {ghost_cells} holding-days across {ghost_days} sessions "
+            f"({ghost_rate:.3%} of holding-days), closed same-day at the last available price. "
+            f"Detection basis {detection}.")
 
     daily = pd.DataFrame(rows, index=index)
-    assert list(daily.columns) == DAILY_COLS, "daily 列清单与 §8.3 不符"
+    assert list(daily.columns) == DAILY_COLS, "daily column list does not match §8.3"
 
     audit = {
         "booksize": booksize,

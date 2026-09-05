@@ -21,7 +21,7 @@ def _specs(path: str) -> list[Path]:
     for h in hits:
         out.extend(sorted(h.glob("*.yaml")) if h.is_dir() else [h])
     if not out:
-        raise SystemExit(f"没有找到 config：{path}")
+        raise SystemExit(f"no config matched: {path}")
     return out
 
 
@@ -33,7 +33,7 @@ def _preflight_summary(f: Path, spec, diags: list, ms: float) -> None:
     n_out = sum(len(n.outputs) for n in spec.nodes.values())
     n_dep = sum(len(n.deps) for n in spec.nodes.values())
     print(f"preflight {'FAIL' if e else ('WARN' if w else 'OK  ')}  {f}  "
-          f"{len(spec.nodes)} 节点 / {n_out} 输出 / {n_dep} 依赖  "
+          f"{len(spec.nodes)} nodes / {n_out} outputs / {n_dep} deps  "
           f"{e} error {w} warn  {ms:.1f} ms")
 
 
@@ -93,8 +93,8 @@ def _dry_run(spec, store, a) -> list:
         out.append(Diagnostic(
             WARN, "DRYRUN_RUNTIME", _rel(spec.path), "-", "handle",
             " ".join(str(w.message).split())[:200],
-            "--dry-run 不预热, 单日窗口几乎全是 NaN, 故 Σ|w|=0 一类的告警"
-            "在这里是预期的; 数值对不对请用 --probe 看"))
+            "--dry-run does no warmup, so a single-day window is almost all NaN; warnings "
+            "like Σ|w|=0 are expected here. Use --probe to check actual values"))
     return out
 
 
@@ -142,12 +142,12 @@ def cmd_store(a) -> int:
     if a.action == "status":
         cat = store.catalog()
         if cat.empty:
-            print("store 为空"); return 0
+            print("store is empty"); return 0
         cat["first"] = cat["first_session"].map(lambda i: store.axes.date(int(i)) if i is not None else "")
         cat["last"] = cat["last_session"].map(lambda i: store.axes.date(int(i)) if i is not None else "")
         cols = ["ref", "dims", "dtype", "version", "first", "last"]
         print(cat[cols].to_string(index=False))
-        print(f"\n轴: {store.axes.n_sessions} sessions × {store.axes.n_securities} securities")
+        print(f"\naxes: {store.axes.n_sessions} sessions x {store.axes.n_securities} securities")
     elif a.action == "ls":
         for r in store.list_refs():
             print(r)
@@ -179,7 +179,7 @@ def main(argv=None) -> int:
     # 里最容易踩空的一处: 两处同名选项、后解析的那个会无条件盖掉先前的值。
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--store", default=argparse.SUPPRESS,
-                        help="L3 根目录; 缺省取 region 的 l3_root")
+                        help="L3 root directory; defaults to the region's l3_root")
     common.add_argument("--region", default=argparse.SUPPRESS)
 
     ap = argparse.ArgumentParser(prog="alphakit")
@@ -188,37 +188,37 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     r = sub.add_parser("run", parents=[common],
-                       help="唯一执行入口: 数据节点与 alpha 同一条命令")
-    r.add_argument("path", help="节点目录 / yaml / glob")
+                       help="the one execution entry point: data nodes and alphas take the same command")
+    r.add_argument("path", help="node directory / yaml / glob")
     r.add_argument("--sd"); r.add_argument("--ed")
-    r.add_argument("--only", help="只跑指定节点")
+    r.add_argument("--only", help="run only the named node")
     r.add_argument("--probe", nargs="?", type=int, const=20, default=None,
-                   help="暖机尾段试跑, 不写 store")
+                   help="trial-run the warmed tail; does not write the store")
     r.add_argument("--dry-run", dest="dry_run", action="store_true",
-                   help="编译检查 + 单个 session 上执行 handle; 不预热、不写 store "
-                        "(§15.7)。与 --probe 同时给时以本项为准")
-    r.add_argument("--rebuild", action="store_true", help="全量重建并 bump version")
+                   help="compile checks + run handle on one session; no warmup, no store write "
+                        "(§15.7). Takes precedence when given together with --probe")
+    r.add_argument("--rebuild", action="store_true", help="full rebuild, bumping version")
     r.add_argument("--pnl", action="store_true")
     r.set_defaults(fn=cmd_run)
 
-    s = sub.add_parser("store", parents=[common], help="查询工具, 不是执行器")
+    s = sub.add_parser("store", parents=[common], help="query tool, not an executor")
     s.add_argument("action", choices=["status", "ls", "meta"])
     s.add_argument("ref", nargs="?")
     s.set_defaults(fn=cmd_store)
 
-    p = sub.add_parser("pnl", parents=[common], help="权重 → 指标")
+    p = sub.add_parser("pnl", parents=[common], help="weights -> metrics")
     p.add_argument("--node", default=None)
     p.add_argument("--sd"); p.add_argument("--ed")
     p.add_argument("--booksize", type=float, default=None)
     p.add_argument("--rm", default=None)
     p.add_argument("--cost-bps", dest="cost_bps", type=float, default=10.0,
-                   help="常数 bps 成本模型; §4.9.3 说成本模型是有版本的 L3 field, "
-                        "常数只是 v0 的诚实近似, 会写进 metrics.json")
+                   help="flat bps cost model; §4.9.3 makes the cost model a versioned L3 field, "
+                        "so a constant is only v0's honest approximation. Recorded in metrics.json")
     p.add_argument("--participation", type=float, default=None)
     p.add_argument("--halt-proxy", dest="halt_proxy", type=int, default=None,
-                   help="无 is_halted field 时的显式降级: 连续 K 日 ret=NaN 视作停牌 (§九)")
-    p.add_argument("--weight", default=None, help="外来权重文件入口")
-    p.add_argument("--out", default=None, help="四交付物落地处; 缺省取 region 的 pnl_out")
+                   help="explicit fallback when there is no is_halted field: K consecutive NaN return days count as halted (§9)")
+    p.add_argument("--weight", default=None, help="entry point for externally supplied weights")
+    p.add_argument("--out", default=None, help="where the four deliverables land; defaults to the region's pnl_out")
     p.set_defaults(fn=cmd_pnl)
 
     a = ap.parse_args(argv)

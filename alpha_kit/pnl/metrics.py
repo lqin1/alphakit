@@ -189,13 +189,14 @@ def _gate_beta(daily, thr, market_ret, ann):
     # 两边都要查方差：账本恒为空仓时 y 是常数序列，corrcoef 会除零并吐 RuntimeWarning
     if ok.sum() < 30 or np.std(x[ok]) == 0 or np.std(y[ok]) == 0:
         return _g("market beta", NOBASIS, nums,
-                  "市场序列或组合收益不足 30 个有效观测、或方差为 0——无从回归")
+                  "the market series or portfolio return has fewer than 30 valid observations, "
+                  "or zero variance -- nothing to regress")
     xs, ys = x[ok], y[ok]
     beta = float(np.cov(xs, ys, ddof=1)[0, 1] / np.var(xs, ddof=1))
     r2 = float(np.corrcoef(xs, ys)[0, 1] ** 2)
     nums.update(beta=beta, r2=r2, sharpe_hedged=_sharpe(ys - beta * xs, ann))
     state = PASS if r2 <= thr["beta_r2_max"] else FAIL
-    return _g("market beta", state, nums, f"R² 阈值 {thr['beta_r2_max']}")
+    return _g("market beta", state, nums, f"R2 threshold {thr['beta_r2_max']}")
 
 
 def _gate_concentration(res, thr):
@@ -206,7 +207,7 @@ def _gate_concentration(res, thr):
     day_tot = float(daily_abs.sum())
     nums = {"total_abs_pnl": tot, "n_names_with_pnl": int((absn > 0).sum())}
     if tot == 0:
-        return _g("集中度", NOBASIS, nums, "全区间 Σ|pnl| = 0，无从判断集中度")
+        return _g("concentration", NOBASIS, nums, "Sigma|pnl| = 0 over the whole period -- no basis to judge concentration")
     order = absn.sort_values(ascending=False)
     top1 = float(order.iloc[:1].sum() / tot)
     top5 = float(order.iloc[:5].sum() / tot)
@@ -218,8 +219,8 @@ def _gate_concentration(res, thr):
                 top_day=str(daily_abs.idxmax()) if day_tot else None)
     state = PASS if (top1 <= thr["conc_top1_max"] and top5 <= thr["conc_top5_max"]
                      and (not np.isfinite(day1) or day1 <= thr["conc_day1_max"])) else FAIL
-    return _g("集中度", state, nums,
-              f"阈值 top1≤{thr['conc_top1_max']} top5≤{thr['conc_top5_max']} 单日≤{thr['conc_day1_max']}")
+    return _g("concentration", state, nums,
+              f"thresholds top1<={thr['conc_top1_max']} top5<={thr['conc_top5_max']} single-day<={thr['conc_day1_max']}")
 
 
 def _gate_stability(daily, by_year, thr, ann):
@@ -241,12 +242,12 @@ def _gate_stability(daily, by_year, thr, ann):
         # 样本不足一年：不许因此报 PASS——那正是"空白在干净与没查之间有歧义"
         state = NOBASIS if not np.isfinite(ratio) else (
             PASS if ratio >= thr["stab_half_ratio_min"] else FAIL)
-        return _g("区间稳定性", state, nums,
-                  f"样本 {len(ret)} 天 < {ANN_DAYS + 1}，滚动 1 年 Sharpe 无从计算，只用上下半场比")
+        return _g("period stability", state, nums,
+                  f"sample {len(ret)} days < {ANN_DAYS + 1}; rolling-1y Sharpe cannot be computed, using half-vs-half only")
     state = PASS if (roll > thr["stab_roll1y_sharpe_min"] and
                      (not np.isfinite(ratio) or ratio >= thr["stab_half_ratio_min"])) else FAIL
-    return _g("区间稳定性", state, nums,
-              f"阈值 滚动1年 Sharpe>{thr['stab_roll1y_sharpe_min']}、下半场/上半场≥{thr['stab_half_ratio_min']}")
+    return _g("period stability", state, nums,
+              f"thresholds rolling-1y Sharpe>{thr['stab_roll1y_sharpe_min']}, second-half/first-half>={thr['stab_half_ratio_min']}")
 
 
 def _gate_breakeven(daily, thr):
@@ -255,12 +256,12 @@ def _gate_breakeven(daily, thr):
     gross = net + cost
     nums = {"cost_total": cost, "pnl_gross": gross, "pnl_net": net, "breakeven_cost": None}
     if cost == 0:
-        return _g("成本临界倍数", NOBASIS, nums,
-                  "cost ≡ 0（未接成本模型）——本闸门此时无判据，不报 PASS")
+        return _g("cost breakeven", NOBASIS, nums,
+                  "cost is identically 0 (no cost model wired in) -- this gate has no basis, so it does not report PASS")
     be = gross / cost
     nums["breakeven_cost"] = be
-    return _g("成本临界倍数", PASS if be >= thr["breakeven_min"] else FAIL, nums,
-              f"阈值 ≥{thr['breakeven_min']}x（量纲 = 成本模型可以错多少倍）")
+    return _g("cost breakeven", PASS if be >= thr["breakeven_min"] else FAIL, nums,
+              f"threshold >={thr['breakeven_min']}x (i.e. how many times wrong the cost model could be)")
 
 
 def _gate_ls_balance(daily, thr):
@@ -272,12 +273,12 @@ def _gate_ls_balance(daily, thr):
             "long_short_ratio": (lv / sv) if sv else float("inf"),
             "net_exposure_frac_of_gross": ((lv - sv) / (lv + sv)) if (lv + sv) else float("nan")}
     if lv + sv == 0:
-        return _g("多空平衡", NOBASIS, nums, "账本恒为空仓")
+        return _g("long/short balance", NOBASIS, nums, "book is empty on every session")
     if sv == 0:
-        return _g("多空平衡", FAIL, nums, "纯多头账本（空头市值恒为 0）")
+        return _g("long/short balance", FAIL, nums, "long-only book (short value is identically 0)")
     r = lv / sv
-    return _g("多空平衡", PASS if thr["ls_ratio_lo"] <= r <= thr["ls_ratio_hi"] else FAIL, nums,
-              f"阈值 L/S ∈ [{thr['ls_ratio_lo']}, {thr['ls_ratio_hi']}]")
+    return _g("long/short balance", PASS if thr["ls_ratio_lo"] <= r <= thr["ls_ratio_hi"] else FAIL, nums,
+              f"threshold L/S in [{thr['ls_ratio_lo']}, {thr['ls_ratio_hi']}]")
 
 
 def _gate_pool(daily, sim_audit, thr):
@@ -291,11 +292,11 @@ def _gate_pool(daily, sim_audit, thr):
             "coverage_max": int(daily["target_count"].max()),
             "out_of_pool_weight_max": (float(oop.max()) if sim_audit["universe_supplied"] else None)}
     if not sim_audit["universe_supplied"]:
-        return _g("池子卫生", NOBASIS, nums,
-                  "未提供 universe 面板——§3.5 那道两端夹住的掩码是否生效**没有查过**")
+        return _g("pool hygiene", NOBASIS, nums,
+                  "no universe panel supplied -- whether the two-sided mask of §3.5 took effect was NOT checked")
     ok = (float(oop.max()) == 0.0) and np.isfinite(gross_dev) and gross_dev <= thr["pool_gross_tol"]
-    return _g("池子卫生", PASS if ok else FAIL, nums,
-              f"池外权重必须恰为 0；Σ|w| 与 1 的容差 {thr['pool_gross_tol']}")
+    return _g("pool hygiene", PASS if ok else FAIL, nums,
+              f"weights outside the pool must be exactly 0; tolerance of Sigma|w| vs 1 is {thr['pool_gross_tol']}")
 
 
 def _gate_lookahead(sim_audit, meta):
@@ -312,17 +313,17 @@ def _gate_lookahead(sim_audit, meta):
                                   else meta["region_hash"] == meta["region_hash_canonical"])}
     bad = []
     if sim_audit["ghost_detection"] == "disabled":
-        bad.append("ghost 检测被显式关闭")
+        bad.append("ghost detection explicitly disabled")
     if sim_audit["delist_source"] == "none":
-        bad.append("无 delist_date field：退市路径是死代码，delist_events 恒为 0")
+        bad.append("no delist_date field: the delisting path is dead code, delist_events identically 0")
     if nums["region_hash_match"] is False:
-        bad.append("region_hash 不等于模板标准值（口径不可比）")
+        bad.append("region_hash differs from the template baseline (results not comparable)")
     unknown = [k for k in ("deps_tc_resolved", "region_hash") if nums[k] is None]
     if bad:
-        return _g("前视状态", FAIL, nums, "；".join(bad))
+        return _g("lookahead status", FAIL, nums, "; ".join(bad))
     if unknown:
-        return _g("前视状态", NOBASIS, nums, f"权重 meta 未提供 {unknown}，这几项没有查过")
-    return _g("前视状态", PASS, nums, "")
+        return _g("lookahead status", NOBASIS, nums, f"weight meta did not supply {unknown}; those items were not checked")
+    return _g("lookahead status", PASS, nums, "")
 
 
 def gates(res, *, thresholds: dict | None = None, market_ret=None,
@@ -377,22 +378,22 @@ def format_report(m: dict) -> str:
     """`--pnl` 末尾那一屏。七道闸门逐条打印状态与数字，末行是 readiness。"""
     s, au = m["scalar"], m["audit"]
     L = []
-    L.append(f"{'区间':<10}{m['snapshot']['sd']} → {m['snapshot']['ed']}  "
+    L.append(f"{'period':<10}{m['snapshot']['sd']} → {m['snapshot']['ed']}  "
              f"{m['snapshot']['n_sessions']} sessions × {m['snapshot']['n_securities']} names  "
              f"booksize={m['snapshot']['booksize']:,.0f}")
-    L.append(f"{'指标':<10}Sharpe {_fmt(s['sharpe'], '.3f')}   Ret {_fmt((s['ann_return'] or 0) * 100, '.2f')}%   "
+    L.append(f"{'metrics':<10}Sharpe {_fmt(s['sharpe'], '.3f')}   Ret {_fmt((s['ann_return'] or 0) * 100, '.2f')}%   "
              f"TO {_fmt((s['turnover'] or 0) * 100, '.2f')}%   Margin {_fmt(s['margin_bps'], '.2f')}bps   "
              f"Fitness {_fmt(s['fitness'], '.3f')}   MaxDD {_fmt((s['max_drawdown'] or 0) * 100, '.2f')}%")
-    L.append(f"{'账本':<10}long {_fmt(s['avg_long_value'], ',.0f')}({_fmt(s['avg_long_count'], '.0f')})  "
+    L.append(f"{'book':<10}long {_fmt(s['avg_long_value'], ',.0f')}({_fmt(s['avg_long_count'], '.0f')})  "
              f"short {_fmt(s['avg_short_value'], ',.0f')}({_fmt(s['avg_short_count'], '.0f')})  "
-             f"L/S {_fmt(s['long_short_ratio'], '.3f')}  成本吃掉毛利 {_fmt((s['cost_share_of_gross'] or 0) * 100, '.1f')}%")
-    L.append(f"{'审计':<10}ghost_detection={au['ghost_detection']}  ghost_days={au['ghost_days']}  "
+             f"L/S {_fmt(s['long_short_ratio'], '.3f')}  cost/gross {_fmt((s['cost_share_of_gross'] or 0) * 100, '.1f')}%")
+    L.append(f"{'audit':<10}ghost_detection={au['ghost_detection']}  ghost_days={au['ghost_days']}  "
              f"delist_source={au['delist_source']}  delist_events={au['delist_events']}  "
              f"frozen_value_avg={_fmt(au['frozen_value_avg'], ',.0f')}  "
              f"realloc_TO={_fmt((au['realloc_turnover_avg'] or 0) * 100, '.3f')}%  "
              f"cash_avg={_fmt(au['cash_avg'], ',.0f')}")
     if m["by_year"]:
-        L.append("分年度   " + "  ".join(
+        L.append("by year   " + "  ".join(
             f"{y}: Sh {_fmt(v['sharpe'], '.2f')} Ret {_fmt((v['ann_return'] or 0) * 100, '.1f')}% "
             f"({v['days']}d)" for y, v in sorted(m["by_year"].items())))
     L.append("")
@@ -401,7 +402,7 @@ def format_report(m: dict) -> str:
             f"{k}={v if isinstance(v, (bool, str)) else _fmt(v, '.4g')}"
             for k, v in g["numbers"].items()
             if not isinstance(v, (list, dict)) and v is not None)
-        L.append(f"[闸门 {i}/7] {g['gate']:<12} {g['state']:<8} {nums}")
+        L.append(f"[gate {i}/7] {g['gate']:<18} {g['state']:<8} {nums}")
         if g["note"]:
             L.append(f"{'':>13} └ {g['note']}")
     L.append("")

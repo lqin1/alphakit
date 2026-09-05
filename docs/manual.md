@@ -112,10 +112,10 @@ python3 -m venv .venv
 | 引用名 | 秩 | 内容 |
 |---|---|---|
 | `g_common.field_base_px.adj_close_1500` | di×ii | 复权收盘 |
-| `…-volume_1500` | di×ii | 原始成交股数 |
-| `…-ret_1d_1500` | di×ii | 复权日收益 |
-| `…-adv_dollar` | di×ii | 20 日平均成交额 |
-| `…-market_ret` | **di** | 等权市场收益（秩-1 示例） |
+| `….volume_1500` | di×ii | 原始成交股数 |
+| `….ret_1d_1500` | di×ii | 复权日收益 |
+| `….adv_dollar` | di×ii | 20 日平均成交额 |
+| `….market_ret` | **di** | 等权市场收益（秩-1 示例） |
 | `g_common.factor_common_gics.sector` | di×ii | GICS sector 码（i1） |
 | `g_common.field_common_univ.us_top400` | di×ii | 按 ADV 排名的池子（bool） |
 
@@ -140,13 +140,13 @@ run repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml  --sd 2025-12-01   # 例7 com
 实际长这样：
 
 ```
-preflight OK    repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml  2 节点 / 2 输出 / 6 依赖  0 error 0 warn  5.6 ms
+preflight OK    repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml  2 nodes / 2 outputs / 6 deps  0 error 0 warn  6.2 ms
 run alpha_yliu_rev/rev.yaml  2025-12-01..2026-08-27
-  alpha_yliu_rev_w005                216 日 (预热 30) 写入 1 输出  0.65s
-  alpha_yliu_rev_w020                216 日 (预热 30) 写入 1 输出  0.68s
+  alpha_yliu_rev_w005                216 days (warmup 30) wrote 1 outputs  0.69s
+  alpha_yliu_rev_w020                216 days (warmup 30) wrote 1 outputs  0.83s
 ```
 
-`预热 30` 是 `lookback` 撑出来的：算 2025-12-01 那天要用到之前 30 个 session 的数据，
+`warmup 30` 是 `lookback` 撑出来的：算 2025-12-01 那天要用到之前 30 个 session 的数据，
 引擎自己往前取，不用你操心。
 
 一条命令自证整条链是通的：
@@ -392,33 +392,33 @@ ref **要带输出名**。单输出的 alpha 那个输出叫 `weight`，所以�
 终端上是这样一张报表：
 
 ```
-  warn  无 delist_date：`delisted` 恒为 False，退市路径是死代码、delist_events 恒为 0。……
-  warn  幽灵持仓 1 个持仓日（1 个 session，占持仓日 0.001%），已按最后可得价当日平仓。检测口径 proxy(3)。
+  warn  No delist_date: `delisted` is always False, so the delisting path is dead code ...
+  warn  Ghost positions: 1 holding-days across 1 sessions (0.001% of holding-days), closed same-day ...
 
 ==============================================================================
  g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight
  2025-12-01 .. 2026-08-27   186 sessions × 503 names   book $20.00M
 ==============================================================================
- 收益   Sharpe=-0.254             年化收益=-2.05%           年化美元=$-410.61K
-        Fitness=-0.05501          命中率=47.85%             日波动=0.51%
- 成本   换手=43.77%               Margin=-1.861 bps         成本合计=$1.63M
-        成本/毛利=122.87%         毛利=$1.33M               净利=$-303.07K
- 风险   MaxDD=10.98%              回撤额=$2.20M             回撤区间=2025-12-01→2026-05-13
- 持仓   多头=$9.99M / 200.3 只    空头=$-10.01M / 199.7 只  多空比=0.9988
+ Return Sharpe=-0.254             AnnRet=-2.05%             AnnRet$=$-410.61K
+        Fitness=-0.05501          HitRate=47.85%            DailyVol=0.51%
+ Cost   Turnover=43.77%           Margin=-1.861 bps         CostTotal=$1.63M
+        Cost/Gross=122.87%        Gross=$1.33M              Net=$-303.07K
+ Risk   MaxDD=10.98%              MaxDD$=$2.20M             DDWindow=2025-12-01→2026-05-13
+ Book   Long=$9.99M / 200.3 names Short=$-10.01M / 199.7 names L/S=0.9988
 ------------------------------------------------------------------------------
- 七道闸门   3/7 通过
-   [PASS    ] market beta    beta=0.08234  r2=0.01412  sharpe_hedged=-0.5015
-   [PASS    ] 集中度            total_abs_pnl=6.494e+06  n_names_with_pnl=467  top1_share=0.038
-   [NO-BASIS] 区间稳定性          sharpe_by_year={'2025': -5.1156, '2026': 0.1133}  sharpe_first_half=-2.919
-   [FAIL    ] 成本临界倍数         cost_total=1.628e+06  pnl_gross=1.325e+06  pnl_net=-3.031e+05
-   [PASS    ] 多空平衡           avg_long_value=9.994e+06  avg_short_value=-1.001e+07  avg_long_count=200.3
-   [NO-BASIS] 池子卫生           empty_weight_days=0  weight_gross_dev_max=4.511e-09  coverage_min=399
-   [FAIL    ] 前视状态           ghost_detection=proxy(3)  ghost_days=1  delist_source=none
+ Gates     3/7 passed
+   [PASS    ] market beta        beta=0.08234  r2=0.01412  sharpe_hedged=-0.5015
+   [PASS    ] concentration      total_abs_pnl=6.494e+06  n_names_with_pnl=467  top1_share=0.038
+   [NO-BASIS] period stability   sharpe_by_year={'2025': -5.1156, '2026': 0.1133}  sharpe_first_half=-2.919
+   [FAIL    ] cost breakeven     cost_total=1.628e+06  pnl_gross=1.325e+06  pnl_net=-3.031e+05
+   [PASS    ] long/short balance avg_long_value=9.994e+06  avg_short_value=-1.001e+07
+   [NO-BASIS] pool hygiene       empty_weight_days=0  weight_gross_dev_max=4.511e-09  coverage_min=399
+   [FAIL    ] lookahead status   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
 ------------------------------------------------------------------------------
- 审计   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
- 缺陷   survivorship_bias_no_delisted, no_vwap, no_shares_outstanding, equal_weighted_market_proxy
- 结论   submission readiness: 3/7 gates pass
- 交付   pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight/  →  daily.csv  pnl.csv  holding.csv  metrics.json
+ Audit   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
+ Defects survivorship_bias_no_delisted, no_vwap, no_shares_outstanding, equal_weighted_market_proxy
+ Verdict submission readiness: 3/7 gates pass
+ Output  pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight/  →  daily.csv  pnl.csv  holding.csv  metrics.json
 ==============================================================================
 ```
 
@@ -429,11 +429,11 @@ ref **要带输出名**。单输出的 alpha 那个输出叫 `weight`，所以�
 **每道闸门通过也打印数字**，且没有判据时报 `NO-BASIS` 而不是 `PASS`——空白绝不能在
 "干净"与"根本没查"之间有歧义。上面这次运行就很说明问题：
 
-- **成本临界倍数 FAIL** 是真结论：10 bps × 0.44 换手，成本 163 万把 133 万毛利全吃掉了，
+- **cost breakeven FAIL** 是真结论：10 bps × 0.44 换手，成本 163 万把 133 万毛利全吃掉了，
   净利 −30 万。报 Turnover 回答不了"能不能投"，这个数能。
-- **前视状态 FAIL** 是因为我们确实在降级口径下跑（无 `is_halted`、无 `delist_date`）。
+- **lookahead status FAIL** 是因为我们确实在降级口径下跑（无 `is_halted`、无 `delist_date`）。
   它应该 FAIL，直到接入真数据为止。
-- **区间稳定性 NO-BASIS** 是因为 250 个 session 只跨两个**不完整**年份。
+- **period stability NO-BASIS** 是因为 250 个 session 只跨两个**不完整**年份。
 
 外来权重（别人给的、或别的工具算的）走 `--weight FILE`，认 `.csv` / `.feather` / `.parquet`：
 

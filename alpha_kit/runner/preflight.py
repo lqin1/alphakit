@@ -139,7 +139,7 @@ def _suggest(ref: str, known: list[str]) -> str | None:
     照抄，距离 11 就该自己再看一眼。
     """
     if not known:
-        return "store 是空的——`alphakit store status` 可查已落库的节点"
+        return "the store is empty -- `ak store status` lists what has landed"
     try:
         r = parse_ref(ref)
     except ConfigError:
@@ -152,16 +152,16 @@ def _suggest(ref: str, known: list[str]) -> str | None:
             # 输出集里再比编辑距离, 命中率远高于在整个 catalog 上比。
             best = min(sib, key=lambda c: _levenshtein(r.output, c))
             dist = _levenshtein(r.output, best)
-            near = (f"最接近的是 `{best}`（编辑距离 {dist}）；"
+            near = (f"closest is `{best}` (edit distance {dist}); "
                     if dist <= max(3, len(r.output) // 3) else "")
-            return f"该节点在 store 里，但没有输出 `{r.output}`；{near}它的输出是 {sib}"
+            return f"that node is in the store but has no output `{r.output}`; {near}its outputs are {sib}"
     cand = difflib.get_close_matches(ref, known, n=5, cutoff=0.5)
     if cand:
         best = min(cand, key=lambda c: _levenshtein(ref, c))
         dist = _levenshtein(ref, best)
         if dist <= max(3, len(ref) // 4):
-            return f"是否想写 {best}?（编辑距离 {dist}）"
-    return "store 里没有相近的名字——跨 config 的依赖必须先跑（§7.1），`store ls` 可查"
+            return f"did you mean {best}? (edit distance {dist})"
+    return "no similar name in the store -- cross-config deps must be run first (§7.1); `store ls` lists them"
 
 
 # --------------------------------------------------------------- catalog 缓存
@@ -305,16 +305,16 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                 # 必然扑空。与其报一条 "名字不存在" 让人去 store 里找一个永远不会有的
                 # 名字，不如直说模板没被解析。
                 add(ERROR, "DEP_TC_UNRESOLVED", node.name, f,
-                    f"依赖里带 `_tc` 模板标记但引擎不做替换：{dep}",
-                    "v0 未实现 §4.9.5 的 cutoff 替换；请写死实际 cutoff"
-                    "（如 `-adj_close_1500`）")
+                    f"a dep carries the `_tc` template marker but the engine does not substitute it: {dep}",
+                    "v0 does not implement the cutoff substitution of §4.9.5; write the actual "
+                    "cutoff literally (e.g. `adj_close_1500`)")
                 continue
             if is_wildcard(dep):
                 hits = cat.expand(dep)
                 if not hits:
                     # §4.9 ②：通配是简写而非豁免，展开为空说明上游一个输出都没落库
                     add(ERROR, "DEP_WILDCARD_EMPTY", node.name, f,
-                        f"通配 {dep} 展开为空——该节点尚未产出任何输出",
+                        f"wildcard {dep} expanded to nothing -- that node has not produced any output yet",
                         _suggest(dep[:-1], cat.known))
                     continue
                 resolved.extend(hits)
@@ -325,13 +325,13 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
             at = produced_at.get(dep)
             if at is None:
                 add(ERROR, "DEP_MISSING", node.name, f,
-                    f"依赖不在 store 里：{dep}", _suggest(dep, cat.known))
+                    f"dep is not in the store: {dep}", _suggest(dep, cat.known))
             elif at > i:
                 # 靠后声明的兄弟节点这一轮还没跑到，读到的要么是空要么是上一轮的旧值
                 add(ERROR, "DECL_ORDER", node.name, f,
-                    f"依赖 {dep} 由同一 yaml 里**声明在后**的节点 "
-                    f"{list(spec.nodes)[at]} 产出",
-                    "§7.1：声明顺序即执行顺序，被依赖的节点要写在前面")
+                    f"dep {dep} is produced by {list(spec.nodes)[at]}, which is declared LATER in the "
+                    f"same yaml",
+                    "§7.1: declaration order is execution order -- the node depended on must come first")
 
         resolved_all |= {r for r in resolved if not is_wildcard(r)}
 
@@ -343,9 +343,10 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                     # load_spec 已在加载期拦下同一条（这份是给"程序化构造的 Spec"
                     # 兜底，走 cli 时它不会触发）；两处同码同文，出口也同一个。
                     add(ERROR, "CS_OP_RANK", node.name, f"outputs.{o.key}.ops[{j}]",
-                        f"CS 类算子 `{op}` 只对秩-2 合法，该输出 dims={list(o.dims)}",
-                        "§3.6：秩-1 没有 ii 轴可截面，秩-3 的截面轴不唯一；"
-                        "要日内截面请先在 handle 里压成秩-2")
+                        f"the CS op `{op}` is legal only for rank-2; this output has dims={list(o.dims)}",
+                        "§3.6: rank-1 has no ii axis to cut across, and rank-3 has no unique "
+                        "cross-sectional axis. For an intraday cross-section, collapse to rank-2 "
+                        "inside handle first")
                 if op != "neutralize":
                     continue
                 fld = str(arg)
@@ -353,56 +354,57 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                 if fld not in resolved:
                     add(ERROR, "NEUTRALIZE_NOT_IN_DEPS", node.name,
                         f"outputs.{o.key}.ops[{j}]",
-                        f"neutralize 的分组字段 {fld} 没有出现在 deps 里",
-                        "§4.10：凡是这个节点跑起来需要读到的 L3，无论谁去读它，"
-                        "都要出现在 deps 里——handle 不提它，但算子链会去读它，"
-                        "而这一读发生在算子链深处")
+                        f"the grouping field {fld} used by neutralize does not appear in deps",
+                        "§4.10: every L3 this node needs in order to run must appear in deps, no "
+                        "matter who reads it. handle never mentions this one, but the ops chain "
+                        "reads it -- deep inside the chain")
                 if not cat.exists(fld):
                     if produced_at.get(fld) is None:
                         add(ERROR, "NEUTRALIZE_MISSING", node.name,
                             f"outputs.{o.key}.ops[{j}]",
-                            f"neutralize 的分组字段不在 store 里：{fld}",
+                            f"the grouping field used by neutralize is not in the store: {fld}",
                             _suggest(fld, cat.known))
                     continue
                 gd = cat.dims(fld)
                 if gd != ["di", "ii"]:
                     add(ERROR, "NEUTRALIZE_RANK", node.name,
                         f"outputs.{o.key}.ops[{j}]",
-                        f"neutralize 的分组字段必须是秩-2，{fld} 是 dims={gd}")
+                        f"the grouping field used by neutralize must be rank-2; {fld} has dims={gd}")
                 dt = cat.dtype(fld)
                 if not (dt.startswith(_INT_PREFIX) or dt in _BOOL_DTYPES):
                     add(WARN, "NEUTRALIZE_DTYPE", node.name,
                         f"outputs.{o.key}.ops[{j}]",
-                        f"neutralize 的分组字段 dtype={dt}，§6.2 要求一个 int field",
-                        "浮点分组几乎每只票自成一组，demean 后恒为 0——"
-                        "整条 alpha 静默清零而不报错")
+                        f"the grouping field for neutralize has dtype={dt}; §6.2 requires an int field",
+                        "with float groups nearly every name forms its own group, so demean "
+                        "returns identically 0 -- the whole alpha is silently zeroed with no error")
 
         # ------------------------------------------------ alpha 的秩与 scale
         if node.kind == "alpha":
             for o in node.outputs.values():
                 if o.dims != ("di", "ii"):
                     add(ERROR, "ALPHA_RANK", node.name, f"outputs.{o.key}.dims",
-                        f"alpha 必须是秩-2（权重是 di×ii），该输出 dims={list(o.dims)}")
+                        f"an alpha must be rank-2 (weights are di x ii); this output has dims={list(o.dims)}")
                 elif not o.ops or o.ops[-1][0] != "scale":
                     # 同 CS_OP_RANK：load_spec 已在加载期报同一条，这里只兜程序化 Spec
                     add(ERROR, "ALPHA_NO_SCALE", node.name, f"outputs.{o.key}.ops",
-                        "alpha 的 ops 链必须以 scale 收尾（§4.4）",
-                        "少了它，上游各自 Σ|w|=1 的权重线性组合后会因抵消而缩水，"
-                        "账本投不满而 Sharpe 看着正常")
+                        "an alpha's ops chain must end in scale (§4.4)",
+                        "without it, upstream weights that each satisfy Sigma|w|=1 shrink through "
+                        "cancellation once combined -- the book is under-deployed while Sharpe "
+                        "still looks normal")
 
         # ------------------------------------------------------ universe 与秩
         if spec.universe:
             if ranks == {1}:
                 add(ERROR, "UNIVERSE_RANK1", node.name, "universe",
-                    f"秩-1 节点不能声明 universe（本文件声明了 {spec.universe}）",
-                    "§3.6：没有 ii 轴可掩")
+                    f"a rank-1 node cannot declare a universe (this file declares {spec.universe})",
+                    "§3.6: there is no ii axis to mask")
             elif 1 in ranks:
                 add(WARN, "UNIVERSE_RANK1", node.name, "universe",
-                    "本节点混有秩-1 输出，池子对它们无效（引擎只掩秩-2）")
+                    "this node mixes in rank-1 outputs, for which the pool has no effect (the engine masks rank-2 only)")
             if 3 in ranks:
                 add(WARN, "UNIVERSE_RANK3", node.name, "universe",
-                    "秩-3 输出在当前引擎里不会被掩码（§3.6 要求沿 ti 广播）",
-                    "池外标的会带着值进下游——这是口径差异，不会报错")
+                    "rank-3 outputs are not masked by the current engine (§3.6 requires broadcasting along ti)",
+                    "names outside the pool carry values downstream -- a difference in convention, not an error")
 
         # ---------------------------------------------- 源码：deps / 输出元数
         if node.code not in codes:
@@ -411,15 +413,15 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
         cf = _rel(node.code)
         if code.error == "missing":
             add(ERROR, "CODE_MISSING", node.name, "code",
-                f"代码文件不存在：{cf}",
-                "缺省是同目录下与 yaml 同名的 .py（§4.1）")
+                f"code file does not exist: {cf}",
+                "the default is a .py beside the yaml with the same stem (§4.1)")
         elif code.error and code.error.startswith("syntax"):
             _, ln, msg = code.error.split(":", 2)
-            add(ERROR, "CODE_SYNTAX", node.name, "code", f"{cf}:{ln} 语法错误：{msg}")
+            add(ERROR, "CODE_SYNTAX", node.name, "code", f"{cf}:{ln} syntax error: {msg}")
         else:
             if not code.has_handle:
                 add(ERROR, "NO_HANDLE", node.name, "code",
-                    f"{cf} 里没有模块级的 handle(ctx)")
+                    f"{cf} has no module-level handle(ctx)")
             for r in code.refs:
                 try:
                     parse_ref(r)
@@ -431,44 +433,44 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                     # 引擎当前会替自引用兜底（panels.setdefault），所以只是告警；
                     # 但 meta["deps"] 里会少这一条，血缘从此说谎。
                     add(WARN, "SELF_REF_NOT_IN_DEPS", node.name, "code",
-                        f"{cf} 读自己的输出 {r}，但 deps 里没写它",
-                        "§7.2 第 1 条：自引用节点必须把自己列进 deps，"
-                        "否则落库 meta 的 deps 缺这一条、血缘不成立")
+                        f"{cf} reads its own output {r} but does not list it in deps",
+                        "§7.2 item 1: a self-referencing node must list itself in deps, or the "
+                        "deps recorded in meta are incomplete and the lineage does not hold")
                 else:
                     # 名字本身在不在 store 里, 决定了这是"忘了声明"还是"顺带还写错了"
                     known_ref = cat.exists(r) or r in produced_at
                     add(ERROR, "DEP_NOT_DECLARED", node.name, "code",
-                        f"{cf} 里 ctx.f/win 读 {r}，但它不在 deps 里",
-                        "该名字在 store 里，补进 deps 即可（§4.10）" if known_ref
+                        f"{cf} reads {r} via ctx.f/win but it is not in deps",
+                        "that name is in the store; just add it to deps (§4.10)" if known_ref
                         else _suggest(r, cat.known))
 
             # §4.2 的表：单输出直接 return 裸值，≥2 个输出必须走 ctx.multi_outputs
             n_out = len(node.outputs)
             if n_out >= 2 and not code.multi:
                 add(ERROR, "OUTPUTS_MULTI_MISSING", node.name, "outputs",
-                    f"声明了 {n_out} 个输出 {sorted(node.outputs)}，"
-                    f"但 {cf} 里没有 ctx.multi_outputs(...)",
-                    "§4.2：≥2 个 key 却返回裸值是错误——读一眼返回语句就该知道"
-                    "该节点有几个输出")
+                    f"declares {n_out} outputs {sorted(node.outputs)} but {cf} never calls "
+                    f"ctx.multi_outputs(...)",
+                    "§4.2: returning a bare value with 2+ keys is an error -- one look at the "
+                    "return statement should tell you how many outputs a node has")
             elif n_out == 1 and code.multi:
                 add(ERROR, "OUTPUTS_SINGLE_MULTI", node.name, "outputs",
-                    f"只有一个输出 {sorted(node.outputs)}，"
-                    f"但 {cf} 用了 ctx.multi_outputs(...)",
-                    "§4.2：单输出直接 return 值")
+                    f"has only one output {sorted(node.outputs)} but {cf} uses ctx.multi_outputs(...)",
+                    "§4.2: a single-output node returns the value directly")
             for keys in code.multi:
                 if keys is None or n_out < 2:
                     continue
                 for k in sorted(keys - set(node.outputs)):
                     hint = difflib.get_close_matches(k, list(node.outputs), 1)
                     add(ERROR, "OUTPUTS_KEY_UNKNOWN", node.name, "outputs",
-                        f"{cf} 传了未声明的输出 `{k}`",
-                        f"是否想写 {hint[0]}?" if hint else
-                        f"yaml 声明的是 {sorted(node.outputs)}")
+                        f"{cf} passes an undeclared output `{k}`",
+                        f"did you mean {hint[0]}?" if hint else
+                        f"the yaml declares {sorted(node.outputs)}")
                 for k in sorted(set(node.outputs) - keys):
                     add(ERROR, "OUTPUTS_KEY_MISSING", node.name, "outputs",
-                        f"{cf} 没有传声明过的输出 `{k}`",
-                        "算不出值请传 NaN，不要漏 key——NaN 是合法值，"
-                        "漏 key 意味着这个节点今天不存在（§4.3）")
+                        f"{cf} never passes the declared output `{k}`",
+                        "if a value cannot be computed pass NaN rather than omitting the key -- "
+                        "NaN is a legal value, while a missing key means this node does not exist "
+                        "today (§4.3)")
 
     # ------------------------------------------------------- universe 自身的秩
     if spec.universe:
@@ -476,30 +478,32 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
         if not cat.exists(u):
             if produced_at.get(u) is None:
                 add(ERROR, "UNIVERSE_MISSING", "-", "universe",
-                    f"universe 不在 store 里：{u}", _suggest(u, cat.known))
+                    f"universe is not in the store: {u}", _suggest(u, cat.known))
         else:
             ud = cat.dims(u)
             if ud != ["di", "ii"]:
                 add(ERROR, "UNIVERSE_RANK", "-", "universe",
-                    f"universe 必须是秩-2，{u} 是 dims={ud}",
-                    "§3.5：池子是 di×ii 的成员掩码")
+                    f"universe must be rank-2; {u} has dims={ud}",
+                    "§3.5: a pool is a di x ii membership mask")
             udt = cat.dtype(u)
             if udt in _BOOL_DTYPES:
                 pass
             elif udt.startswith(_INT_PREFIX):
                 add(WARN, "UNIVERSE_DTYPE", "-", "universe",
-                    f"universe dtype={udt}，§3.5 说的是 bool field",
-                    "引擎按 `> 0` 判成员，0/1 的整数掩码能跑通，但口径靠约定而非类型")
+                    f"universe dtype={udt}; §3.5 specifies a bool field",
+                    "the engine tests membership with `> 0`, so a 0/1 integer mask works, but the "
+                    "convention then rests on agreement rather than on the type")
             else:
                 add(ERROR, "UNIVERSE_DTYPE", "-", "universe",
-                    f"universe dtype={udt} 不是 bool field（§3.5）",
-                    "引擎按 `> 0` 判成员：把一个浮点面板当池子，"
-                    "会静默变成「只留取值为正的票」，不报错、只改口径")
+                    f"universe dtype={udt} is not a bool field (§3.5)",
+                    "the engine tests membership with `> 0`, so using a float panel as the pool "
+                    "silently becomes 'keep only names with a positive value' -- no error, just a "
+                    "different convention")
 
     if spec.return_metric and not cat.exists(spec.return_metric):
         add(WARN, "RETURN_METRIC_MISSING", "-", "return_metric",
-            f"return_metric 不在 store 里：{spec.return_metric}",
-            "run 不读它（只 --pnl 读），故只是告警；但 --pnl 会在这里断")
+            f"return_metric is not in the store: {spec.return_metric}",
+            "run does not read it (only --pnl does), so this is a warning; but --pnl will break here")
 
     d.extend(_window_checks(spec, store, cat, resolved_all, sd, ed, path))
     return d
@@ -521,17 +525,17 @@ def _window_checks(spec: Spec, store, cat: _Cat, deps: set[str],
 
     def near(day: str) -> str:
         hit = difflib.get_close_matches(day, axes.sessions, 1, cutoff=0.6)
-        return (f"最近的 session 是 {hit[0]}" if hit else
-                f"session 轴是 {axes.sessions[0]}..{axes.sessions[-1]}（{len(on_axis)} 天）")
+        return (f"the nearest session is {hit[0]}" if hit else
+                f"the session axis runs {axes.sessions[0]}..{axes.sessions[-1]} ({len(on_axis)} days)")
 
     for who, day in (("sd", sd), ("ed", ed)):
         if day is not None and day not in on_axis:
             out.append(Diagnostic(
                 ERROR, f"{who.upper()}_NOT_SESSION", path, "-", who,
-                f"{who}={day} 不在 session 轴上", near(day)))
+                f"{who}={day} is not on the session axis", near(day)))
     if sd and ed and sd > ed:
         out.append(Diagnostic(ERROR, "SD_AFTER_ED", path, "-", "sd",
-                              f"sd={sd} 晚于 ed={ed}"))
+                              f"sd={sd} is later than ed={ed}"))
 
     # ed 的可用性由数据新鲜度决定（§7.3）：任一依赖的最新 session 未落地则回退。
     # run() 把 return_metric 也算进去，这里照做，否则报出来的 effective_ed 会偏乐观。
@@ -546,10 +550,10 @@ def _window_checks(spec: Spec, store, cat: _Cat, deps: set[str],
     cap = axes.date(max(0, cap_i))
     if binder is not None and (ed is None or ed > cap):
         # 「绝不静默算半截数据」——回退本身是对的，不出声才是错的。
-        want = ed or f"{axes.sessions[-1]}（ed 缺省 = 轴末日）"
+        want = ed or f"{axes.sessions[-1]} (ed defaults to the last session on the axis)"
         out.append(Diagnostic(
             WARN, "ED_BEYOND_DATA", path, "-", "ed",
-            f"ed={want} 越过了数据边界，effective_ed={cap}",
-            f"卡住它的是 {binder}（last_session={cap}）；"
-            f"`alphakit store status` 可看全部落后项"))
+            f"ed={want} runs past the data boundary, effective_ed={cap}",
+            f"the binding constraint is {binder} (last_session={cap}); "
+            f"`ak store status` shows everything that is behind"))
     return out

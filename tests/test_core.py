@@ -101,8 +101,8 @@ def raises(exc, fn, *a, **kw):
     except exc as e:
         return e
     except Exception as e:                      # noqa: BLE001
-        raise AssertionError(f"抛的是 {type(e).__name__}（期望 {exc.__name__}）：{e}") from None
-    raise AssertionError(f"没有抛 {exc.__name__}——被放行了")
+        raise AssertionError(f"raised {type(e).__name__} (expected {exc.__name__}): {e}") from None
+    raise AssertionError(f"did not raise {exc.__name__} -- it was let through")
 
 
 def du(p: Path) -> tuple[int, int]:
@@ -118,14 +118,14 @@ def test_axes_create_load_roundtrip():
     """轴是唯一真相源, 写下去与读回来必须逐位相同——它错一格, 每个节点都跟着错。"""
     st = fresh("ax_rt")
     a = st.axes
-    check(a.sessions == SESSIONS, f"sessions 变了：{a.sessions}")
-    check(a.securities == SECURITIES, f"securities 变了：{a.securities}")
+    check(a.sessions == SESSIONS, f"sessions changed: {a.sessions}")
+    check(a.securities == SECURITIES, f"securities changed: {a.securities}")
     check(a.n_sessions == 10 and a.n_securities == 5, f"{a.n_sessions}×{a.n_securities}")
     cap = json.loads((Path(a.root) / "_axes" / "capacity.json").read_text())
     check(cap["n_active"] == 5 and cap["allocated"] == 12, f"capacity.json = {cap}")
     b = Axes.load(a.root)
     check(b.sessions == a.sessions and b.securities == a.securities
-          and b.allocated == a.allocated, "第二次 load 与第一次不一致")
+          and b.allocated == a.allocated, "the second load disagrees with the first")
     return f"D={a.n_sessions} N={a.n_securities} allocated={a.allocated}"
 
 
@@ -133,11 +133,11 @@ def test_pos_date_inverse():
     """`pos` 与 `date` 必须互为逆。§3.2 的路径推导、§7.2 的主循环全靠这一条。"""
     a = fresh("ax_pos").axes
     for i, d in enumerate(SESSIONS):
-        check(a.pos(d) == i, f"pos({d})={a.pos(d)} 期望 {i}")
-        check(a.date(i) == d, f"date({i})={a.date(i)} 期望 {d}")
+        check(a.pos(d) == i, f"pos({d})={a.pos(d)} expected {i}")
+        check(a.date(i) == d, f"date({i})={a.date(i)} expected {d}")
     e = raises(KeyError, a.pos, "2024-01-06")           # 周末不在轴上
-    check("2024-01-06" in str(e), f"报错没说清是哪个日期：{e}")
-    return f"{a.n_sessions} 个 session 双向逐个对上, 非交易日 pos 抛 KeyError"
+    check("2024-01-06" in str(e), f"the error does not say which date: {e}")
+    return f"{a.n_sessions} sessions map both ways one by one; pos raises KeyError on a non-trading day"
 
 
 def test_slice_half_open():
@@ -158,10 +158,10 @@ def test_slice_half_open():
     }
     for (sd, ed), want in cases.items():
         got = a.slice(sd, ed)
-        check(got == want, f"slice({sd}, {ed}) = {got}，期望 {want}")
+        check(got == want, f"slice({sd}, {ed}) = {got}, expected {want}")
     lo, hi = a.slice("2024-01-09", "2024-01-03")        # sd > ed
-    check(hi - lo <= 0, f"sd 晚于 ed 却给出非空区间 [{lo}, {hi})")
-    return f"{len(cases)} 组边界全中, sd>ed 宽度 {hi - lo}"
+    check(hi - lo <= 0, f"sd is later than ed yet the range [{lo}, {hi}) is non-empty")
+    return f"all {len(cases)} boundary cases hit; width with sd>ed is {hi - lo}"
 
 
 def test_ensure_sessions_appends():
@@ -170,14 +170,14 @@ def test_ensure_sessions_appends():
     a = st.axes
     before = {d: a.pos(d) for d in SESSIONS}
     n = a.ensure_sessions(["2024-01-15", "2024-01-16"])
-    check(n == 2, f"返回新增 {n} 条，期望 2")
+    check(n == 2, f"reported {n} new entries, expected 2")
     check(a.n_sessions == 12, f"n_sessions={a.n_sessions}")
-    check(a.sessions[-2:] == ["2024-01-15", "2024-01-16"], f"末尾是 {a.sessions[-2:]}")
+    check(a.sessions[-2:] == ["2024-01-15", "2024-01-16"], f"the tail is {a.sessions[-2:]}")
     for d, i in before.items():
-        check(a.pos(d) == i, f"append 之后 {d} 的位置从 {i} 变成了 {a.pos(d)}——历史 chunk 全废")
-    check(a.ensure_sessions(["2024-01-16"]) == 0, "重复的末日不该再 append（日更要可重入）")
-    check(Axes.load(a.root).sessions == a.sessions, "没落盘：进程重启就丢")
-    return f"10 → {a.n_sessions}，旧位置 {len(before)} 个不变，重放同一天返回 0"
+        check(a.pos(d) == i, f"after append the position of {d} moved from {i} to {a.pos(d)} -- every historical chunk is invalidated")
+    check(a.ensure_sessions(["2024-01-16"]) == 0, "a repeated last session must not append again (the daily update has to be re-entrant)")
+    check(Axes.load(a.root).sessions == a.sessions, "not persisted: it would be lost on restart")
+    return f"10 -> {a.n_sessions}; {len(before)} old positions unchanged; replaying the same day returns 0"
 
 
 def test_ensure_sessions_rejects_earlier_date():
@@ -186,12 +186,12 @@ def test_ensure_sessions_rejects_earlier_date():
     # 早于首日 / 落在周末缺口里 / 缺口的另一半——三个都不在轴上, 且都不晚于末日
     for bad in ["2023-12-31", "2024-01-06", "2024-01-07"]:
         e = raises(ValueError, a.ensure_sessions, [bad])
-        check("append-only" in str(e), f"{bad} 的报错没提 append-only：{e}")
-        check(a.n_sessions == 10, f"{bad} 被拒了却已经写进轴：n={a.n_sessions}")
+        check("append-only" in str(e), f"the error for {bad} does not mention append-only: {e}")
+        check(a.n_sessions == 10, f"{bad} was rejected yet had already been written to the axis: n={a.n_sessions}")
     e = raises(ValueError, a.ensure_sessions, ["2024-01-06", "2024-01-20"])
-    check(a.n_sessions == 10, "一批里混了一个早日期, 整批必须原子拒绝")
-    check(a.ensure_sessions(["2024-01-12"]) == 0, "末日本身重放应是 0 而不是报错")
-    return f"3 个非法日期 + 1 个混批全部拒绝, n_sessions 仍 {a.n_sessions}"
+    check(a.n_sessions == 10, "one early date in a batch must cause the whole batch to be rejected atomically")
+    check(a.ensure_sessions(["2024-01-12"]) == 0, "replaying the last session itself must return 0, not raise")
+    return f"3 invalid dates plus 1 mixed batch all rejected; n_sessions is still {a.n_sessions}"
 
 
 def test_ensure_sessions_rejects_duplicate_in_batch():
@@ -203,9 +203,9 @@ def test_ensure_sessions_rejects_duplicate_in_batch():
     a = fresh("ax_dup").axes
     n = a.ensure_sessions(["2024-01-15", "2024-01-15"])
     check(a.n_sessions == 11,
-          f"['2024-01-15', '2024-01-15'] 追加后 n_sessions={a.n_sessions}（期望 11），"
-          f"轴末尾 = {a.sessions[-3:]}，返回值 {n}——同一天占了两个位置")
-    check(a.date(a.pos("2024-01-15")) == "2024-01-15", "pos/date 不再互逆")
+          f"after appending ['2024-01-15', '2024-01-15'] n_sessions={a.n_sessions} (expected 11), "
+          f"axis tail = {a.sessions[-3:]}, returned {n} -- the same day took two slots")
+    check(a.date(a.pos("2024-01-15")) == "2024-01-15", "pos and date are no longer inverses")
     return f"n_sessions={a.n_sessions}"
 
 
@@ -223,8 +223,9 @@ def test_axes_create_refuses_to_clobber():
     except Exception as exc:                     # noqa: BLE001
         e = exc
     check(e is not None,
-          f"在已有轴上重放 create 并把 999 插到首位被静默接受：securities 由 {SECURITIES} "
-          f"变成 {Axes.load(root).securities}——每个历史 chunk 的第 0 列现在指向另一只票")
+          f"replaying create on an existing axis with 999 inserted first was silently accepted: securities "
+          f"went from {SECURITIES} to {Axes.load(root).securities} -- column 0 of every historical "
+          f"chunk now points at a different name")
     return type(e).__name__
 
 
@@ -236,7 +237,7 @@ def test_capacity_reserve():
     st.write(R2, panel(SESSIONS, SECURITIES, 1.0))
     z = zarr.open_array(str(st.path(R2)), mode="r")
     check(z.shape[1] == st.axes.allocated,
-          f"数组按 n_securities({st.axes.n_securities}) 而非 allocated 开宽度：{z.shape}")
+          f"the array was sized to n_securities({st.axes.n_securities}) rather than allocated: {z.shape}")
 
     # 在预留额度内加一只新票（ingestion 的日常）：旧 chunk 必须仍可读, 新列是 NaN
     a = Path(st.axes.root) / "_axes"
@@ -244,10 +245,10 @@ def test_capacity_reserve():
     (a / "capacity.json").write_text(json.dumps({"n_active": 6, "allocated": st.axes.allocated}))
     st2 = Store(st.root, REGION)
     df = st2.read(R2)
-    check(list(df.columns) == SECURITIES + [106], f"扩容后列轴 {list(df.columns)}")
-    check(df[106].isna().all(), "新票的历史应当整列 NaN")
-    check((df[SECURITIES] == 1.0).all().all(), "扩容后旧数据变了——旧 chunk 没能原样读出")
-    return f"allocated={st.axes.allocated} 数组宽度={z.shape[1]} 扩容后旧值不变、新列全 NaN"
+    check(list(df.columns) == SECURITIES + [106], f"column axis after growth: {list(df.columns)}")
+    check(df[106].isna().all(), "the history of a new name must be an all-NaN column")
+    check((df[SECURITIES] == 1.0).all().all(), "old data changed after growth -- old chunks did not read back unchanged")
+    return f"allocated={st.axes.allocated} array width={z.shape[1]}; old values unchanged after growth, new column all NaN"
 
 
 # ================================================================== store §3.3
@@ -264,15 +265,15 @@ def test_roundtrip_three_ranks():
     st.write(R3, v3, dims=["di", "ii", "ti"], grid_len=4, meta={"dates": SESSIONS})
 
     b1, b2, b3 = st.read(R1), st.read(R2), st.read(R3)
-    check(isinstance(b1, pd.Series), f"秩-1 返回 {type(b1).__name__}，期望 Series")
-    check(isinstance(b2, pd.DataFrame), f"秩-2 返回 {type(b2).__name__}，期望 DataFrame")
-    check(isinstance(b3, np.ndarray), f"秩-3 返回 {type(b3).__name__}，期望 ndarray")
-    check(b1.shape == (10,) and list(b1.index) == SESSIONS, f"秩-1 {b1.shape}")
-    check(b2.shape == (10, 5) and list(b2.columns) == SECURITIES, f"秩-2 {b2.shape}")
-    check(b3.shape == (10, 5, 4), f"秩-3 {b3.shape}")
-    check(np.allclose(b1.to_numpy(), v1.to_numpy()), "秩-1 值变了")
-    check(np.allclose(b2.to_numpy(), v2.to_numpy()), "秩-2 值变了")
-    check(np.allclose(b3, v3), "秩-3 值变了")
+    check(isinstance(b1, pd.Series), f"rank-1 returned {type(b1).__name__}, expected Series")
+    check(isinstance(b2, pd.DataFrame), f"rank-2 returned {type(b2).__name__}, expected DataFrame")
+    check(isinstance(b3, np.ndarray), f"rank-3 returned {type(b3).__name__}, expected ndarray")
+    check(b1.shape == (10,) and list(b1.index) == SESSIONS, f"rank-1 {b1.shape}")
+    check(b2.shape == (10, 5) and list(b2.columns) == SECURITIES, f"rank-2 {b2.shape}")
+    check(b3.shape == (10, 5, 4), f"rank-3 {b3.shape}")
+    check(np.allclose(b1.to_numpy(), v1.to_numpy()), "rank-1 values changed")
+    check(np.allclose(b2.to_numpy(), v2.to_numpy()), "rank-2 values changed")
+    check(np.allclose(b3, v3), "rank-3 values changed")
     return f"(D,)={b1.shape} (D,N)={b2.shape} (D,N,T)={b3.shape}"
 
 
@@ -290,11 +291,11 @@ def test_chunking_matches_spec():
     got = {r: zarr.open_array(str(st.path(r)), mode="r").chunks for r in (R1, R2, R3)}
     want = {R1: (4096,), R2: (50, N), R3: (1, N, 4)}
     for r, w in want.items():
-        check(got[r] == w, f"{r} 分块 {got[r]}，期望 {w}")
+        check(got[r] == w, f"{r} chunks {got[r]}, expected {w}")
     for r in (R1, R2, R3):
         z = zarr.open_array(str(st.path(r)), mode="r")
-        check(np.isnan(z.fill_value), f"{r} 的 fill_value 是 {z.fill_value}，f4 必须是 NaN")
-    return f"秩1 {got[R1]} 秩2 {got[R2]} 秩3 {got[R3]}"
+        check(np.isnan(z.fill_value), f"fill_value of {r} is {z.fill_value}; f4 must be NaN")
+    return f"rank1 {got[R1]} rank2 {got[R2]} rank3 {got[R3]}"
 
 
 def test_dtypes_survive():
@@ -308,13 +309,13 @@ def test_dtypes_survive():
                      index=SESSIONS, columns=SECURITIES)
     st.write(R2, f, dtype="f4"); st.write(RB, b, dtype="bool"); st.write(RI, i, dtype="i1")
     gf, gb, gi = st.read(R2), st.read(RB), st.read(RI)
-    check(gf.dtypes.unique().tolist() == [np.dtype("f4")], f"f4 读回 {gf.dtypes.unique()}")
-    check(gb.dtypes.unique().tolist() == [np.dtype("bool")], f"bool 读回 {gb.dtypes.unique()}")
-    check(gi.dtypes.unique().tolist() == [np.dtype("i1")], f"i1 读回 {gi.dtypes.unique()}")
-    check(np.array_equal(gf.to_numpy(), f.to_numpy()), "f4 值变了")
-    check(np.array_equal(gb.to_numpy(), b.to_numpy()), "bool 值变了")
-    check(np.array_equal(gi.to_numpy(), i.to_numpy()), "i1 值变了")
-    return "f4 / bool / i1 均原样往返"
+    check(gf.dtypes.unique().tolist() == [np.dtype("f4")], f"f4 read back as {gf.dtypes.unique()}")
+    check(gb.dtypes.unique().tolist() == [np.dtype("bool")], f"bool read back as {gb.dtypes.unique()}")
+    check(gi.dtypes.unique().tolist() == [np.dtype("i1")], f"i1 read back as {gi.dtypes.unique()}")
+    check(np.array_equal(gf.to_numpy(), f.to_numpy()), "f4 values changed")
+    check(np.array_equal(gb.to_numpy(), b.to_numpy()), "bool values changed")
+    check(np.array_equal(gi.to_numpy(), i.to_numpy()), "i1 values changed")
+    return "f4 / bool / i1 all round-trip unchanged"
 
 
 def test_read_aligns_to_global_axis():
@@ -326,12 +327,12 @@ def test_read_aligns_to_global_axis():
     st = fresh("st_align")
     st.write(R2, panel(SESSIONS, [101, 103, 105], 2.0))          # 只覆盖 5 列中的 3 列
     df = st.read(R2)
-    check(list(df.columns) == SECURITIES, f"列轴 {list(df.columns)}，期望全局 5 列")
-    check(list(df.index) == SESSIONS, f"行轴 {df.index[:3].tolist()}...")
-    check((df[[101, 103, 105]] == 2.0).all().all(), "写过的列值不对")
+    check(list(df.columns) == SECURITIES, f"column axis {list(df.columns)}, expected the global 5 columns")
+    check(list(df.index) == SESSIONS, f"row axis {df.index[:3].tolist()}...")
+    check((df[[101, 103, 105]] == 2.0).all().all(), "the values of the written columns are wrong")
     missing = [c for c in SECURITIES if df[c].isna().all()]
-    check(missing == [102, 104], f"未覆盖的列应整列 NaN，实得 {missing}")
-    return f"写 3/5 列 → 读回 {df.shape[1]} 列，未写列 {missing} 全 NaN"
+    check(missing == [102, 104], f"uncovered columns must be all-NaN, got {missing}")
+    return f"wrote 3 of 5 columns -> read back {df.shape[1]} columns; unwritten {missing} all NaN"
 
 
 def test_range_read_equals_full_sliced():
@@ -347,16 +348,16 @@ def test_range_read_equals_full_sliced():
                    ("2024-01-08", None), ("2024-01-06", "2024-01-07")]:
         i0, i1 = st.axes.slice(sd, ed)
         got, want = st.read(R2, sd, ed), full.iloc[i0:i1]
-        check(list(got.index) == list(want.index), f"[{sd},{ed}] 行轴 {list(got.index)}")
+        check(list(got.index) == list(want.index), f"[{sd},{ed}] row axis {list(got.index)}")
         check(np.allclose(got.to_numpy(), want.to_numpy(), equal_nan=True),
-              f"[{sd},{ed}] 区间读与全量切片不一致")
+              f"[{sd},{ed}] ranged read disagrees with the full slice")
         g1 = st.read(R1, sd, ed)
         check(np.allclose(g1.to_numpy(), full1.iloc[i0:i1].to_numpy(), equal_nan=True),
-              f"[{sd},{ed}] 秩-1 区间读不一致")
+              f"[{sd},{ed}] rank-1 ranged read disagrees")
     t = st.tail(R2, 3)
-    check(list(t.index) == SESSIONS[-3:], f"tail(3) 给出 {list(t.index)}")
-    check(np.allclose(t.to_numpy(), full.iloc[-3:].to_numpy(), equal_nan=True), "tail 与切片不符")
-    return "4 组区间 + tail(3) 与全量切片逐位相同"
+    check(list(t.index) == SESSIONS[-3:], f"tail(3) gave {list(t.index)}")
+    check(np.allclose(t.to_numpy(), full.iloc[-3:].to_numpy(), equal_nan=True), "tail disagrees with the slice")
+    return "4 ranges plus tail(3) match the full slice bit for bit"
 
 
 def test_read_after_axis_grows():
@@ -373,7 +374,7 @@ def test_read_after_axis_grows():
              grid_len=2, meta={"dates": SESSIONS})
     st.axes.ensure_sessions(["2024-01-15"])                  # 轴走到了 11 天
     got = {}
-    for nm, r in [("秩1", R1), ("秩2", R2), ("秩3", R3)]:
+    for nm, r in [("rank1", R1), ("rank2", R2), ("rank3", R3)]:
         try:
             v = st.read(r)
             got[nm] = f"shape={v.shape}"
@@ -383,11 +384,11 @@ def test_read_after_axis_grows():
         got["tail"] = f"shape={st.tail(R2, 1).shape}"
     except Exception as e:                                   # noqa: BLE001
         got["tail"] = f"{type(e).__name__}"
-    check(got == {"秩1": "shape=(11,)", "秩2": "shape=(11, 5)",
-                  "秩3": "shape=(11, 5, 2)", "tail": "shape=(1, 5)"},
-          f"轴 +1 天后 read/tail 没有对齐到全局轴：{got}"
-          f"（期望三种秩都补出末行 NaN，tail(1) 给出那一行）")
-    check(st.read(R2).iloc[-1].isna().all(), "补出来的末行应当是 NaN")
+    check(got == {"rank1": "shape=(11,)", "rank2": "shape=(11, 5)",
+                  "rank3": "shape=(11, 5, 2)", "tail": "shape=(1, 5)"},
+          f"after the axis grew by a day, read/tail did not align to the global axis: {got} "
+          f"(all three ranks should pad a trailing NaN row, and tail(1) should return it)")
+    check(st.read(R2).iloc[-1].isna().all(), "the padded trailing row must be NaN")
     return f"{got}"
 
 
@@ -403,19 +404,19 @@ def test_write_is_range_upsert_not_truncate():
 
     st.write(R2, panel(SESSIONS[-1:], SECURITIES, 9.0))          # run --ed today
     df = st.read(R2)
-    check(df.shape == (10, 5), f"一行交付之后数组变成了 {df.shape}")
-    check((df.iloc[:9] == 1.0).all().all(), "一行交付覆盖了历史——`write` 不是区间 upsert")
-    check((df.iloc[-1] == 9.0).all(), "末行没写进去")
+    check(df.shape == (10, 5), f"after delivering one row the array became {df.shape}")
+    check((df.iloc[:9] == 1.0).all().all(), "delivering one row overwrote history -- `write` is not a ranged upsert")
+    check((df.iloc[-1] == 9.0).all(), "the last row was not written")
 
     st.write(R2, panel(SESSIONS[5:], SECURITIES, 7.0))           # run --sd 2024-01-08
     df = st.read(R2)
-    check((df.iloc[:5] == 1.0).all().all(), "短区间回填截断了它之前的历史")
-    check((df.iloc[5:] == 7.0).all().all(), "短区间没写全")
+    check((df.iloc[:5] == 1.0).all().all(), "a short backfill truncated the history before it")
+    check((df.iloc[5:] == 7.0).all().all(), "the short range was not fully written")
     m = st.meta(R2)
-    check(m["version"] == v0, f"upsert 不该 bump version：{v0} → {m['version']}")
+    check(m["version"] == v0, f"upsert must not bump version: {v0} -> {m['version']}")
     check(m["first_session"] == 0 and m["last_session"] == 9,
-          f"watermark 被区间写缩窄了：{m['first_session']}..{m['last_session']}")
-    return f"1 行 / 5 行交付后仍是 {df.shape}，version 恒 {m['version']}"
+          f"the watermark was narrowed by a ranged write: {m['first_session']}..{m['last_session']}")
+    return f"still {df.shape} after delivering 1 row and 5 rows; version stays {m['version']}"
 
 
 def test_write_rejects_broken_date_index():
@@ -423,7 +424,7 @@ def test_write_rejects_broken_date_index():
     st = fresh("st_dates")
     e = raises(StoreError, st.write, R2,
                panel([SESSIONS[0], SESSIONS[4]], SECURITIES))     # 跳着的两天
-    check("不连续" in str(e), f"报错没说清是日期不连续：{e}")
+    check("not contiguous" in str(e), f"the error does not say the dates are non-contiguous: {e}")
     raises(KeyError, st.write, R2, panel(["2024-01-06"], SECURITIES))   # 非交易日
 
     # 首尾恰好卡住区间宽度的错序：连续性检查算的是「跨几个 session」, 它数得对,
@@ -438,9 +439,9 @@ def test_write_rejects_broken_date_index():
         err = e
     got = None if err is not None else st.read(R2)[101].iloc[:4].tolist()
     check(err is not None or got == [0.0, 1.0, 2.0, 3.0],
-          f"错序索引 {idx} 被放行且按给定顺序落库：col101 = {got}，期望 [0.0, 1.0, 2.0, 3.0]"
-          f"——第 2、3 天的值互换了, 且没有任何报错")
-    return f"不连续/非交易日已拒；错序 → {type(err).__name__ if err else got}"
+          f"an out-of-order index {idx} was accepted and stored in the given order: col101 = {got}, "
+          f"expected [0.0, 1.0, 2.0, 3.0] -- days 2 and 3 were swapped with no error at all")
+    return f"non-contiguous and non-trading days rejected; out-of-order -> {type(err).__name__ if err else got}"
 
 
 def test_version_bumps_only_on_rebuild():
@@ -452,12 +453,12 @@ def test_version_bumps_only_on_rebuild():
     st.write(R2, one, rebuild=True);      v3 = st.meta(R2)["version"]
     st.write(R2, one);                    v4 = st.meta(R2)["version"]
     st.write(R2, one, rebuild=True);      v5 = st.meta(R2)["version"]
-    check(v1 == 1, f"首次写入 version={v1}，期望 1")
-    check(v2 == v1, f"普通写入 bump 了 version：{v1} → {v2}（version 会退化成天数计数器）")
-    check(v3 == v1 + 1, f"rebuild 没 bump：{v1} → {v3}")
-    check(v4 == v3, f"rebuild 之后的普通写入又 bump 了：{v3} → {v4}")
-    check(v5 == v3 + 1, f"第二次 rebuild 没 bump：{v3} → {v5}")
-    return f"1,1,2,2,3 → 实得 {v1},{v2},{v3},{v4},{v5}"
+    check(v1 == 1, f"first write gave version={v1}, expected 1")
+    check(v2 == v1, f"an ordinary write bumped version: {v1} -> {v2} (version would decay into a day counter)")
+    check(v3 == v1 + 1, f"rebuild did not bump: {v1} -> {v3}")
+    check(v4 == v3, f"an ordinary write after rebuild bumped again: {v3} -> {v4}")
+    check(v5 == v3 + 1, f"the second rebuild did not bump: {v3} -> {v5}")
+    return f"1,1,2,2,3 -> got {v1},{v2},{v3},{v4},{v5}"
 
 
 def test_check_fingerprint():
@@ -467,17 +468,17 @@ def test_check_fingerprint():
     meta 与 catalog 都看不出来, 事后也无法判断断点在哪天。
     """
     st = fresh("st_fp")
-    check(st.check_fingerprint(R2, "sha256:aaaa") is None, "节点还不存在时应当静默放行")
+    check(st.check_fingerprint(R2, "sha256:aaaa") is None, "must pass silently when the node does not exist yet")
     st.write(R2, panel(SESSIONS, SECURITIES), meta={"fingerprint": "sha256:aaaa"})
-    check(st.check_fingerprint(R2, "sha256:aaaa") is None, "同一个指纹不该报错")
+    check(st.check_fingerprint(R2, "sha256:aaaa") is None, "the same fingerprint must not raise")
     e = raises(StoreError, st.check_fingerprint, R2, "sha256:bbbb")
-    check("指纹" in str(e) and "sha256:aaaa" in str(e) and "sha256:bbbb" in str(e),
-          f"报错没同时给出两边的指纹：{e}")
-    check("rebuild" in str(e), f"报错没给出路（--rebuild / 换 identity）：{e}")
+    check("fingerprint" in str(e) and "sha256:aaaa" in str(e) and "sha256:bbbb" in str(e),
+          f"the error does not give both fingerprints: {e}")
+    check("rebuild" in str(e), f"the error offers no way forward (--rebuild / a different identity): {e}")
     st.write(R1, pd.Series(np.ones(10, dtype="f4"), index=SESSIONS), dims=["di"])
     check(st.check_fingerprint(R1, "sha256:cccc") is None,
-          "store 里没记指纹的老节点应当放行（向后兼容）")
-    return "首写静默 / 同指纹静默 / 改指纹抛 StoreError 且两边指纹都在消息里"
+          "an older node with no recorded fingerprint must pass (backward compatibility)")
+    return "first write silent / same fingerprint silent / changed fingerprint raises StoreError with both in the message"
 
 
 def test_expand_wildcard():
@@ -491,12 +492,12 @@ def test_expand_wildcard():
     st.write("g_yliu.liq.factor_yliu_liq2-x", panel(SESSIONS[:1], SECURITIES))
     hits = st.expand("g_yliu.liq.factor_yliu_liq-*")
     check(hits == [f"g_yliu.liq.factor_yliu_liq-{o}" for o in ("adv20", "illiq20", "rvol20")],
-          f"展开结果 {hits}")
-    check("g_yliu.liq.factor_yliu_liq2-x" not in hits, "前缀相近的另一个节点被卷了进来")
+          f"expansion gave {hits}")
+    check("g_yliu.liq.factor_yliu_liq2-x" not in hits, "another node with a similar prefix was swept in")
     e = raises(StoreError, st.expand, "g_yliu.liq.factor_yliu_none-*")
-    check("空" in str(e), f"展开为空的报错文不对题：{e}")
-    check(st.expand(R2) == [R2], "非通配名应原样返回")
-    return f"3 个输出被展开、相邻节点未误入、空展开抛 {type(e).__name__}"
+    check("expanded to nothing" in str(e), f"the empty-expansion error is off topic: {e}")
+    check(st.expand(R2) == [R2], "a non-wildcard name must be returned unchanged")
+    return f"3 outputs expanded, the neighbouring node stayed out, an empty expansion raised {type(e).__name__}"
 
 
 def test_store_root_accepts_region_qualified_path():
@@ -509,11 +510,11 @@ def test_store_root_accepts_region_qualified_path():
     root = st1.root
     a = Store(str(root), REGION)                   # 不带 region 段
     b = Store(str(root / REGION), REGION)          # 带 region 段
-    check(a.root == b.root, f"两种 l3_root 写法根不同：{a.root} vs {b.root}")
-    check(a.path(R2) == b.path(R2), f"两种写法路径不同：{a.path(R2)} vs {b.path(R2)}")
+    check(a.root == b.root, f"the two l3_root spellings gave different roots: {a.root} vs {b.root}")
+    check(a.path(R2) == b.path(R2), f"the two spellings gave different paths: {a.path(R2)} vs {b.path(R2)}")
     check(a.path(R2).parent.parent.parent == root / REGION,
-          f"region 层不对：{a.path(R2)}")
-    return f"`{root.name}` 与 `{root.name}/{REGION}` 落到同一处"
+          f"the region level is wrong: {a.path(R2)}")
+    return f"`{root.name}` and `{root.name}/{REGION}` land in the same place"
 
 
 def test_path_ref_roundtrip():
@@ -523,18 +524,18 @@ def test_path_ref_roundtrip():
     for ref in refs:
         p = st.path(ref)
         back = f"{p.parent.parent.name}.{p.parent.name}.{p.name}"
-        check(back == ref, f"path→ref 回不去：{ref} → {p} → {back}")
-        check(p.parent.parent.parent == st.root / REGION, f"region 层不对：{p}")
+        check(back == ref, f"path->ref does not round-trip: {ref} -> {p} -> {back}")
+        check(p.parent.parent.parent == st.root / REGION, f"the region level is wrong: {p}")
         r = parse_ref(ref)
-        check(str(r) == ref, f"str(Ref) 不等于原串：{r}")
-        check(st.path(r) == p, "传 Ref 与传字符串给出不同路径")
-        check(r.leaf == p.name, f"叶子名不符折叠规则：{p.name}")
+        check(str(r) == ref, f"str(Ref) does not equal the original: {r}")
+        check(st.path(r) == p, "passing a Ref and a string gave different paths")
+        check(r.leaf == p.name, f"the leaf name does not follow the collapse rule: {p.name}")
     st.write(R2, panel(SESSIONS[:1], SECURITIES))
     check(st.list_refs() == [R2], f"list_refs = {st.list_refs()}")
     cat = st.catalog()
     check(len(cat) == 1 and cat["ref"].iloc[0] == R2, f"catalog：\n{cat}")
     never = [c for c in cat.columns if cat[c].isna().all()]
-    return f"{len(refs)} 个 ref 往返一致；catalog 中恒为空的列 {never}"
+    return f"{len(refs)} refs round-trip; columns always empty in catalog: {never}"
 
 
 def test_sparse_cost_is_proportional():
@@ -564,14 +565,14 @@ def test_sparse_cost_is_proportional():
 
     cover = 500 / N
     check(cols[0] < dense[0] * cover * 2.5,
-          f"列稀疏（500/{N}）占 {cols[0]/1e6:.2f} MB，稠密 {dense[0]/1e6:.2f} MB，"
-          f"覆盖率 {cover:.1%} 却没省下相应的空间")
-    check(both[0] < cols[0] / 5, f"双稀疏 {both[0]/1e6:.3f} MB 没比列稀疏 {cols[0]/1e6:.2f} MB 小")
-    check(both[1] < dense[1], f"时间稀疏应当少写 chunk 文件：{both[1]} vs {dense[1]}")
-    check(empty[1] <= 1, f"空节点应当只剩 zarr.json，实得 {empty[1]} 个文件")
-    return (f"稠密 {dense[0]/1e6:.2f}MB/{dense[1]}文件 · 列稀疏 {cols[0]/1e6:.2f}MB/{cols[1]} "
-            f"({cols[0]/dense[0]:.1%}, 覆盖率 {cover:.1%}) · 双稀疏 {both[0]/1e6:.3f}MB/{both[1]} "
-            f"· 空 {empty[0]}B/{empty[1]}")
+          f"column-sparse (500/{N}) takes {cols[0]/1e6:.2f} MB vs dense {dense[0]/1e6:.2f} MB; "
+          f"coverage is {cover:.1%} yet the space saved does not match")
+    check(both[0] < cols[0] / 5, f"doubly-sparse {both[0]/1e6:.3f} MB is not smaller than column-sparse {cols[0]/1e6:.2f} MB")
+    check(both[1] < dense[1], f"time sparsity should write fewer chunk files: {both[1]} vs {dense[1]}")
+    check(empty[1] <= 1, f"an empty node should leave only zarr.json, got {empty[1]} files")
+    return (f"dense {dense[0]/1e6:.2f}MB/{dense[1]} files - column-sparse {cols[0]/1e6:.2f}MB/{cols[1]} "
+            f"({cols[0]/dense[0]:.1%}, coverage {cover:.1%}) - doubly-sparse {both[0]/1e6:.3f}MB/{both[1]} "
+            f"- empty {empty[0]}B/{empty[1]}")
 
 
 def test_sparse_write_of_nonfloat_dtype():
@@ -593,11 +594,11 @@ def test_sparse_write_of_nonfloat_dtype():
     irow = st.read(RI).iloc[0].tolist()
     uncovered = [102, 104, 105]
     check(not row[uncovered].any(),
-          f"bool 面板只交付了 101/103，未覆盖列 {uncovered} 读回 "
-          f"{row[uncovered].tolist()}（NaN 转 bool = True）——池外的票被标成了池内")
-    return (f"bool 未覆盖列 {row[uncovered].tolist()} · i1 未覆盖列 "
+          f"the bool panel delivered only 101/103; uncovered columns {uncovered} read back as "
+          f"{row[uncovered].tolist()} (NaN cast to bool is True) -- names outside the pool were marked inside")
+    return (f"bool uncovered columns {row[uncovered].tolist()} - i1 uncovered columns "
             f"{[irow[SECURITIES.index(c)] for c in uncovered]}"
-            f"（{len(caught)} 条 cast 告警）")
+            f" ({len(caught)} cast warnings)")
 
 
 def test_write_never_drops_columns_silently():
@@ -622,7 +623,7 @@ def test_write_never_drops_columns_silently():
         except Exception:                                     # noqa: BLE001
             kept = False
     check(err is not None or kept,
-          "写入含轴外列 999 的面板：既没报错、读回来也没有这一列——那一列的数据无声消失了")
+          "writing a panel containing off-axis column 999 neither raised nor read that column back -- its data vanished silently")
     return f"{type(err).__name__ if err else 'kept'}"
 
 
@@ -633,51 +634,51 @@ def test_same_day_rerun_is_idempotent():
     one = panel(SESSIONS[-1:], SECURITIES, 3.0)
     st.write(R2, one); a = st.read(R2).to_numpy().copy(); n_a = st.axes.n_sessions
     st.write(R2, one); b = st.read(R2).to_numpy()
-    check(np.array_equal(a, b, equal_nan=True), "同一天写两遍结果不同")
-    check(st.axes.n_sessions == n_a, f"重跑把轴推长了：{n_a} → {st.axes.n_sessions}")
+    check(np.array_equal(a, b, equal_nan=True), "writing the same day twice gave different results")
+    check(st.axes.n_sessions == n_a, f"the re-run extended the axis: {n_a} -> {st.axes.n_sessions}")
     check(st.meta(R2)["last_session"] == 9, f"last_session={st.meta(R2)['last_session']}")
-    return f"重放同一日逐位相同，n_sessions 恒 {n_a}"
+    return f"replaying the same day is bit-identical; n_sessions stays {n_a}"
 
 
 def test_read_missing_ref_says_where():
     """依赖不存在是最常见的一类失败, 报错必须带上它去哪儿找过（§7.1 唯一的兜底）。"""
     st = fresh("st_missing")
     e = raises(StoreError, st.read, R2)
-    check(R2 in str(e) and str(st.path(R2)) in str(e), f"报错没给出期望路径：{e}")
-    check(not st.exists(R2), "exists 对不存在的节点返回了 True")
-    return "报错含 ref 与期望路径"
+    check(R2 in str(e) and str(st.path(R2)) in str(e), f"the error does not give the expected path: {e}")
+    check(not st.exists(R2), "exists returned True for a node that does not exist")
+    return "the error carries both the ref and the expected path"
 
 
 # ============================================================ 命名与配置 §4.11
 def test_parse_ref_accepts_canonical():
     """`{repo}.{node_dir}.{node_name}-{output}`：kind / ns 从名字里解析, 不另外声明。"""
     r = parse_ref("g_yliu.liq.factor_yliu_liq-adv20")
-    check(isinstance(r, Ref), f"返回的不是 Ref：{type(r).__name__}")
+    check(isinstance(r, Ref), f"did not return a Ref: {type(r).__name__}")
     check((r.repo, r.node_dir, r.node_name, r.output)
-          == ("g_yliu", "liq", "factor_yliu_liq", "adv20"), f"拆错了：{r}")
+          == ("g_yliu", "liq", "factor_yliu_liq", "adv20"), f"parsed incorrectly: {r}")
     check(r.kind == "factor" and r.ns == "yliu", f"kind/ns = {r.kind}/{r.ns}")
-    check(str(r) == "g_yliu.liq.factor_yliu_liq-adv20", f"拼不回去：{r}")
+    check(str(r) == "g_yliu.liq.factor_yliu_liq-adv20", f"does not reassemble: {r}")
     r2 = parse_ref("g_yliu.rev.alpha_yliu_rev_w005-weight")
     check(r2.kind == "alpha" and r2.output == "weight", f"{r2.kind}/{r2.output}")
     check(parse_ref("g_common.field_base_px.adj_close_1500").ns == "base",
-          "g_common 的 ns 段解析错")
-    return f"kind={r.kind} ns={r.ns} output={r.output}，str() 往返一致"
+          "the ns segment of g_common parsed incorrectly")
+    return f"kind={r.kind} ns={r.ns} output={r.output}; str() round-trips"
 
 
 def test_parse_ref_rejects_legacy_and_malformed():
     """老的三段式 `field.base.x` 与叶子无 `-` 必须被拒——它们与新形式看着一样长。"""
     bad = {
-        "field.base.adj_close": "老三段式（kind/ns/name），叶子里没有 `-`",
-        "g_yliu.liq.factor_yliu_liq": "缺 output",
-        "g_yliu.liq.foo_yliu_liq-x": "首段不是 field/factor/alpha",
-        "g_yliu.factor_yliu_liq-adv20": "只有两段",
-        "a.b.c.d-e": "四段",
-        "factor_yliu_liq-adv20": "裸名（neutralize 最容易这么写）",
+        "field.base.adj_close": "the old three-segment form (kind/ns/name), no `-` in the leaf",
+        "g_yliu.liq.factor_yliu_liq": "missing output",
+        "g_yliu.liq.foo_yliu_liq-x": "the first segment is not field/factor/alpha",
+        "g_yliu.factor_yliu_liq-adv20": "only two segments",
+        "a.b.c.d-e": "four segments",
+        "factor_yliu_liq-adv20": "a bare name (the easiest mistake to make in neutralize)",
     }
     for ref, why in bad.items():
         e = raises(ConfigError, parse_ref, ref)
-        check(ref in str(e), f"{why}：报错里没有原串 {ref}")
-    return f"{len(bad)} 种非法引用名全部拒绝"
+        check(ref in str(e), f"{why}: the error does not contain the original {ref}")
+    return f"all {len(bad)} malformed refs were rejected"
 
 
 def test_parse_ref_rejects_broken_leaf():
@@ -687,10 +688,10 @@ def test_parse_ref_rejects_broken_leaf():
     ——报错发生在离原因很远的地方, 且不是 ConfigError, 上层的 friendly 分支接不住。
     """
     bad = {
-        "g_yliu.liq.factor-adv20": "节点名不是 {kind}_{ns}_{name}（Ref.ns 随后 IndexError）",
-        "g_yliu.liq.factor_yliu_liq-": "output 为空 → 目录名以裸连字符结尾",
-        "G_YLIU.LIQ.factor_YLIU_liq-ADV20": "大写（§4.11.1 第 4 条：APFS 上会撞名）",
-        "g_yliu.liq.factor_yliu_liq-a-b": "output 里有连字符（§4.11.1 第 3 条）",
+        "g_yliu.liq.factor-adv20": "the node name is not {kind}_{ns}_{name} (Ref.ns would then IndexError)",
+        "g_yliu.liq.factor_yliu_liq-": "empty output -- the directory name would end in a bare hyphen",
+        "G_YLIU.LIQ.factor_YLIU_liq-ADV20": "uppercase (§4.11.1 item 4: collides on APFS)",
+        "g_yliu.liq.factor_yliu_liq-a-b": "a hyphen inside output (§4.11.1 item 3)",
     }
     passed = {}
     for ref, why in bad.items():
@@ -698,8 +699,8 @@ def test_parse_ref_rejects_broken_leaf():
             parse_ref(ref); passed[ref] = why
         except ConfigError:
             pass
-    check(not passed, f"以下非法引用名被放行：{passed}")
-    return f"{len(bad)} 种畸形叶子全部拒绝"
+    check(not passed, f"these malformed refs were let through: {passed}")
+    return f"all {len(bad)} malformed leaves were rejected"
 
 
 def test_check_name_rejects_leading_digit():
@@ -714,33 +715,33 @@ def test_check_name_rejects_leading_digit():
         compile("ctx.multi_outputs(5dr_250d=v)", "<yaml>", "eval")
     except SyntaxError as e:
         syn = e
-    check(syn is not None, "前提没了：5dr_250d= 居然是合法语法")
-    e = raises(ConfigError, check_name, "5dr_250d", "输出名")
-    check("5dr_250d" in str(e), f"报错没带上名字：{e}")
-    check(check_name("dr5_250d", "输出名") is None, "数字在中间是合法的")
-    return f"5dr_250d 被拒；直接编译得 SyntaxError: {syn.msg}"
+    check(syn is not None, "premise gone: 5dr_250d= turns out to be valid syntax")
+    e = raises(ConfigError, check_name, "5dr_250d", "output name")
+    check("5dr_250d" in str(e), f"the error does not include the name: {e}")
+    check(check_name("dr5_250d", "output name") is None, "a digit in the middle is legal")
+    return f"5dr_250d rejected; compiling it directly gives SyntaxError: {syn.msg}"
 
 
 def test_check_name_rejects_reserved_and_unsafe():
     """§4.11.6 保留字表 + §4.11.1 语法：每一条都对着一个具体的坏结果。"""
     bad = {
-        "class": "Python 关键字 → 关键字参数是 SyntaxError",
-        "return": "同上（§4.11.1 点名的那个）",
-        "Adv20": "大写 → 大小写不敏感文件系统上两台机器不一致",
-        "adj.close": "点号 → 与引用名的分段符冲突",
-        "adj-close": "连字符 → 与 {node_name}-{output} 的接缝冲突",
-        "adj_close_tc": "_tc 结尾 → 那只是源码形态的模板标记",
-        "_axes": "下划线开头 → 与轴目录撞名",
-        "dims": "schema 键", "outputs": "schema 键", "all": "缺省 universe",
-        "region": "schema 键", "sim": "schema 键",
-        "a" * 41: "超过 40 字符",
-        "": "空名",
+        "class": "a Python keyword -- as a keyword argument this is a SyntaxError",
+        "return": "same as above (the one §4.11.1 names explicitly)",
+        "Adv20": "uppercase -- two machines disagree on a case-insensitive filesystem",
+        "adj.close": "a dot -- collides with the ref segment separator",
+        "adj-close": "a hyphen -- collides with the {node_name}-{output} seam",
+        "adj_close_tc": "ends in _tc -- that is only a source-level template marker",
+        "_axes": "leading underscore -- collides with the axes directory",
+        "dims": "a schema key", "outputs": "a schema key", "all": "the default universe",
+        "region": "a schema key", "sim": "a schema key",
+        "a" * 41: "longer than 40 characters",
+        "": "an empty name",
     }
     for s, why in bad.items():
-        raises(ConfigError, check_name, s, "输出名")
+        raises(ConfigError, check_name, s, "output name")
     for good in ("adv20", "adj_close_1500", "mkt_beta_w250", "weight", "rv_5m"):
-        check(check_name(good, "输出名") is None, f"合法名字被拒：{good}")
-    return f"{len(bad)} 个非法名全拒、5 个合法名全过"
+        check(check_name(good, "output name") is None, f"a legal name was rejected: {good}")
+    return f"all {len(bad)} illegal names rejected, all 5 legal names accepted"
 
 
 # ---------------------------------------------------------------- load_spec
@@ -761,16 +762,16 @@ def spec_from(text: str, *, repo="g_yliu", node_dir="liq", stem="liq",
 def test_ns_must_match_repo():
     """§4.11.6：ns 段必须等于所在 repo 的 owner——§二 的写权限模型的名字表达。"""
     e = raises(ConfigError, spec_from, "nodes:\n  factor_lqin_x: {}\n")
-    check("lqin" in str(e) and "yliu" in str(e), f"报错没点出两边：{e}")
+    check("lqin" in str(e) and "yliu" in str(e), f"the error does not name both sides: {e}")
     s = spec_from("nodes:\n  factor_yliu_x: {}\n")
-    check(list(s.nodes) == ["factor_yliu_x"], f"自己的 ns 被误拒：{list(s.nodes)}")
+    check(list(s.nodes) == ["factor_yliu_x"], f"a node's own ns was wrongly rejected: {list(s.nodes)}")
     s = spec_from("nodes:\n  field_base_px: {}\n", repo="g_common", node_dir="base_px",
                   stem="base_px")
-    check(list(s.nodes) == ["field_base_px"], "g_common 应当能写 base 等共享 ns")
+    check(list(s.nodes) == ["field_base_px"], "g_common must be able to write shared ns such as base")
     e = raises(ConfigError, spec_from, "nodes:\n  factor_yliu: {}\n")
-    check("{kind}_{ns}_{name}" in str(e) or "三段" in str(e) or "name" in str(e),
-          f"两段名字的报错文不对题：{e}")
-    return "跨 ns 拒绝 / 自己的 ns 放行 / g_common 豁免 / 两段名拒绝"
+    check("{kind}_{ns}_{name}" in str(e) or "name" in str(e),
+          f"the two-segment-name error is off topic: {e}")
+    return "cross-ns rejected / own ns allowed / g_common exempt / two-segment name rejected"
 
 
 def test_ns_segment_syntax():
@@ -786,7 +787,7 @@ def test_ns_segment_syntax():
     except ConfigError as exc:
         e = exc
     check(e is not None,
-          f"`factor__x` 被接受：ns/outputs = {got}——ns 段没有做语法检查")
+          f"`factor__x` was accepted: ns/outputs = {got} -- the ns segment is not syntax-checked")
     return type(e).__name__
 
 
@@ -798,14 +799,14 @@ def test_single_output_default_name():
     """
     s = spec_from("nodes:\n  factor_yliu_liq:\n    params: {window: 20}\n")
     check(list(s.nodes["factor_yliu_liq"].outputs) == ["liq"],
-          f"数据节点缺省输出名 {list(s.nodes['factor_yliu_liq'].outputs)}，期望去掉前缀的 liq")
+          f"data node default output name {list(s.nodes['factor_yliu_liq'].outputs)}, expected the de-prefixed liq")
     s = spec_from("nodes:\n  factor_yliu_beta_decomp: {}\n", node_dir="bd", stem="bd")
     check(list(s.nodes["factor_yliu_beta_decomp"].outputs) == ["beta_decomp"],
-          "多段 name 的缺省输出名应当是整个去前缀部分")
+          "for a multi-segment name the default output must be the whole de-prefixed part")
     s = spec_from("nodes:\n  alpha_yliu_rev_w005:\n    params: {window: 5}\n"
                   "    ops: [{scale: book}]\n", node_dir="rev", stem="rev")
     check(list(s.nodes["alpha_yliu_rev_w005"].outputs) == ["weight"],
-          f"单输出 alpha 的缺省名 {list(s.nodes['alpha_yliu_rev_w005'].outputs)}，期望 weight")
+          f"single-output alpha default name {list(s.nodes['alpha_yliu_rev_w005'].outputs)}, expected weight")
     e = got = None
     try:
         got = list(spec_from("nodes:\n  factor_yliu_liq:\n    outputs:\n      banana: {}\n"
@@ -813,9 +814,9 @@ def test_single_output_default_name():
     except ConfigError as exc:
         e = exc
     check(e is not None,
-          f"单输出显式写成 {got} 被接受——检查 ③「单输出 key == 缺省名」没有实现，"
-          f"节点 factor_yliu_liq 的缺省名是 'liq'")
-    return "数据节点/多段名/alpha 三条缺省都对"
+          f"a single output written explicitly as {got} was accepted -- check 3 (single-output key == "
+          f"default name) is not implemented; the default for factor_yliu_liq is 'liq'")
+    return "all three defaults are right: data node, multi-segment name, alpha"
 
 
 def test_alpha_must_be_rank2_and_end_with_scale():
@@ -828,28 +829,28 @@ def test_alpha_must_be_rank2_and_end_with_scale():
                "nodes:\n  alpha_yliu_x:\n    outputs:\n"
                "      weight: {dims: [di, ii, ti], grid: m5, ops: [{scale: book}]}\n",
                node_dir="a1", stem="a1")
-    check("秩-2" in str(e) or "di×ii" in str(e), f"秩报错文不对题：{e}")
+    check("rank-2" in str(e) or "di x ii" in str(e), f"the rank error is off topic: {e}")
     e = raises(ConfigError, spec_from, "nodes:\n  alpha_yliu_x:\n    ops: [rank]\n",
                node_dir="a2", stem="a2")
-    check("scale" in str(e), f"收尾报错没提 scale：{e}")
+    check("scale" in str(e), f"the trailing-op error does not mention scale: {e}")
     e = raises(ConfigError, spec_from, "nodes:\n  alpha_yliu_x: {}\n",
                node_dir="a3", stem="a3")
-    check("scale" in str(e), f"空 ops 的 alpha 也必须被拒：{e}")
+    check("scale" in str(e), f"an alpha with empty ops must also be rejected: {e}")
     e = raises(ConfigError, spec_from,
                "nodes:\n  alpha_yliu_x:\n    ops: [{scale: book}, rank]\n",
                node_dir="a4", stem="a4")
-    check("scale" in str(e), f"scale 不在最后也必须被拒：{e}")
+    check("scale" in str(e), f"scale not being last must also be rejected: {e}")
     s = spec_from("nodes:\n  alpha_yliu_x:\n    ops:\n      - rank\n      - truncate: 0.02\n"
                   "      - scale: book\n", node_dir="a5", stem="a5")
     check([o for o, _ in s.nodes["alpha_yliu_x"].outputs["weight"].ops][-1] == "scale",
-          "合法链被改了")
-    return "秩-3 / 无 scale / 空链 / scale 不在末尾 四种全拒"
+          "a legal chain was altered")
+    return "all four rejected: rank-3, no scale, empty chain, scale not last"
 
 
 def test_cs_ops_only_on_rank2():
     """§3.6：CS 类作用在 ii 上, 仅秩-2 合法；秩-1 没有 ii 轴, 秩-3 的轴不明确。"""
-    for dims, extra, tag in [("[di]", "", "秩-1"),
-                             ("[di, ii, ti]", ", grid: m5", "秩-3")]:
+    for dims, extra, tag in [("[di]", "", "rank-1"),
+                             ("[di, ii, ti]", ", grid: m5", "rank-3")]:
         for op in sorted(CS_OPS):
             arg = {"rank": "", "truncate": ": 0.02", "scale": ": book",
                    "neutralize": ": g_common.factor_common_gics.sector"}[op]
@@ -860,19 +861,19 @@ def test_cs_ops_only_on_rank2():
                        f"nodes:\n  factor_yliu_m:\n    outputs:\n"
                        f"      m: {{dims: {dims}{extra}, ops: [{op}]}}\n",
                        node_dir="cs", stem="cs")
-            check(op in str(e) and ("CS" in str(e) or "秩-2" in str(e)),
-                  f"{tag} 上的 {op} 报错文不对题：{e}")
+            check(op in str(e) and ("CS" in str(e) or "rank-2" in str(e)),
+                  f"the error for {op} on {tag} is off topic: {e}")
     for op in sorted(TS_OPS):                       # TS 类三种秩皆合法
         arg = {"linear_decay": 3, "exp_decay": 5, "delay": 1}[op]
         s = spec_from(f"nodes:\n  factor_yliu_m:\n    outputs:\n"
                       f"      m: {{dims: [di], ops: [{{{op}: {arg}}}]}}\n",
                       node_dir="ts", stem="ts")
-        check(s.nodes["factor_yliu_m"].outputs["m"].ops == [(op, arg)], f"{op} 在秩-1 被拒")
+        check(s.nodes["factor_yliu_m"].outputs["m"].ops == [(op, arg)], f"{op} was rejected on rank-1")
     e = raises(ConfigError, spec_from,
                "nodes:\n  factor_yliu_m:\n    outputs:\n      m: {dims: [di, ii, ti]}\n",
                node_dir="g", stem="g")
-    check("grid" in str(e), f"秩-3 缺 grid 的报错文不对题：{e}")
-    return f"秩-1/秩-3 × {len(CS_OPS)} 个 CS 算子全拒；{len(TS_OPS)} 个 TS 算子在秩-1 放行"
+    check("grid" in str(e), f"the missing-grid error for rank-3 is off topic: {e}")
+    return f"rank-1/rank-3 x {len(CS_OPS)} CS ops all rejected; {len(TS_OPS)} TS ops allowed on rank-1"
 
 
 def test_op_arg_types():
@@ -886,13 +887,13 @@ def test_op_arg_types():
                "nodes:\n  alpha_yliu_x:\n    ops:\n      - rank\n"
                "      - truncate: 0.02,\n      - scale: book\n", node_dir="o1", stem="o1")
     check("truncate" in str(e) and ("str" in str(e) or "0.02," in str(e)),
-          f"逗号案的报错没点出收到的是字符串：{e}")
+          f"the trailing-comma error does not say a string was received: {e}")
     bad = [
-        ("truncate", "'0.02'", "带引号的数"), ("truncate", "true", "bool 不是数"),
-        ("linear_decay", "3.5", "小数不是正整数"), ("linear_decay", "0", "0 不是正整数"),
-        ("linear_decay", "-3", "负数"), ("delay", "'2'", "字符串"),
-        ("exp_decay", "true", "bool"), ("neutralize", "sector", "裸名不是全 ref"),
-        ("neutralize", "3", "不是名字"), ("rank", "3", "rank 不接受参数"),
+        ("truncate", "'0.02'", "a quoted number"), ("truncate", "true", "a bool is not a number"),
+        ("linear_decay", "3.5", "a decimal is not a positive integer"), ("linear_decay", "0", "0 is not a positive integer"),
+        ("linear_decay", "-3", "a negative number"), ("delay", "'2'", "a string"),
+        ("exp_decay", "true", "a bool"), ("neutralize", "sector", "a bare name is not a full ref"),
+        ("neutralize", "3", "not a name"), ("rank", "3", "rank takes no argument"),
     ]
     for op, arg, why in bad:
         raises(ConfigError, spec_from,
@@ -900,16 +901,17 @@ def test_op_arg_types():
                node_dir="o2", stem="o2")
     e = raises(ConfigError, spec_from,
                "nodes:\n  factor_yliu_m:\n    ops: [zscore]\n", node_dir="o3", stem="o3")
-    check("zscore" in str(e) and "可用" in str(e), f"未知算子的报错没列出可用算子：{e}")
+    check("zscore" in str(e) and "available" in str(e),
+          f"the unknown-op error does not list the available ops: {e}")
     s = spec_from("nodes:\n  factor_yliu_m:\n    ops:\n      - rank\n"
                   "      - truncate: 0.02\n      - linear_decay: 3\n"
                   "      - neutralize: g_common.factor_common_gics.sector\n",
                   node_dir="o4", stem="o4")
     ops = s.nodes["factor_yliu_m"].outputs["m"].ops
     check(ops[1] == ("truncate", 0.02) and ops[2] == ("linear_decay", 3),
-          f"合法参数被改了：{ops}")
-    check(set(OP_TYPES) == CS_OPS | TS_OPS, f"算子分类漂移：{set(OP_TYPES) ^ (CS_OPS | TS_OPS)}")
-    return f"逗号案 + {len(bad)} 种错类型 + 未知算子全拒；合法链原样保留"
+          f"legal arguments were altered: {ops}")
+    check(set(OP_TYPES) == CS_OPS | TS_OPS, f"op classification has drifted: {set(OP_TYPES) ^ (CS_OPS | TS_OPS)}")
+    return f"trailing comma + {len(bad)} wrong types + unknown op all rejected; legal chains preserved"
 
 
 def test_node_level_ops_with_multiple_outputs():
@@ -929,7 +931,7 @@ def test_node_level_ops_with_multiple_outputs():
         e = exc
     got = None if s is None else {k: v.ops for k, v in s.nodes["factor_yliu_two"].outputs.items()}
     check(e is not None or all(o for o in got.values()),
-          f"节点级 ops [rank, truncate] 配 2 个输出 → 实得 {got}，ops 链被静默丢弃")
+          f"node-level ops [rank, truncate] with 2 outputs gave {got} -- the ops chain was silently dropped")
     return type(e).__name__ if e else str(got)
 
 
@@ -938,12 +940,12 @@ def test_node_ops_and_output_ops_conflict():
     e = raises(ConfigError, spec_from,
                "nodes:\n  factor_yliu_two:\n    ops: [rank]\n    outputs:\n"
                "      a: {ops: [rank]}\n      b: {}\n", node_dir="tw2", stem="tw2")
-    check("同时" in str(e), f"报错文不对题：{e}")
+    check("both" in str(e), f"the error is off topic: {e}")
     s = spec_from("nodes:\n  factor_yliu_one:\n    ops:\n      - truncate: 0.02\n"
                   "    outputs:\n      one: {}\n", node_dir="tw3", stem="tw3")
     check(s.nodes["factor_yliu_one"].outputs["one"].ops == [("truncate", 0.02)],
-          "单输出时节点级 ops 应当落到那唯一的输出上")
-    return "并存拒绝；单输出时节点级 ops 生效"
+          "with a single output, node-level ops must land on that one output")
+    return "coexistence rejected; node-level ops take effect for a single output"
 
 
 def test_param_tag_consistency():
@@ -955,28 +957,28 @@ def test_param_tag_consistency():
     s = spec_from("nodes:\n  factor_yliu_adv20:\n    params: {window: 20}\n",
                   node_dir="t1", stem="t1")
     check(list(s.nodes) == ["factor_yliu_adv20"],
-          "单个从未被扫描的粘连名（adv20）应当放行——§4.11.4 的行业惯用语豁免")
+          "a lone unscanned run-on name (adv20) must pass -- the idiom exemption of §4.11.4")
     two = ("nodes:\n  alpha_yliu_rev_w005:\n    params: {window: %s}\n"
            "    ops: [{scale: book}]\n"
            "  alpha_yliu_rev_w020:\n    params: {window: 20}\n    ops: [{scale: book}]\n")
     s = spec_from(two % 5, node_dir="t2", stem="t2")
-    check(len(s.nodes) == 2, "对得上的一族被误拒")
+    check(len(s.nodes) == 2, "a consistent family was wrongly rejected")
     e = raises(ConfigError, spec_from, two % 20, node_dir="t3", stem="t3")
-    check("w005" in str(e) or "005" in str(e), f"报错没指出是哪个成员：{e}")
+    check("w005" in str(e) or "005" in str(e), f"the error does not say which member: {e}")
     e = raises(ConfigError, spec_from,
                "nodes:\n  alpha_yliu_rev_w005:\n    params: {window: 5}\n"
                "    ops: [{scale: book}]\n"
                "  alpha_yliu_rev_slow:\n    params: {window: 20}\n    ops: [{scale: book}]\n",
                node_dir="t4", stem="t4")
-    check("标签" in str(e), f"一族里缺标签的报错文不对题：{e}")
+    check("tag" in str(e), f"the missing-tag-within-a-family error is off topic: {e}")
     e = raises(ConfigError, spec_from,
                "nodes:\n  factor_yliu_x_h010:\n    params: {halflife: 20}\n"
                "  factor_yliu_x_h020:\n    params: {halflife: 20}\n",
                node_dir="t5", stem="t5")
-    check("h" in str(e), f"halflife 标签没被校验：{e}")
+    check("h" in str(e), f"the halflife tag was not validated: {e}")
     check(set(TAGS) >= {"window", "halflife", "lag", "quantile", "count"},
-          f"标签字典缩水：{TAGS}")
-    return f"孤例豁免 / 一族对上放行 / 值不符与缺标签均拒（{len(TAGS)} 个标签）"
+          f"the tag dictionary shrank: {TAGS}")
+    return f"lone case exempt / consistent family allowed / mismatched value and missing tag both rejected ({len(TAGS)} tags)"
 
 
 def test_fingerprint_covers_the_definition():
@@ -992,14 +994,14 @@ def test_fingerprint_covers_the_definition():
     base = spec_from(body % dep, node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
     p = spec_from((body % dep).replace("window: 20", "window: 21"),
                   node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
-    check(p != base, "改 params 指纹没变")
+    check(p != base, "changing params did not change the fingerprint")
     d = spec_from(body % "g_common.field_base_px.volume_1500",
                   node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
-    check(d != base, "换 deps 指纹没变")
+    check(d != base, "changing deps did not change the fingerprint")
     c = spec_from(body % dep, node_dir="fp", stem="fp",
                   code="def handle(ctx):\n    return 1.0\n"
                   ).nodes["factor_yliu_f"].fingerprint()
-    check(c != base, "改 code 指纹没变")
+    check(c != base, "changing code did not change the fingerprint")
     u = spec_from("universe: g_common.field_common_univ.us_top400\n" + (body % dep),
                   node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
     u2 = spec_from("universe: g_common.field_common_univ.us_top3000\n" + (body % dep),
@@ -1007,9 +1009,10 @@ def test_fingerprint_covers_the_definition():
     lb = spec_from("lookback: 250\n" + (body % dep),
                    node_dir="fp", stem="fp").nodes["factor_yliu_f"].fingerprint()
     check(u != u2 and lb != base,
-          f"改 universe（top400 → top3000）指纹相同={u == u2}、改 lookback 指纹相同="
-          f"{lb == base}——这两项逐值改变输出却不进指纹，日更会静默放行")
-    return f"params/deps/code 三项均改变指纹（{base[:14]}…）"
+          f"changing universe (top400 -> top3000) same fingerprint={u == u2}, changing lookback same="
+          f"{lb == base} -- both change the output value by value yet do not enter the fingerprint, "
+          f"so the daily update would pass silently")
+    return f"params/deps/code all change the fingerprint ({base[:14]}...)"
 
 
 def test_op_contract_matches_runner():
@@ -1017,11 +1020,11 @@ def test_op_contract_matches_runner():
     try:
         from alpha_kit.runner.ops import OPS, OpChain
     except Exception as e:                          # noqa: BLE001
-        return f"跳过（runner.ops 不可导入：{e}）"
-    check(set(OPS) == set(OP_TYPES), f"算子集合漂移：{set(OPS) ^ set(OP_TYPES)}")
+        return f"skipped (runner.ops could not be imported: {e})"
+    check(set(OPS) == set(OP_TYPES), f"op sets have drifted: {set(OPS) ^ set(OP_TYPES)}")
     runtime_ok = True
     try:
-        OpChain([("rank", None), ("scale", None)], None)     # 执行期允许裸 scale
+        OpChain([("rank", None), ("scale", None)], None)     # a bare scale is allowed at runtime
     except Exception:                               # noqa: BLE001
         runtime_ok = False
     cfg_ok = True
@@ -1031,36 +1034,36 @@ def test_op_contract_matches_runner():
     except ConfigError:
         cfg_ok = False
     check(runtime_ok == cfg_ok,
-          f"`ops: [rank, scale]`（不带参数的 scale）执行期接受={runtime_ok}、"
-          f"编译期接受={cfg_ok}——OP_TYPES['scale'] 是 str，None 过不去，"
-          f"而 OpChain 明确把 None 当作 book")
-    return f"{len(OPS)} 个算子名一致，裸 scale 两侧一致={runtime_ok == cfg_ok}"
+          f"`ops: [rank, scale]` (scale with no argument) accepted at runtime={runtime_ok}, at compile "
+          f"time={cfg_ok} -- OP_TYPES['scale'] is str so None does not pass, while OpChain "
+          f"explicitly treats None as book")
+    return f"{len(OPS)} op names agree; bare scale agrees on both sides={runtime_ok == cfg_ok}"
 
 
 def test_real_repo_specs_load():
     """仓库里现成的 yaml 必须都能加载——它们是 §4.10 那条研究链的实物。"""
     root = Path(__file__).resolve().parents[1] / "repos"
     if not root.exists():
-        return "跳过（没有 repos/）"
+        return "skipped (no repos/)"
     files = sorted(root.glob("g_*/nodes/*/*.yaml"))
-    check(files, f"没找到任何节点 yaml：{root}")
+    check(files, f"found no node yaml at all: {root}")
     n_nodes = n_alpha = 0
     for f in files:
         s = load_spec(f)
         n_nodes += len(s.nodes)
         for node in s.nodes.values():
-            check(node.repo == f.parents[2].name, f"{f}: repo 推导错 {node.repo}")
-            check(node.node_dir == f.parent.name, f"{f}: node_dir 推导错 {node.node_dir}")
+            check(node.repo == f.parents[2].name, f"{f}: repo inferred incorrectly as {node.repo}")
+            check(node.node_dir == f.parent.name, f"{f}: node_dir inferred incorrectly as {node.node_dir}")
             check(node.kind in KINDS, f"{f}: kind={node.kind}")
             for k, o in node.outputs.items():
                 # 折叠规则（§4.11）：node_name 与 node_dir 同名时中间那段省略
                 want = k if node.name == node.node_dir else f"{node.name}-{k}"
-                check(str(node.ref(k)).endswith(want), f"{f}: ref 拼错")
+                check(str(node.ref(k)).endswith(want), f"{f}: ref assembled incorrectly")
             if node.kind == "alpha":
                 n_alpha += 1
                 check(all(node.ref(k).output == "weight" for k in node.outputs)
-                      or len(node.outputs) > 1, f"{f}: 单输出 alpha 不叫 weight")
-    return f"{len(files)} 个 yaml / {n_nodes} 个节点（{n_alpha} 个 alpha）全部加载通过"
+                      or len(node.outputs) > 1, f"{f}: the single output of an alpha is not called weight")
+    return f"{len(files)} yaml files / {n_nodes} nodes ({n_alpha} alphas) all loaded"
 
 
 TESTS = [
@@ -1115,14 +1118,14 @@ TESTS = [
 if __name__ == "__main__":
     shutil.rmtree(TMP, ignore_errors=True)
     TMP.mkdir(parents=True, exist_ok=True)
-    print(f"core 自检  ({len(TESTS)} 项)  zarr {zarr.__version__} / "
+    print(f"core self-check  ({len(TESTS)} tests)  zarr {zarr.__version__} / "
           f"pandas {pd.__version__} / numpy {np.__version__}")
-    print(f"临时 store: {TMP}\n")
+    print(f"temp store: {TMP}\n")
     for t in TESTS:
         run(t)
-    print(f"\n{len(TESTS) - len(FAILS)}/{len(TESTS)} 通过")
+    print(f"\n{len(TESTS) - len(FAILS)}/{len(TESTS)} passed")
     if FAILS:
-        print("\n红的这几条不是测试环境问题, 每条都对着 architecture.md 里明写的一条承诺：")
+        print("\nThese failures are not environment problems -- each maps to a promise written in architecture.md:")
         for i, (name, msg) in enumerate(FAILS, 1):
             print(f"  {i}. {name}\n     {msg.splitlines()[0]}")
     sys.exit(1 if FAILS else 0)

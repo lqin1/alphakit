@@ -86,19 +86,19 @@ def test_identity():
     prev = np.vstack([np.zeros((1, N)), hv[:-1]])
     resid = hv - (prev + pl + inflow)
     tol = 1e-9 * B                                            # f64 相对精度 ~2e-16，账本 2e7 美元
-    close(resid, 0.0, tol, "逐股逐日恒等式 pos_t = pos_{t-1} + pnl_t + (δ+settle+cost)",
+    close(resid, 0.0, tol, "per-name per-day identity pos_t = pos_{t-1} + pnl_t + (delta+settle+cost)",
           f"（tol = 1e-9 × booksize = ${tol:.3g}）")
 
     d = res.daily
     nav = d["nav"].to_numpy()
     nav_prev = np.concatenate([[0.0], nav[:-1]])
     close(nav - (nav_prev + d["pnl"].to_numpy()), 0.0, 1e-6,
-          "NAV 恒等式 Σpos_t + cash_t = Σpos_{t-1} + cash_{t-1} + Σpnl_t")
-    close(nav[-1], d["pnl"].sum(), 1e-6, "NAV 终值 = 累计损益（现金腿初值 0）")
+          "NAV identity Sigma pos_t + cash_t = Sigma pos_{t-1} + cash_{t-1} + Sigma pnl_t")
+    close(nav[-1], d["pnl"].sum(), 1e-6, "final NAV equals cumulative pnl (the cash leg starts at 0)")
     close(d["pnl"].to_numpy(), (d["holding_pnl"] - d["cost"]).to_numpy(), 1e-9,
           "daily.pnl = holding_pnl + trading_pnl − cost")
-    close(pl.sum(axis=1), d["pnl"].to_numpy(), 1e-8, "逐股 pnl 横向求和 = daily.pnl")
-    check(np.isfinite(hv).all() and np.isfinite(pl).all(), "全程无 NaN/Inf 持仓与损益")
+    close(pl.sum(axis=1), d["pnl"].to_numpy(), 1e-8, "per-name pnl summed across names equals daily.pnl")
+    check(np.isfinite(hv).all() and np.isfinite(pl).all(), "no NaN/Inf positions or pnl anywhere")
 
     # 无成本时同一条恒等式退化为逐位精确（唯一的舍入来源就是 ±cost 的分组）
     res0 = simulate(panel(W, dates, cols), panel(R, dates, cols), booksize=B,
@@ -108,7 +108,7 @@ def test_identity():
     fl0 = res0.flows["trade"].to_numpy() + res0.flows["settle"].to_numpy()
     prev0 = np.vstack([np.zeros((1, N)), hv0[:-1]])
     r0 = float(np.max(np.abs(hv0 - (prev0 + pl0 + fl0))))
-    check(r0 == 0.0, "cost≡0 时恒等式**逐位精确**（残差恰为 0.0）", f"residual = {r0!r}")
+    check(r0 == 0.0, "with cost identically 0 the identity holds BIT-EXACTLY (residual is exactly 0.0)", f"residual = {r0!r}")
     say(f"    ghost_days={res.audit['ghost_days']} ghost_cells={res.audit['ghost_cells']} "
         f"delist_events={res.audit['delist_events']} halt_cells={res.audit['halt_cells']}")
 
@@ -133,15 +133,15 @@ def test_split():
     px = [100.0, 100.0, 50.0]                      # 第 3 日 1 股拆 2 股
     tot = [0.0, 0.0, (50.0 * 2) / 100.0 - 1.0]     # 复权总收益：拆股不是收益
     res, v, sh = _hold_one(px, tot)
-    check(abs(v[2] - v[1]) < 1e-9, "拆股日持仓价值连续", f"{v[1]:,.2f} → {v[2]:,.2f}")
-    check(abs(sh[2] / sh[1] - 2.0) < 1e-12, "隐含股数恰好翻倍",
-          f"{sh[1]:,.2f} → {sh[2]:,.2f} 股")
-    check(abs(res.daily['pnl'].iloc[2]) < 1e-9, "拆股日 pnl = 0（不是 −50%）",
+    check(abs(v[2] - v[1]) < 1e-9, "position value is continuous across a split", f"{v[1]:,.2f} → {v[2]:,.2f}")
+    check(abs(sh[2] / sh[1] - 2.0) < 1e-12, "implied share count exactly doubles",
+          f"{sh[1]:,.2f} -> {sh[2]:,.2f} shares")
+    check(abs(res.daily['pnl'].iloc[2]) < 1e-9, "pnl on the split day is 0 (not -50%)",
           f"pnl = {res.daily['pnl'].iloc[2]:.6f}")
     # 反面：若误喂原始价收益（−50%），账本当场亏掉一半——split_factor 账本的经典事故。
     # 比的是 pnl 而不是收盘持仓：账本每天重新瞄准 booksize，收盘价值总会被买回来。
     bad, _, _ = _hold_one(px, [0.0, 0.0, 50.0 / 100.0 - 1.0])
-    check(abs(bad.daily["pnl"].iloc[2] + 500_000) < 1e-6, "对照：喂原始价收益则当日亏 50%",
+    check(abs(bad.daily["pnl"].iloc[2] + 500_000) < 1e-6, "control: feeding raw-price returns loses 50% that day",
           f"pnl = {bad.daily['pnl'].iloc[2]:,.0f}")
 
 
@@ -151,15 +151,15 @@ def test_dividend():
     tot = [0.0, 0.0, (100.0 - 100.0 + div) / 100.0]        # 除息日价格未动 + 1 美元分红
     res, v, sh = _hold_one(px, tot)
     pnl = res.daily["pnl"].iloc[2]
-    check(abs(pnl - sh[1] * div) < 1e-6, "分红日 pnl = 昨日股数 × 每股分红",
-          f"pnl = {pnl:,.2f}  股数 {sh[1]:,.2f} × ${div}")
+    check(abs(pnl - sh[1] * div) < 1e-6, "pnl on the dividend day equals yesterday's share count times the dividend per share",
+          f"pnl = {pnl:,.2f}  shares {sh[1]:,.2f} x ${div}")
     # 分红先按总收益推进进价值账本（= 再投资），当日再平衡时被原样卖回目标——
     # 故当日 delta 恰等于 −分红额，账本无需任何现金账户改写。
     res2, _, _ = _hold_one(px, tot, keep_flows=True)
     trim = res2.flows["trade"].iloc[2, 0]
-    check(abs(trim + pnl) < 1e-6, "分红先入价值账本、当日再平衡按 −分红额修剪回目标",
+    check(abs(trim + pnl) < 1e-6, "the dividend enters the value ledger first, then same-day rebalancing trims back to target by the dividend amount",
           f"delta = {trim:,.2f} vs pnl = {pnl:,.2f}")
-    check(abs(v[2] - 1e6) < 1e-6, "收盘回到满仓 1M（每日重新瞄准 booksize）",
+    check(abs(v[2] - 1e6) < 1e-6, "the close returns to a full 1M book (booksize is re-targeted daily)",
           f"{v[1]:,.2f} → {v[2]:,.2f}")
 
 
@@ -179,24 +179,24 @@ def test_halt():
                    is_halted=halted, cost_bps=0.0)
     hv, d = res.holding_value, res.daily
     a = hv.iloc[:, 0].to_numpy()
-    check(res.audit["ghost_detection"] == "field", "检测口径 = field",
+    check(res.audit["ghost_detection"] == "field", "detection basis = field",
           res.audit["ghost_detection"])
-    check(np.isfinite(a).all(), "停牌日持仓不是 NaN（§8.2 注 1）", f"{a[3]:,.0f}")
-    check(abs(a[3] - a[2]) < 1e-9 and abs(a[4] - a[3]) < 1e-9, "停牌两日持仓原地冻结",
+    check(np.isfinite(a).all(), "a halted-day position is not NaN (§8.2 note 1)", f"{a[3]:,.0f}")
+    check(abs(a[3] - a[2]) < 1e-9 and abs(a[4] - a[3]) < 1e-9, "the position stays frozen in place across two halted days",
           f"{a[2]:,.0f} / {a[3]:,.0f} / {a[4]:,.0f}")
-    check(np.isfinite(d["pnl"].to_numpy()).all(), "停牌日 daily.pnl 是有限数")
+    check(np.isfinite(d["pnl"].to_numpy()).all(), "daily.pnl is finite on halted days")
     check(abs(res.pnl.iloc[3, 0]) < 1e-12 and abs(res.pnl.iloc[4, 0]) < 1e-12,
-          "停牌日该票 pnl = 0")
+          "that name's pnl is 0 on halted days")
     gap = res.pnl.iloc[5, 0]
-    check(abs(gap - a[4] * 0.10) < 1e-6, "跳空损益一次性落在复牌日",
+    check(abs(gap - a[4] * 0.10) < 1e-6, "the gap pnl lands in one piece on the resumption day",
           f"{gap:,.2f} = {a[4]:,.0f} × 10%")
-    check(abs(d['frozen_value'].iloc[3] - abs(a[3])) < 1e-9, "frozen_value = 冻结票 gross",
+    check(abs(d['frozen_value'].iloc[3] - abs(a[3])) < 1e-9, "frozen_value equals the gross of the frozen names",
           f"{d['frozen_value'].iloc[3]:,.0f}")
     check(abs(d['avail'].iloc[3] - (B - abs(a[3]))) < 1e-9, "avail = booksize − frozen_value",
           f"{d['avail'].iloc[3]:,.0f}")
     check(abs(d['frozen_reprice_pnl'].iloc[5] - gap) < 1e-6,
-          "frozen_reprice_pnl 单列出复牌重估损益", f"{d['frozen_reprice_pnl'].iloc[5]:,.2f}")
-    check(res.audit["ghost_days"] == 0, "有正向 is_halted 时无幽灵持仓")
+          "frozen_reprice_pnl reports the resumption revaluation pnl separately", f"{d['frozen_reprice_pnl'].iloc[5]:,.2f}")
+    check(res.audit["ghost_days"] == 0, "with a positive is_halted there are no ghost positions")
 
 
 # =====================================================================
@@ -214,22 +214,22 @@ def test_delist():
                    delist_date=delist, halt_proxy=2, cost_bps=0.0)
     hv, d = res.holding_value, res.daily
     a, b = hv.iloc[:, 0].to_numpy(), hv.iloc[:, 1].to_numpy()
-    check(abs(res.pnl.iloc[4, 0] - a[3] * -0.30) < 1e-6, "退市日按最终对价计损益",
+    check(abs(res.pnl.iloc[4, 0] - a[3] * -0.30) < 1e-6, "pnl on the delisting day uses the final consideration",
           f"{res.pnl.iloc[4, 0]:,.2f} = {a[3]:,.0f} × −30%")
-    check(a[4] == 0.0, "退市日收盘该票已平仓", f"pos = {a[4]}")
+    check(a[4] == 0.0, "that name is flat by the close of the delisting day", f"pos = {a[4]}")
     check(d["delist_close_value"].iloc[4] > 0 and res.audit["delist_events"] == 1,
-          "delist_events 计到 1（退市路径不是死代码）",
-          f"释放 {d['delist_close_value'].iloc[4]:,.0f}")
-    check(d["frozen_value"].iloc[5:].max() == 0.0, "退市后不再占用 frozen_value（资金回收）",
+          "delist_events reaches 1 (the delisting path is not dead code)",
+          f"released {d['delist_close_value'].iloc[4]:,.0f}")
+    check(d["frozen_value"].iloc[5:].max() == 0.0, "after delisting no frozen_value is tied up (capital is recovered)",
           f"max = {d['frozen_value'].iloc[5:].max():,.0f}")
     check(abs(b[3] - B / 2) < 1e-6 and abs(b[4] - B) < 1e-6,
-          "释放的资金当日就回到活票上（退市 = 资金回收，不是占用）",
-          f"另一票 {b[3]:,.0f} → {b[4]:,.0f}")
+          "the released capital returns to live names the same day (delisting recovers capital, it does not tie it up)",
+          f"the other name {b[3]:,.0f} -> {b[4]:,.0f}")
     # [偏离 4]：退市当日不许买进一只将死的票，只许卖出
     r2 = simulate(panel(W, dates, cols), panel(R, dates, cols), booksize=B,
                   delist_date=delist, halt_proxy=2, cost_bps=0.0, keep_flows=True)
     dlt = r2.flows["trade"].iloc[4, 0]
-    check(dlt <= 0, "退市当日只减仓不加仓（否则凭空抬高 trade_dollar 与成本）",
+    check(dlt <= 0, "the delisting day only reduces the position, never adds (otherwise trade_dollar and cost are inflated from nothing)",
           f"delta = {dlt:,.2f}")
 
 
@@ -256,23 +256,23 @@ def test_both_sides_frozen():
     gross = abs(pos[0]) + abs(pos[1])
     signed = pos[0] + pos[1]
     check(abs(d["frozen_value"].iloc[2] - gross) < 1e-6,
-          "frozen_value = 两侧 gross 之和（而非带符号和）",
-          f"frozen_value = {d['frozen_value'].iloc[2]:,.0f}，两侧 gross = {gross:,.0f}")
+          "frozen_value is the sum of both sides' gross, not the signed sum",
+          f"frozen_value = {d['frozen_value'].iloc[2]:,.0f}, both-side gross = {gross:,.0f}")
     check(abs(signed) < 1e-6,
-          "对照：带符号和 ≈ 0 —— 写错就会让 avail ≈ booksize、冻结重分配等于没做",
-          f"带符号和 = {signed:,.2f}")
-    check(abs(d["avail"].iloc[2] - (B - gross)) < 1e-6, "avail 扣掉了 10M 而不是 0",
-          f"avail = {d['avail'].iloc[2]:,.0f}（若用带符号和会是 {B:,.0f}）")
+          "control: the signed sum is about 0 -- getting this wrong makes avail about booksize and the frozen reallocation a no-op",
+          f"signed sum = {signed:,.2f}")
+    check(abs(d["avail"].iloc[2] - (B - gross)) < 1e-6, "avail deducted 10M rather than 0",
+          f"avail = {d['avail'].iloc[2]:,.0f} (the signed sum would have given {B:,.0f})")
     live = abs(hv.iloc[2, 2]) + abs(hv.iloc[2, 3])
-    check(abs(live - (B - gross)) < 1e-6, "可交易的两只把 avail 投满（可交易部分始终满仓）",
+    check(abs(live - (B - gross)) < 1e-6, "the two tradable names deploy avail fully (the tradable part is always fully invested)",
           f"{live:,.0f}")
     check(d["realloc_turnover"].iloc[2] > 0 and d["gap_realloc"].iloc[2] > 0,
-          "冻结引起的摩擦换手单列在 realloc_turnover，不混进 alpha 换手",
+          "friction turnover caused by freezing is reported in realloc_turnover, not mixed into alpha turnover",
           f"realloc {d['realloc_turnover'].iloc[2]:.3%} / alpha {d['alpha_turnover'].iloc[2]:.3%}"
           f" / gap_realloc {d['gap_realloc'].iloc[2]:,.0f}")
     close((d["alpha_turnover"] + d["realloc_turnover"]).to_numpy(),
           (d["trade_dollar"] / B).to_numpy(), 1e-15,
-          "两块换手恰好把当日成交额分完（alpha + realloc ≡ turnover）")
+          "the two turnover components exactly partition the day's traded value (alpha + realloc == turnover)")
 
 
 # =====================================================================
@@ -287,17 +287,17 @@ def test_all_frozen():
     halted = pd.DataFrame(False, index=dates, columns=cols)
     halted.iloc[2:, :] = True
     with warnings.catch_warnings():
-        warnings.simplefilter("error", RuntimeWarning)   # 除零/无效值会以 RuntimeWarning 现身
+        warnings.simplefilter("error", RuntimeWarning)   # division by zero / invalid values surface as RuntimeWarning
         res = simulate(panel(W, dates, cols), panel(R, dates, cols), booksize=B,
                        is_halted=halted, cost_bps=1.0)
     d, hv = res.daily, res.holding_value
     check(np.isfinite(hv.to_numpy()).all() and np.isfinite(res.pnl.to_numpy()).all(),
-          "全员冻结不产生 NaN/Inf（不除零）")
+          "freezing everything produces no NaN/Inf (no division by zero)")
     check(abs(d["avail"].iloc[2]) < 1e-9, "avail = 0", f"{d['avail'].iloc[2]}")
-    check(d["trade_dollar"].iloc[2:].sum() == 0.0, "avail=0 时不产生任何交易",
+    check(d["trade_dollar"].iloc[2:].sum() == 0.0, "no trades occur when avail is 0",
           f"trade_dollar = {d['trade_dollar'].iloc[2:].sum()}")
-    check(d["cost"].iloc[2:].sum() == 0.0, "也不产生任何成本")
-    check(abs(d["frozen_value"].iloc[2] - B) < 1e-6, "整本 booksize 全被冻结",
+    check(d["cost"].iloc[2:].sum() == 0.0, "and no cost is incurred either")
+    check(abs(d["frozen_value"].iloc[2] - B) < 1e-6, "the entire booksize is frozen",
           f"{d['frozen_value'].iloc[2]:,.0f}")
 
 
@@ -315,15 +315,15 @@ def test_ghost_detection():
 
     try:
         simulate(w_, r_, booksize=B)
-        check(False, "无 is_halted 且无 halt_proxy 时必须拒绝运行")
+        check(False, "must refuse to run when there is neither is_halted nor halt_proxy")
     except SimError as e:
-        check("拒绝运行" in str(e), "无正向停牌信号 → 拒绝运行（不静默降级）",
+        check("Refusing to run" in str(e), "no positive halt signal means refuse to run, not silently degrade",
               str(e).splitlines()[0])
     try:
         simulate(w_, r_, booksize=B, halt_proxy=1)
-        check(False, "halt_proxy=1 必须被拒")
+        check(False, "halt_proxy=1 must be rejected")
     except SimError as e:
-        check("K=1" in str(e), "halt_proxy=1 被拒（否则第三类恒空、告警永不触发）",
+        check("K=1" in str(e), "halt_proxy=1 is rejected (otherwise the third class is always empty and the warning never fires)",
               str(e).splitlines()[0])
 
     with warnings.catch_warnings(record=True) as W_:
@@ -334,28 +334,30 @@ def test_ghost_detection():
     check(res.audit["ghost_detection"] == "proxy(2)", "ghost_detection = proxy(2)",
           res.audit["ghost_detection"])
     check(res.audit["ghost_cells"] == 1 and res.audit["ghost_days"] == 1,
-          "一日 NaN 记为幽灵持仓（降级口径会漏掉真正的一日停牌）",
+          "a one-day NaN counts as a ghost position (the degraded proxy misses genuine one-day halts)",
           f"ghost_cells = {res.audit['ghost_cells']}")
-    check(any("幽灵持仓" in str(x.message) for x in W_), "少量幽灵 → warning 而非静默")
-    check(res.holding_value.iloc[4, 0] == 0.0, "幽灵持仓按最后可得价当日平仓",
+    check(any("Ghost positions" in str(x.message) for x in W_),
+          "a small number of ghosts warns rather than passing silently")
+    check(res.holding_value.iloc[4, 0] == 0.0, "ghost positions are closed same-day at the last available price",
           f"pos = {res.holding_value.iloc[4, 0]}")
     check(res.audit["halt_cells"] == 3 and res.daily["frozen_value"].iloc[7] > 0,
-          "≥K 的连续 NaN 判为停牌 → 冻结而非平仓",
+          "a run of K or more NaNs counts as halted, so the position freezes rather than closing",
           f"halt_cells = {res.audit['halt_cells']}")
 
     res_d = simulate(w_, r_, booksize=B, halt_proxy=0, cost_bps=0.0)   # 显式关闭
     check(res_d.audit["ghost_detection"] == "disabled" and res_d.audit["ghost_days"] == 0,
-          "halt_proxy=0 → disabled，且报表能区分'没有幽灵'与'根本没查'",
+          "halt_proxy=0 gives disabled, and the report distinguishes 'no ghosts' from 'never checked'",
           f"{res_d.audit['ghost_detection']} / ghost_days={res_d.audit['ghost_days']}")
     try:
         simulate(w_, r_, booksize=B, halt_proxy=2, ghost_tolerance=0.0)
-        check(False, "幽灵超阈值必须报错")
+        check(False, "exceeding the ghost threshold must raise")
     except SimError as e:
-        check("幽灵持仓超阈值" in str(e), "幽灵超阈值 → 报错（不是调阈值继续跑）",
+        check("Ghost positions over threshold" in str(e),
+              "exceeding the ghost threshold raises rather than nudging the threshold and carrying on",
               str(e).splitlines()[0])
     check(simulate(w_, r_, booksize=B, halt_proxy=2, cost_bps=0.0, ghost_tolerance=0.10
                    ).audit["delist_source"] == "none",
-          "无 delist_date → delist_source=none（退市路径是死代码，必须可见）")
+          "no delist_date gives delist_source=none (the delisting path is dead code and that must be visible)")
 
 
 # =====================================================================
@@ -372,20 +374,20 @@ def test_kernel_invariants():
     snapshot = w.copy(deep=True)
 
     res = simulate(w, r, booksize=B, halt_proxy=2, cost_bps=0.0)
-    check(w.equals(snapshot), "[偏离 1] 权重面板未被就地改写（容量扫描要重复喂同一份）")
+    check(w.equals(snapshot), "[deviation 1] the weight panel is not mutated in place (a capacity sweep feeds the same one repeatedly)")
     r2 = simulate(w, r, booksize=2 * B, halt_proxy=2, cost_bps=0.0)
     close(r2.pnl.to_numpy(), 2 * res.pnl.to_numpy(), 1e-6,
-          "容量扫描：无 cap 时 booksize 翻倍 → 损益逐位翻倍")
+          "capacity sweep: with no cap, doubling booksize doubles pnl bit for bit")
 
     d = res.daily
     check(float(d["realloc_turnover"].abs().max()) == 0.0,
-          "无冻结时 realloc_turnover 恒为 0", f"max = {d['realloc_turnover'].abs().max()}")
+          "realloc_turnover is identically 0 when nothing is frozen", f"max = {d['realloc_turnover'].abs().max()}")
     close(d["alpha_turnover"].to_numpy(), (d["trade_dollar"] / B).to_numpy(), 1e-12,
-          "无冻结时 alpha_turnover ≡ trade_dollar / booksize")
+          "alpha_turnover equals trade_dollar / booksize when nothing is frozen")
     check(float(d[["gap_participation", "gap_realloc", "gap_reprice"]].abs().max().max()) < 1e-6,
-          "无冻结、无 cap 时三个 gap 全为 0",
+          "all three gaps are 0 with no freezing and no cap",
           f"max = {float(d[['gap_participation', 'gap_realloc', 'gap_reprice']].abs().max().max()):.3e}")
-    check(float(d["cash"].abs().max()) < 1e-6, "满仓：cash ≈ 0",
+    check(float(d["cash"].abs().max()) < 1e-6, "fully invested: cash is about 0",
           f"max|cash| = {d['cash'].abs().max():.3e}")
 
     # [偏离 3] ADV 缺失：cap 取 +inf 而不是 NaN，否则 np.clip(x, nan, nan) 把持仓变 NaN
@@ -394,20 +396,20 @@ def test_kernel_invariants():
     adv.iloc[:, 3] = np.nan                           # 中途上市的票
     res3 = simulate(w, r, booksize=B, adv_dollar=adv, halt_proxy=2, cost_bps=0.0)
     check(np.isfinite(res3.holding_value.to_numpy()).all(),
-          "[偏离 3] ADV=NaN 不把持仓变成 NaN")
-    check(res3.audit["adv_uncapped_cells"] > 0, "ADV 缺失处未设约束，且计数可见",
+          "[deviation 3] ADV=NaN does not turn positions into NaN")
+    check(res3.audit["adv_uncapped_cells"] > 0, "where ADV is missing no constraint is applied, and the count is visible",
           f"adv_uncapped_cells = {res3.audit['adv_uncapped_cells']}")
 
     # 参与率约束：cap 咬住时缺口进 gap_participation，且每日重试
     advs = pd.DataFrame(2e6, index=dates, columns=cols)
     res4 = simulate(w, r, booksize=B, adv_dollar=advs, participation=0.10,
                     halt_proxy=2, cost_bps=0.0)
-    check(res4.daily["gap_participation"].iloc[0] > 0, "cap 咬住 → gap_participation > 0",
+    check(res4.daily["gap_participation"].iloc[0] > 0, "when the cap binds, gap_participation > 0",
           f"{res4.daily['gap_participation'].iloc[0]:,.0f}")
-    check(res4.daily["cash"].iloc[0] > 0, "投不满的部分留在 cash（容量警报）",
+    check(res4.daily["cash"].iloc[0] > 0, "the undeployable remainder stays in cash (a capacity alarm)",
           f"cash = {res4.daily['cash'].iloc[0]:,.0f}")
     check(float(res4.daily["trade_dollar"].max()) <= N * 0.10 * 2e6 + 1e-6,
-          "单日成交额不超过 Σ cap")
+          "single-day traded value never exceeds the sum of the caps")
 
 
 # =====================================================================
@@ -436,33 +438,33 @@ def test_metrics_and_gates():
         say("    " + line)
     say("")
     g = m["gates"]
-    check(len(g) == 7, "七道闸门齐全", f"{len(g)} 道")
-    check(all(x["numbers"] for x in g), "每道闸门都带数字（通过也打印）")
-    check(all(x["state"] in ("PASS", "FAIL", "NO-BASIS") for x in g), "每道闸门都有状态")
-    check(m["summary"].startswith("submission readiness:"), "末行是 readiness", m["summary"])
-    check(m["audit"]["ghost_detection"] == "proxy(2)", "metrics.json 恒含 ghost_detection",
+    check(len(g) == 7, "all seven gates are present", f"{len(g)}")
+    check(all(x["numbers"] for x in g), "every gate carries numbers (printed even when it passes)")
+    check(all(x["state"] in ("PASS", "FAIL", "NO-BASIS") for x in g), "every gate has a state")
+    check(m["summary"].startswith("submission readiness:"), "the last line is the readiness verdict", m["summary"])
+    check(m["audit"]["ghost_detection"] == "proxy(2)", "metrics.json always contains ghost_detection",
           m["audit"]["ghost_detection"])
-    check(m["audit"]["delist_source"] == "none", "metrics.json 恒含 delist_source")
-    check(len(m["by_year"]) >= 2, "分年度表", str(sorted(m["by_year"])))
+    check(m["audit"]["delist_source"] == "none", "metrics.json always contains delist_source")
+    check(len(m["by_year"]) >= 2, "by-year table", str(sorted(m["by_year"])))
     s = m["scalar"]
     for k in ("sharpe", "ann_return", "turnover", "margin_bps", "fitness", "max_drawdown",
               "avg_long_value", "avg_short_value", "avg_long_count", "avg_short_count"):
-        if not check(s.get(k) is not None, f"标量指标 {k} 已算出"):
+        if not check(s.get(k) is not None, f"scalar metric {k} was computed"):
             break
     fit = s["sharpe"] * np.sqrt(abs(s["ann_return"]) / max(s["turnover"], 0.125))
     check(abs(fit - s["fitness"]) < 1e-9, "Fitness = Sharpe×√(|Ret|/max(TO,0.125))",
           f"{s['fitness']:.4f}")
     import json
     js = json.dumps(m, allow_nan=False)                       # 严格 JSON：NaN/Inf 已转 None
-    check(len(js) > 0, "metrics 可直接 json.dump（严格模式）", f"{len(js)} bytes")
+    check(len(js) > 0, "metrics can be json.dump-ed directly (strict mode)", f"{len(js)} bytes")
 
     # NO-BASIS 必须真的会出现：不给 universe、不给 meta、不计成本
     res2 = simulate(panel(Wm, dates, cols), panel(R, dates, cols), booksize=B,
                     cost_bps=0.0, halt_proxy=2)
     m2 = metrics(res2)
     nb = [x["gate"] for x in m2["gates"] if x["state"] == "NO-BASIS"]
-    check("成本临界倍数" in nb and "池子卫生" in nb,
-          "没有判据的闸门报 NO-BASIS 而不是悄悄 PASS", f"NO-BASIS: {nb}")
+    check("cost breakeven" in nb and "pool hygiene" in nb,
+          "a gate with no basis reports NO-BASIS rather than quietly passing", f"NO-BASIS: {nb}")
 
 
 # =====================================================================
@@ -477,7 +479,7 @@ def test_real_store():
     try:
         s = Store(str(root), "us")
     except FileNotFoundError:
-        say(f"    [skip] {root} 下没有可用的轴（先跑 pipeline/build_l3_base.py），跳过端到端")
+        say(f"    [skip] no usable axes under {root} (run pipeline/build_l3_base.py first); skipping end-to-end")
         return
     ret = s.read("g_common.field_base_px.ret_1d_1500")
     adv = s.read("g_common.field_base_px.adv_dollar")
@@ -498,15 +500,15 @@ def test_real_store():
     prev = np.vstack([np.zeros((1, hv.shape[1])), hv[:-1]])
     resid = hv - (prev + res.pnl.to_numpy() + fl["trade"].to_numpy()
                   + fl["settle"].to_numpy() + fl["cost"].to_numpy())
-    close(resid, 0.0, 1e-9 * 20e6, "真实面板上会计恒等式成立")
+    close(resid, 0.0, 1e-9 * 20e6, "the accounting identity holds on the real panel")
     m = metrics(res, market_ret=s.read("g_common.field_base_px.market_ret"))
     say("")
     for line in format_report(m).splitlines():
         say("    " + line)
     say("")
-    check(float(res.daily["oop_weight"].max()) == 0.0, "池外权重恰为 0（闸门六有判据）")
-    check(np.isfinite(hv).all(), "真实数据上无 NaN 持仓")
-    say(f"    真实 warning: {[str(x.message).splitlines()[0] for x in WW][:3]}")
+    check(float(res.daily["oop_weight"].max()) == 0.0, "outside-pool weights are exactly 0 (gate 6 has a basis)")
+    check(np.isfinite(hv).all(), "no NaN positions on real data")
+    say(f"    real warnings: {[str(x.message).splitlines()[0] for x in WW][:3]}")
 
     # K 的取值直接决定这道防线会不会响 —— 本面板实测的 NaN 连续段长度分布：
     nanm = ret_.isna().to_numpy()
@@ -521,7 +523,7 @@ def test_real_store():
                 run = 0
         if run:
             dist[run] = dist.get(run, 0) + 1
-    say(f"    NaN 连续段长度分布 {dict(sorted(dist.items()))}（首行 ret 无定义的那一列不计）")
+    say(f"    NaN run-length distribution {dict(sorted(dist.items()))} (the first row, where ret is undefined, is excluded)")
     ks = {}
     for k in (2, 3):
         with warnings.catch_warnings():
@@ -531,9 +533,10 @@ def test_real_store():
         say(f"    halt_proxy={k}: ghost_days={ks[k]['ghost_days']} "
             f"ghost_cells={ks[k]['ghost_cells']} halt_cells={ks[k]['halt_cells']}")
     check(ks[2]["ghost_days"] == 0 and ks[3]["ghost_days"] > 0,
-          "K 的取值是有后果的：本面板真实缺口都是 2 个 session，K=2 会把它们判成停牌、"
-          "ghost_days 恒为 0（§九 要堵的那个失效模式的软化版）；K=3 才让告警响",
-          f"K=2 → {ks[2]['ghost_days']} 天；K=3 → {ks[3]['ghost_days']} 天 "
+          "the choice of K has consequences: every genuine gap in this panel is 2 sessions long, so "
+          "K=2 classifies them as halts and ghost_days stays 0 -- a softened form of the failure "
+          "mode §9 exists to block. Only K=3 lets the warning fire",
+          f"K=2 -> {ks[2]['ghost_days']} days; K=3 -> {ks[3]['ghost_days']} days "
           f"{ks[3]['ghost_examples'][:1]}")
 
 
@@ -556,21 +559,21 @@ def test_deliverables():
                    delist_date=pd.Series({c: pd.NaT for c in cols}))
     h = res.holding
     check(list(h.columns.levels[0]) == ["holding_value", "holding_weight"],
-          "holding 同时带 value 与 weight 两块", str(h.shape))
+          "holding carries both the value and weight blocks", str(h.shape))
     close(res.holding_weight.to_numpy(), res.holding_value.to_numpy() / B, 0,
-          "holding_weight = holding_value / booksize（与目标权重同尺度）")
+          "holding_weight = holding_value / booksize (same scale as the target weights)")
     with tempfile.TemporaryDirectory() as td:
         paths = res.write(td)
         (Path(td) / "metrics.json").write_text(
             json.dumps(metrics(res), ensure_ascii=False, indent=1, allow_nan=False))
         back = pd.read_csv(paths["daily"])
-        check(len(back) == T and "return" in back.columns, "daily.csv 可读回",
-              f"{len(back)} 行 × {len(back.columns)} 列")
+        check(len(back) == T and "return" in back.columns, "daily.csv reads back",
+              f"{len(back)} rows x {len(back.columns)} cols")
         check(pd.read_csv(paths["holding"]).shape[1] == 2 * N + 1,
-              "holding.csv 拍平成 {块}|{security_id}")
+              "holding.csv is flattened to {block}|{security_id}")
         m = json.loads((Path(td) / "metrics.json").read_text())
         check(set(m) >= {"scalar", "by_year", "audit", "gates", "summary", "snapshot"},
-              "metrics.json 结构齐全", str(sorted(m)))
+              "metrics.json is structurally complete", str(sorted(m)))
 
     # 全零权重（引擎预热期）不许把仿真器打崩
     z = pd.DataFrame(0.0, index=dates, columns=cols)
@@ -578,8 +581,8 @@ def test_deliverables():
                   booksize=B, halt_proxy=2)
     m0 = metrics(r0)
     check(float(r0.daily["trade_dollar"].sum()) == 0.0 and m0["scalar"]["sharpe"] is None,
-          "权重全为 0 的预热期：不交易、指标为 None 而不是崩溃或假数字")
-    check(m0["gates"][5]["state"] == "NO-BASIS", "此时池子卫生闸门报 NO-BASIS")
+          "an all-zero warmup period: no trading, and metrics are None rather than a crash or a fake number")
+    check(m0["gates"][5]["state"] == "NO-BASIS", "the pool hygiene gate reports NO-BASIS here")
 
 
 # =====================================================================
@@ -599,11 +602,11 @@ def test_timing():
     t0 = time.perf_counter()
     res = simulate(w, r, booksize=20e6, cost_bps=2.0, halt_proxy=2, ghost_tolerance=1.0)
     dt = time.perf_counter() - t0
-    check(dt < 60, f"{T}×{N} 仿真耗时 {dt:.2f}s（§8.2 称'秒级'）",
-          f"{dt / T * 1e3:.3f} ms/日")
+    check(dt < 60, f"{T}x{N} simulation took {dt:.2f}s (§8.2 claims 'seconds')",
+          f"{dt / T * 1e3:.3f} ms/day")
     t1 = time.perf_counter()
     m = metrics(res)
-    say(f"    metrics + 七道闸门 {time.perf_counter() - t1:.2f}s（§15.9 要求 < 200ms 的是闸门部分）")
+    say(f"    metrics + seven gates {time.perf_counter() - t1:.2f}s (the <200ms of §15.9 refers to the gates)")
     say(f"    Sharpe {m['scalar']['sharpe']:.3f}  ghost_cells {res.audit['ghost_cells']}  "
         f"halt_cells {res.audit['halt_cells']}")
 
@@ -619,8 +622,8 @@ def main() -> int:
         say(f"\n=== {fn.__name__} — {head}")
         try:
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", message="幽灵持仓")
-                warnings.filterwarnings("ignore", message="无 delist_date")
+                warnings.filterwarnings("ignore", message="Ghost positions")
+                warnings.filterwarnings("ignore", message="No delist_date")
                 fn()
         except Exception:
             FAILURES.append(fn.__name__)

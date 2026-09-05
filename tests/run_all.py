@@ -31,7 +31,7 @@ REPO = Path(__file__).resolve().parent.parent
 # 每个解析器返回 (通过数, 失败数, 备注)。解析不出来返回 (0, 0, ...), 只报退出码。
 
 def _p_ops(out: str) -> tuple[int, int, str]:
-    m = re.search(r"(\d+)\s*/\s*(\d+)\s*通过", out)
+    m = re.search(r"(\d+)\s*/\s*(\d+)\s*passed", out)
     if not m:
         return 0, 0, ""
     ok, tot = int(m.group(1)), int(m.group(2))
@@ -43,7 +43,7 @@ def _p_simulate(out: str) -> tuple[int, int, str]:
 
 
 def _p_smoke(out: str) -> tuple[int, int, str]:
-    m = re.search(r"通过\s*(\d+)\s*/\s*失败\s*(\d+)", out)
+    m = re.search(r"passed\s*(\d+)\s*/\s*failed\s*(\d+)", out)
     return (int(m.group(1)), int(m.group(2)), "") if m else (0, 0, "")
 
 
@@ -56,7 +56,7 @@ def _p_validate(out: str) -> tuple[int, int, str]:
     ok = len(re.findall(r"^\[PASS\] [VXW]\d.*checked=", out, re.M))
     bad = len(re.findall(r"^\[FAIL\] [VXW]\d.*checked=", out, re.M))
     warn = re.findall(r"^\[WARN\] ([VXW]\d+).*checked=", out, re.M)
-    return ok, bad, (f"+{len(warn)} WARN({','.join(warn)}) 仅告警" if warn else "")
+    return ok, bad, (f"+{len(warn)} WARN({','.join(warn)}) warnings only" if warn else "")
 
 
 def _p_generic(out: str) -> tuple[int, int, str]:
@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     for name, args, parse in suites:
         target = REPO / args[0]
         if not target.exists():
-            rows.append((name, "-", 0.0, "MISSING", f"没有这个文件: {target}"))
+            rows.append((name, "-", 0.0, "MISSING", f"no such file: {target}"))
             print(f"▸ {name}  ——  MISSING")
             continue
         print(f"▸ {name}  ...", flush=True)
@@ -119,21 +119,21 @@ def main(argv: list[str] | None = None) -> int:
         status = "PASS" if p.returncode == 0 else "FAIL"
         count = f"{ok}/{ok + bad}" if (ok or bad) else "-"
         rows.append((name, count, dt, status, note))
-        print(f"  {status}  {count} 断言  {dt:.1f}s" + (f"  {note}" if note else ""))
+        print(f"  {status}  {count} assertions  {dt:.1f}s" + (f"  {note}" if note else ""))
         if verbose:
             print(out)
         elif p.returncode != 0:
             # 失败时必须留下线索, 否则用户只拿到一个 FAIL 还得自己再跑一遍
             tail = out.strip().splitlines()[-25:]
-            print("  --- 末 25 行 " + "-" * 44)
+            print("  --- last 25 lines " + "-" * 44)
             print("\n".join("  " + l for l in tail))
             print("  " + "-" * 57)
 
     w_name = max(_w(r[0]) for r in rows) + 2
-    w_cnt = max(max(_w(r[1]) for r in rows), _w("断言")) + 2
+    w_cnt = max(max(_w(r[1]) for r in rows), _w("assertions")) + 2
     bar = "=" * (w_name + w_cnt + 22)
     print("\n" + bar)
-    print(_pad("套件", w_name) + _pad("断言", w_cnt) + _pad("耗时", 9) + "结果")
+    print(_pad("suite", w_name) + _pad("assertions", w_cnt) + _pad("time", 9) + "result")
     print("-" * len(bar))
     n_pass = n_ok = n_tot = 0
     for name, count, dt, status, note in rows:
@@ -144,11 +144,11 @@ def main(argv: list[str] | None = None) -> int:
             a, b = count.split("/")
             n_ok += int(a); n_tot += int(b)
     print("-" * len(bar))
-    print(f"{n_pass}/{len(rows)} 套通过    断言 {n_ok}/{n_tot}    "
-          f"合计 {time.perf_counter() - t_all:.1f}s")
+    print(f"{n_pass}/{len(rows)} suites passed    assertions {n_ok}/{n_tot}    "
+          f"total {time.perf_counter() - t_all:.1f}s")
     print(bar)
     if n_pass != len(rows):
-        print("\n红了的套件：" + ", ".join(r[0] for r in rows if r[3] != "PASS"))
+        print("\nfailing suites: " + ", ".join(r[0] for r in rows if r[3] != "PASS"))
     return 0 if n_pass == len(rows) else 1
 
 

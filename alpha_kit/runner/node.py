@@ -56,8 +56,9 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
     for d in deps:
         if not store.exists(d):
             raise StoreError(
-                f"{node.name}: 依赖 {d} 不在 store 里。\n"
-                f"  v0 不做图分析，跨 config 的依赖必须先跑（§7.1）。`store status` 可查。")
+                f"{node.name}: dependency {d} is not in the store.\n"
+                f"  v0 does no graph analysis, so cross-config deps must be run first (§7.1). "
+                f"`store status` lists what has landed.")
 
     i_sd, i_ed = store.axes.pos(sd), store.axes.pos(ed)
     # 先建算子链：预热下限由链自己给（TS 算子串联时窗口相加, 且 n 日窗口只需 n-1 天
@@ -75,7 +76,7 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
     panels = {d: PanelLoader(store, d, load_sd, load_ed) for d in deps}
     universe = UniverseView(store, spec.universe, load_sd, load_ed, cols, i_start)
     if spec.universe and not store.exists(spec.universe):
-        raise StoreError(f"{node.name}: universe {spec.universe} 不在 store 里")
+        raise StoreError(f"{node.name}: universe {spec.universe} is not in the store")
 
     # 自引用：节点读自己昨天的输出是合法写法, 当日产出必须能回灌（§7.2 第 1 条）
     # 自己的输出：optional=True——首次运行时数组还不存在, 自引用写法不该因此崩掉
@@ -153,9 +154,9 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
                           "lookback": lookback})
         written[ref] = len(keep)
     if verbose:
-        tag = f"probe({probe})" if probe is not None else "写入"
-        print(f"  {node.name:<34} {len(dates)} 日 (预热 {i_sd - i_start}) "
-              f"{tag} {len(written)} 输出  {time.time()-t0:.2f}s")
+        tag = f"probe({probe})" if probe is not None else "wrote"
+        print(f"  {node.name:<34} {len(dates)} days (warmup {i_sd - i_start}) "
+              f"{tag} {len(written)} outputs  {time.time()-t0:.2f}s")
     return {"node": node.name, "written": written, "deps": deps,
             "seconds": round(time.time() - t0, 3),
             "rows": {k: len(v) for k, v in rows.items()}}
@@ -165,11 +166,11 @@ def _normalize(out, node: NodeSpec, ctx) -> dict:
     """裸值 → 单键；多输出已由 ctx.multi_outputs 的构造器保证齐全（§4.2）。"""
     if isinstance(out, dict):
         if len(node.outputs) < 2:
-            raise ValueError(f"{node.name}: 单输出请直接 return 值，不要用 multi_outputs")
+            raise ValueError(f"{node.name}: single-output node must return the value directly, not multi_outputs")
         return out
     if len(node.outputs) >= 2:
         raise ValueError(
-            f"{node.name}: 声明了 {len(node.outputs)} 个输出，必须用 ctx.multi_outputs(...)")
+            f"{node.name}: declares {len(node.outputs)} outputs, so it must use ctx.multi_outputs(...)")
     (key, o), = node.outputs.items()
     return {key: ctx._coerce(out, o)}
 
@@ -205,5 +206,5 @@ def run(spec: Spec, store: Store, sd: str, ed: str | None, *, only: str | None =
         i = store.axes.pos(ed)
         sd = store.axes.date(max(0, i - probe))
     print(f"run {spec.path.parent.name}/{spec.path.name}  {sd}..{ed}"
-          f"{'  [probe 不写 store]' if probe is not None else ''}")
+          f"{'  [probe: store not written]' if probe is not None else ''}")
     return [run_node(store, spec, n, sd, ed, rebuild=rebuild, probe=probe) for n in todo]

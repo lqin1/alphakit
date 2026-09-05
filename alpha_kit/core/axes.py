@@ -49,9 +49,9 @@ class Axes:
             old = json.loads((a / "securities.json").read_text())
             if old != securities[:len(old)]:
                 raise ValueError(
-                    f"{a} 已有 {len(old)} 个 security_id，而新列表不是它的扩展——"
-                    f"重放会让每个历史 chunk 的列含义错位。\n"
-                    f"  只增不减：新标的追加在末尾；确实要重建请显式 overwrite=True。")
+                    f"{a} already holds {len(old)} security_ids and the new list is not an extension "
+                    f"of it -- replaying would shift the column meaning of every historical chunk.\n"
+                    f"  Append-only: new names go on the end. To truly rebuild, pass overwrite=True.")
         a.mkdir(parents=True, exist_ok=True)
         allocated = len(securities) + reserve
         (a / "sessions.json").write_text(json.dumps(sessions))
@@ -67,7 +67,8 @@ class Axes:
             return 0
         if self.sessions and add[0] <= self.sessions[-1]:
             raise ValueError(
-                f"session 轴 append-only：{add[0]} 不晚于现有末日 {self.sessions[-1]}")
+                f"session axis is append-only: {add[0]} is not later than the current last session "
+                f"{self.sessions[-1]}")
         base = len(self.sessions)
         self.sessions.extend(add)
         self._sid_pos.update({d: base + i for i, d in enumerate(add)})
@@ -79,7 +80,7 @@ class Axes:
         try:
             return self._sid_pos[date]
         except KeyError:
-            raise KeyError(f"{date} 不在 session 轴上") from None
+            raise KeyError(f"{date} is not on the session axis") from None
 
     def date(self, i: int) -> str:
         return self.sessions[i]
