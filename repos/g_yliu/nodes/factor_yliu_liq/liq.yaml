@@ -7,7 +7,8 @@ nodes:
       - g_common.field_base_px.adj_close_1500
       - g_common.field_base_px.volume_1500
       - g_common.field_base_px.ret_1d_1500
-    params: {window: 20}
+    params:
+      window: 20
     outputs:
       adv20:   {dtype: f4}
       illiq20: {dtype: f4}

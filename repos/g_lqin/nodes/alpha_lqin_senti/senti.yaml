@@ -4,7 +4,8 @@ lookback: 65
 
 nodes:
   alpha_lqin_senti:
-    params: {window: 60}
+    params:
+      window: 60
     deps:
       - g_common.field_base_px.adj_close_1500
       - g_common.factor_common_gics.sector

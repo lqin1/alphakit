@@ -4,4 +4,5 @@ lookback: 60
 nodes:
   factor_yliu_mom:
     deps: [g_common.field_base_px.adj_close_1500]
-    params: {window: 60}
+    params:
+      window: 60

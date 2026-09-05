@@ -125,22 +125,51 @@ def _scalars(daily: pd.DataFrame, booksize: float, ann: int) -> dict:
     }
 
 
-def _by_year(daily: pd.DataFrame, booksize: float, ann: int) -> dict:
+def _by_period(daily: pd.DataFrame, booksize: float, ann: int, freq: str) -> dict:
+    """按年 / 按月切分, 每段给一整套指标（§8.4）。
+
+    切分不是为了好看: 一个 alpha 的 Sharpe 是被哪一段撑起来的、换手是不是某几个月
+    突然翻倍、账本有没有慢慢偏向多头——这些都只有分段才看得见, 全区间的单个标量
+    正好把它们平均掉。故这里给的是**与全区间同一套口径**的指标, 而不是挑几个。
+
+    freq: "Y" 按年, "M" 按月。键是 "2026" / "2026-03"。
+    """
+    idx = pd.to_datetime(pd.Index(daily.index))
+    keys = idx.year.astype(str) if freq == "Y" else \
+        idx.year.astype(str) + "-" + idx.month.astype(str).str.zfill(2)
     out = {}
-    for y, g in daily.groupby(pd.to_datetime(pd.Index(daily.index)).year):
+    for k, g in daily.groupby(keys.to_numpy()):
         pnl = g["pnl"].to_numpy()
-        tr = float(g["trade_dollar"].mean() / booksize)
-        out[str(int(y))] = {
+        ret = g["return"].to_numpy()
+        trade = g["trade_dollar"].to_numpy()
+        tot_trade, tot_pnl = float(trade.sum()), float(pnl.sum())
+        tot_hold = float(g["holding_pnl"].sum())
+        lv, sv = float(g["long_value"].mean()), float(g["short_value"].mean())
+        gross = lv + abs(sv)
+        out[str(k)] = {
             "days": int(len(g)),
-            "sharpe": _sharpe(g["return"].to_numpy(), ann),
-            "ann_return": float(g["return"].mean() * ann),
-            "pnl": float(pnl.sum()),
-            "turnover": tr,
+            # ---- 收益与风险
+            "sharpe": _sharpe(ret, ann),
+            "ann_return": float(np.nanmean(ret) * ann),
+            "pnl": tot_pnl,
+            "holding_pnl": tot_hold,
+            "cost": float(g["cost"].sum()),
+            "cost_share_of_gross": (float(g["cost"].sum()) / tot_hold) if tot_hold else float("nan"),
+            "margin_bps": (tot_pnl / tot_trade * 1e4) if tot_trade else float("nan"),
             "max_drawdown": _maxdd(pnl)[0] / booksize,
-            "margin_bps": (float(pnl.sum()) / float(g["trade_dollar"].sum()) * 1e4)
-                          if g["trade_dollar"].sum() else float("nan"),
-            "avg_long_value": float(g["long_value"].mean()),
-            "avg_short_value": float(g["short_value"].mean()),
+            "hit_rate": float(np.mean(pnl > 0)) if len(pnl) else float("nan"),
+            "return_std_daily": float(np.nanstd(ret, ddof=1)) if len(ret) > 1 else float("nan"),
+            # ---- 交易
+            "turnover": float(np.nanmean(trade) / booksize),
+            "trade_dollar": tot_trade,
+            # ---- 账本构成
+            "avg_long_value": lv,
+            "avg_short_value": sv,                       # 负部, 带符号
+            "avg_long_count": float(g["long_count"].mean()),
+            "avg_short_count": float(g["short_count"].mean()),
+            # 多头占 gross 的比例: 0.5 是中性, 持续偏离说明账本在往一边漂
+            "long_share": (lv / gross) if gross else float("nan"),
+            "long_short_ratio": (lv / -sv) if sv else float("inf"),
         }
     return out
 
@@ -335,7 +364,7 @@ def gates(res, *, thresholds: dict | None = None, market_ret=None,
     """
     thr = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
     d, a = res.daily, res.audit
-    by_year = _by_year(d, float(a["booksize"]), ann)
+    by_year = _by_period(d, float(a["booksize"]), ann, "Y")
     gs = [
         _gate_beta(d, thr, market_ret, ann),
         _gate_concentration(res, thr),
@@ -359,7 +388,8 @@ def metrics(res, *, market_ret=None, meta: dict | None = None,
     booksize = float(a["booksize"])
     out = {
         "scalar": _scalars(d, booksize, ann),
-        "by_year": _by_year(d, booksize, ann),
+        "by_year": _by_period(d, booksize, ann, "Y"),
+        "by_month": _by_period(d, booksize, ann, "M"),
         "audit": _audit(d, a),
         **gates(res, thresholds=thresholds, market_ret=market_ret, meta=meta, ann=ann),
         # 口径快照（§8.3）：换了任何一项，两份 metrics.json 就不可比

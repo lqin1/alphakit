@@ -14,8 +14,8 @@
 |---|---|
 | 看库里现在有什么 | `ak store status` |
 | 查一个节点的元数据 | `ak store meta <ref>` |
-| 只做编译检查，不跑数 | `run <节点目录> --dry-run` |
 | 跑一个 alpha | `run <节点目录> --sd 2025-12-01` |
+| 只试跑不落库 | `run <节点目录> --probe 20` |
 | 评估它 | `pnl --node <ref> --sd 2025-12-01` |
 | 自检整条链 | `.venv/bin/python tests/run_all.py` |
 
@@ -235,7 +235,8 @@ lookback: 60
 nodes:
   factor_yliu_mom:
     deps: [g_common.field_base_px.adj_close_1500]
-    params: {window: 60}
+    params:
+      window: 60
 ```
 
 ```python
@@ -298,7 +299,8 @@ lookback: 30
 nodes:
   alpha_yliu_rev_w005:
     code: rev.py
-    params: {window: 5}
+    params:
+      window: 5
     deps: [...]
     ops:
       - rank
@@ -342,10 +344,6 @@ return ret - rf / 252
 **每次 `run` 都会先做一遍零数据的预检**（3–5 ms，只查元数据、不读任何面板），
 所以一次完整运行不会在第 12 秒才死于一个拼写错误：
 
-```bash
-run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --dry-run   # 预检 + 只执行一天, 不落库
-```
-
 拼错一个 60 字符的引用名，光靠肉眼很难看出来，所以诊断会给出最近的候选：
 
 ```
@@ -362,8 +360,8 @@ universe 是不是秩-2 bool、`sd`/`ed` 在不在轴上、`ed` 有没有越过�
 它还会用 AST 读你的 `.py`，把 `ctx.win(PX, w)` 里的 `PX` 常量解出来——所以
 **「handle 读了一个没写进 deps 的名字」也在预检期就报**，而不是等到算子链深处才炸。
 
-`--dry-run` 再往前一步：预检通过后**只执行一天**（不预热、不落库），
-用来抓元数据看不出的形状与返回类型错误，比如 `multi_outputs` 漏了一个 key。
+元数据看不出的错——形状不符、返回类型不对、`multi_outputs` 漏了一个 key——
+用 `--probe K` 抓：它在暖机之后的尾段试跑 K 天，**不写 store**。
 
 ### 4.8 评估：`pnl`
 
@@ -393,34 +391,60 @@ ref **要带输出名**。单输出的 alpha 那个输出叫 `weight`，所以�
 
 ```
   warn  No delist_date: `delisted` is always False, so the delisting path is dead code ...
-  warn  Ghost positions: 1 holding-days across 1 sessions (0.001% of holding-days), closed same-day ...
+  warn  Ghost positions: 1 holding-days across 1 sessions (0.001% of holding-days) ...
 
-==============================================================================
+====================================================================================================
  g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight
  2025-12-01 .. 2026-08-27   186 sessions × 503 names   book $20.00M
-==============================================================================
- Return Sharpe=-0.254             AnnRet=-2.05%             AnnRet$=$-410.61K
-        Fitness=-0.05501          HitRate=47.85%            DailyVol=0.51%
- Cost   Turnover=43.77%           Margin=-1.861 bps         CostTotal=$1.63M
-        Cost/Gross=122.87%        Gross=$1.33M              Net=$-303.07K
- Risk   MaxDD=10.98%              MaxDD$=$2.20M             DDWindow=2025-12-01→2026-05-13
- Book   Long=$9.99M / 200.3 names Short=$-10.01M / 199.7 names L/S=0.9988
-------------------------------------------------------------------------------
+====================================================================================================
+ Return Sharpe=-0.254                 AnnRet=-2.05%                 AnnRet$=$-410.61K
+        Fitness=-0.05501              HitRate=47.85%                DailyVol=0.51%
+ Cost   Turnover=43.77%               Margin=-1.861 bps             CostTotal=$1.63M
+        Cost/Gross=122.87%            Gross=$1.33M                  Net=$-303.07K
+ Risk   MaxDD=10.98%                  MaxDD$=$2.20M                 DDWindow=2025-12-01→2026-05-13
+ Book   Long=$9.99M / 200.3 names     Short=$-10.01M / 199.7 names  L/S=0.9988
+----------------------------------------------------------------------------------------------------
+ By year - returns & cost
+ period       days   sharpe    annRet         pnl        cost    margin    maxDD    hit%
+ 2025           22   -5.116   -24.47%   $-427.24K    $197.59K  -21.62bp    2.77%  36.36%
+ 2026          164    0.113     0.95%    $124.17K      $1.43M    0.87bp    9.20%  49.39%
+----------------------------------------------------------------------------------------------------
+ By year - trading & book
+ period       days  turnover    tradeVol    longN   shortN       longV      shortV   long%
+ 2025           22    44.91%    $197.59M    200.6    199.4      $9.99M    $-10.01M  49.96%
+ 2026          164    43.62%      $1.43B    200.2    199.8      $9.99M    $-10.01M  49.97%
+----------------------------------------------------------------------------------------------------
  Gates     3/7 passed
    [PASS    ] market beta        beta=0.08234  r2=0.01412  sharpe_hedged=-0.5015
    [PASS    ] concentration      total_abs_pnl=6.494e+06  n_names_with_pnl=467  top1_share=0.038
-   [NO-BASIS] period stability   sharpe_by_year={'2025': -5.1156, '2026': 0.1133}  sharpe_first_half=-2.919
+   [NO-BASIS] period stability   sharpe_first_half=-2.919  sharpe_second_half=2.104
    [FAIL    ] cost breakeven     cost_total=1.628e+06  pnl_gross=1.325e+06  pnl_net=-3.031e+05
-   [PASS    ] long/short balance avg_long_value=9.994e+06  avg_short_value=-1.001e+07
-   [NO-BASIS] pool hygiene       empty_weight_days=0  weight_gross_dev_max=4.511e-09  coverage_min=399
+   [PASS    ] long/short balance avg_long_value=9.994e+06  avg_long_count=200.3
+   [NO-BASIS] pool hygiene       empty_weight_days=0  coverage_min=399
    [FAIL    ] lookahead status   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
-------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
  Audit   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
  Defects survivorship_bias_no_delisted, no_vwap, no_shares_outstanding, equal_weighted_market_proxy
  Verdict submission readiness: 3/7 gates pass
- Output  pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight/  →  daily.csv  pnl.csv  holding.csv  metrics.json
-==============================================================================
+ Output  pnl_out/…w005-weight/  →  daily.csv  pnl.csv  holding.csv  metrics.json
+====================================================================================================
 ```
+
+**分段表回答标量回答不了的问题。** 上面那个 alpha 的全区间 Sharpe 是 −0.254，
+看着只是平淡地亏；按月拆开是另一回事：
+
+```
+ period       days   sharpe    annRet         pnl        cost    margin    maxDD    hit%
+ 2026-02        19   -4.141   -39.22%   $-591.36K    $153.48K  -38.53bp    3.52%  36.84%
+ 2026-04        21   -3.963   -30.22%   $-503.67K    $176.83K  -28.48bp    3.09%  38.10%
+ 2026-07        22    6.739    68.31%      $1.19M    $200.73K   59.42bp    0.67%  63.64%
+ 2026-08        19    5.777    27.58%    $415.87K    $175.94K   23.64bp    1.06%  57.89%
+```
+
+七八月两个月把全年拉回来，二四月各亏掉半百万——全区间那一个标量正好把这件事平均掉了。
+`--by year|month|both|none` 控制控制台印哪些（缺省 `both`）；`metrics.json` 里
+**两套恒定都在**，各 19 个字段，不受这个开关影响。月份超过 36 个只印最后 36 行，
+再多就是一堵读不出东西的墙。
 
 四交付物落在 `pnl_out/{ref}/`，**全是纯文本**：`holding.csv` / `pnl.csv`（逐股逐日，
 归因就是一行 groupby）/ `daily.csv` / `metrics.json`。选 CSV 是为了能 grep、能 diff、

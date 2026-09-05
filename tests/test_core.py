@@ -981,6 +981,45 @@ def test_param_tag_consistency():
     return f"lone case exempt / consistent family allowed / mismatched value and missing tag both rejected ({len(TAGS)} tags)"
 
 
+def test_params_spellings_are_one_definition():
+    """params 的两种写法必须归一到同一个定义（含指纹）。
+
+        params:            params:              params:
+          window: 5          - window: 5          - window: 5
+          halflife: 7          halflife: 7        - halflife: 7
+
+    归一若发生在指纹之后, 同一份定义会 hash 出两个指纹、指向同一个数组——正是
+    引用名折叠规则要防的那种分叉, 只是换了个地方发生。没写 params 的节点也不能
+    因为归一而凭空多出一个 `params: {}`：那会让定义一字未动的节点指纹改变。
+    """
+    dep = "g_common.field_base_px.adj_close_1500"
+    forms = {
+        "flow":      "nodes:\n  factor_yliu_f:\n    params: {window: 5, halflife: 7}\n    deps: [%s]\n",
+        "block":     "nodes:\n  factor_yliu_f:\n    params:\n      window: 5\n      halflife: 7\n    deps: [%s]\n",
+        "list_one":  "nodes:\n  factor_yliu_f:\n    params:\n      - window: 5\n        halflife: 7\n    deps: [%s]\n",
+        "list_each": "nodes:\n  factor_yliu_f:\n    params:\n      - window: 5\n      - halflife: 7\n    deps: [%s]\n",
+    }
+    seen = {}
+    for tag, body in forms.items():
+        n = spec_from(body % dep, node_dir="pf", stem="pf").nodes["factor_yliu_f"]
+        check(n.params == {"window": 5, "halflife": 7}, f"{tag}: params = {n.params}")
+        seen[tag] = n.fingerprint()
+    check(len(set(seen.values())) == 1,
+          f"the same definition hashed to several fingerprints: {seen}")
+
+    # 没写 params 的节点: 归一不得让它凭空多出一个键
+    bare = "nodes:\n  factor_yliu_f:\n    deps: [%s]\n" % dep
+    f1 = spec_from(bare, node_dir="pf", stem="pf").nodes["factor_yliu_f"]
+    check(f1.params == {}, f"a node with no params got {f1.params}")
+    check("params" not in f1.src, f"an empty params key leaked into src: {f1.src!r}")
+
+    e = raises(ConfigError, spec_from,
+               "nodes:\n  factor_yliu_f:\n    params:\n      - window: 5\n      - window: 7\n"
+               "    deps: [%s]\n" % dep, node_dir="pf", stem="pf")
+    check("window" in str(e), f"a duplicate params key was not named: {e}")
+    return f"4 spellings -> one fingerprint {next(iter(seen.values()))[:14]}...; duplicate key rejected"
+
+
 def test_fingerprint_covers_the_definition():
     """§3.3：指纹 = yaml 子树 + code 字节 + deps identity + params。
 
@@ -1110,6 +1149,7 @@ TESTS = [
     test_node_level_ops_with_multiple_outputs,
     test_node_ops_and_output_ops_conflict,
     test_param_tag_consistency,
+    test_params_spellings_are_one_definition,
     test_fingerprint_covers_the_definition,
     test_op_contract_matches_runner,
     test_real_repo_specs_load,

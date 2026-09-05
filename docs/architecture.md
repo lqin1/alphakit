@@ -502,7 +502,8 @@ nodes:
     deps:                                         # code: 省略 -> 同目录 factor_yliu_beta_decomp.py
       - g_common.field_base_px.adj_close_tc
       - g_common.field_base_px.market_ret
-    params: {window: 250}
+    params:
+      window: 250
     outputs:
       mkt_beta_w250:  {dtype: f4}
       resid_mom_w250: {dtype: f4, ops: [rank]}    # 数据节点也能用 ops
@@ -536,7 +537,8 @@ nodes:
   factor_yliu_intraday_vol:                       # code: 省略 -> 同目录 intraday_vol.py
     deps: 
         - g_common.field_taq_bar.ret_5m     # v0 只吃 L3 (§七)
-    params: {cutoff: "1500"}                      # cutoff 是参数, 不是独立字段
+    params:                      # cutoff 是参数, 不是独立字段
+      cutoff: "1500"
     # 无 outputs -> 单输出, 输出名 = 节点名去掉 {kind}_{ns}_ 前缀 = intraday_vol
     #   落 storage/l3/us/g_yliu/intraday_vol/factor_yliu_intraday_vol-intraday_vol/
 ```
@@ -611,7 +613,8 @@ lookback: 30
 
 nodes:
   alpha_yliu_rev_w005:
-    params: {days: 5}
+    params:
+      days: 5
     deps: [g_common.field_base_px.*]
     ops:
       - rank
@@ -682,7 +685,8 @@ nodes:
       - g_common.field_base_px.adj_close_tc
       - g_common.field_base_px.volume_tc
       - g_common.field_base_px.ret_1d_tc
-    params: {window: 20}
+    params:
+      window: 20
     outputs:
       adv20:   {dtype: f4}      # 20 日平均成交额 (美元)
       illiq20: {dtype: f4}      # Amihud 非流动性
@@ -728,7 +732,8 @@ lookback: 30
 nodes:
   alpha_yliu_rev_w005:              # 标签形式: 一族有 2 个成员即强制 (§4.11.4)
     code: rev.py                    # 全族共用一份代码
-    params: {days: 5}               # 与名字里的 w005 编译期校验一致
+    params:               # 与名字里的 w005 编译期校验一致
+      days: 5
     deps:
       - g_common.field_base_px.adj_close_tc
       - g_yliu.factor_yliu_liq.rvol20          # 吃例 5 的产出
@@ -745,7 +750,8 @@ nodes:
 ```yaml
   alpha_yliu_rev_w020:              # 变体手写展开 (§4.9.4), 同一个 yaml
     code: rev.py                    # 同一份代码
-    params: {days: 20}
+    params:
+      days: 20
     deps: [g_common.field_base_px.adj_close_tc, g_yliu.factor_yliu_liq.rvol20, g_common.factor_common_gics.sector]
     ops:
       - rank
@@ -1310,7 +1316,6 @@ pipelines:
 run PATH                         # 唯一执行入口; PATH 可是节点目录、yaml、或 glob
     --only NODE                  # [v0] 只跑指定节点; 缺省全跑
     --probe [K=20]               # 暖机尾段试跑, 不写 store (§15.7)
-    --dry-run                    # 编译检查 + 单日执行, 不预热
     --rebuild                    # 全量重建并 bump version; 缺省是区间 upsert (§7.2)
     --universe NAME              # 探索期临时覆盖
     --time                       # 分阶段耗时
@@ -1506,10 +1511,11 @@ run nodes/alpha_yliu_rev_w005/ --probe     # K=20
 配套一个零数据的预检，让一次完整运行不会在第 12 秒才死于一个 typo：
 
 ```
-run ... --dry-run       # 只做编译检查 + 在一个 session 上执行 handle, 不预热
+run ...                 # 预检恒在每次调用的最前面跑, 不需要单独的开关
+run ... --probe 20      # 再往前一步: 暖机尾段试跑 20 天, 不写 store
 ```
 
-它检查的全是元数据（catalog 查询，< 50 ms）：deps 是否存在、`dims`/秩 与 CS 算子的合法性（§3.6）、alpha 的 ops 链是否以 `scale` 收尾（§4.4）、`_tc` 能否解析到存在的名字（§4.9.5）、universe 是否秩-2 bool、`output:` 是否单输出、声明的 outputs 键与 handle 返回是否一致。**这些应当在每一次调用读取任何数据之前就跑，而不只在 `--dry-run` 下跑。**
+它检查的全是元数据（catalog 查询，< 50 ms）：deps 是否存在、`dims`/秩 与 CS 算子的合法性（§3.6）、alpha 的 ops 链是否以 `scale` 收尾（§4.4）、`_tc` 能否解析到存在的名字（§4.9.5）、universe 是否秩-2 bool、`output:` 是否单输出、声明的 outputs 键与 handle 返回是否一致。**这些在每一次调用读取任何数据之前就跑——它不是一个可选开关。**
 
 ### 15.8 变体比较：把 6 个 metrics.json 变成一个决策
 

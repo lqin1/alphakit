@@ -96,6 +96,41 @@ class Spec:
 
 # ------------------------------------------------------------------ 加载器
 
+def _params(raw, where: str) -> dict:
+    """params 认两种写法, 归一成一个 dict。
+
+        params:                 params:
+          window: 5               - window: 5
+          halflife: 7               halflife: 7
+
+    列表形是手写 yaml 时很自然的一种笔误/习惯（想着"一串参数"就先敲了个横杠）,
+    两种在语义上没有任何差别, 与其让它以 `list has no attribute get` 的形式在
+    半里深处炸开, 不如在这里收下并归一。
+
+    **归一必须发生在指纹之前**: NodeSpec.src 是 safe_dump(解析后的 body), 两种写法
+    若各自原样进去就会 hash 出两个指纹、指向同一份定义——那正是折叠规则要防的那种分叉。
+
+    重复键必须报错: {window: 5} 与 {window: 7} 合并时后者悄悄覆盖前者, 是最难查的
+    一类配置错误。
+    """
+    if raw is None:
+        return {}
+    if isinstance(raw, dict):
+        return dict(raw)
+    if isinstance(raw, list):
+        out: dict = {}
+        for item in raw:
+            if not isinstance(item, dict):
+                raise ConfigError(
+                    f"{where}: every entry in a params list must be `name: value`, got {item!r}")
+            dup = set(item) & set(out)
+            if dup:
+                raise ConfigError(f"{where}: params declares {sorted(dup)} more than once")
+            out.update(item)
+        return out
+    raise ConfigError(f"{where}: params must be a mapping or a list of mappings, got {type(raw).__name__}")
+
+
 def _canon(obj) -> str:
     """region 的规范化文本（§4.1.1）：递归按键排序、数值最短往返、UTF-8、LF。
 
@@ -308,7 +343,13 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
                         f"{path}:{name}.{o.key}: the CS op `{op}` is legal only for rank-2; this output has "
                         f"dims={list(o.dims)} (§3.6)")
         # `_tc` 按**本节点**的有效 cutoff 解析（节点 params > 文件级 > region）
-        node_cutoff = (body.get("params") or {}).get("cutoff", cutoff)
+        node_params = _params(body.get("params"), f"{path}:{name}")
+        if "params" in body:
+            # 归一后回写, 指纹只认这一种形状（两种写法必须 hash 成同一个）。
+            # 只在本来就有这个键时回写——没写 params 的节点凭空多出一个 `params: {}`
+            # 会让 safe_dump 的结果变样, 指纹随之改变, 而定义其实一个字都没动。
+            body["params"] = node_params
+        node_cutoff = node_params.get("cutoff", cutoff)
         deps = [resolve_tc(str(d), node_cutoff) for d in (body.get("deps") or [])]
         for d in deps:
             parse_ref(d[:-1] + "x" if is_wildcard(d) else d)
@@ -316,7 +357,7 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
             o.ops = [(op, resolve_tc(a, node_cutoff) if op == "neutralize" else a)
                      for op, a in o.ops]
         node = NodeSpec(name=name, node_dir=node_dir, repo=repo, code=code, deps=deps,
-                        params=body.get("params") or {}, outputs=outs,
+                        params=node_params, outputs=outs,
                         src=yaml.safe_dump(body, sort_keys=True, allow_unicode=True),
                         universe=spec.universe, lookback=spec.lookback)
         spec.nodes[name] = node

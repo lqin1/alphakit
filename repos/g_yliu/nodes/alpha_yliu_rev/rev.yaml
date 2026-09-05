@@ -5,7 +5,8 @@ lookback: 30
 nodes:
   alpha_yliu_rev_w005:
     code: rev.py
-    params: {window: 5}
+    params:
+      window: 5
     deps:
       - g_common.field_base_px.adj_close_1500
       - g_yliu.factor_yliu_liq.rvol20
@@ -19,7 +20,8 @@ nodes:
 
   alpha_yliu_rev_w020:
     code: rev.py
-    params: {window: 20}
+    params:
+      window: 20
     deps:
       - g_common.field_base_px.adj_close_1500
       - g_yliu.factor_yliu_liq.rvol20

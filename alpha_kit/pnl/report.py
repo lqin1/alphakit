@@ -73,11 +73,11 @@ def run_pnl(a) -> int:
                                                 "equal_weighted_market_proxy"]})
     (out / "metrics.json").write_text(json.dumps(m, indent=1, ensure_ascii=False))
 
-    _print(name, m, out)
+    _print(name, m, out, by=getattr(a, "by", "both"))
     return 0
 
 
-def _print(name: str, m: dict, out: Path) -> None:
+def _print(name: str, m: dict, out: Path, by: str = "both") -> None:
     """控制台是这条命令的**主要**输出面。
 
     metrics.json 有 60 多个字段, 但决定"这个 alpha 还要不要继续做"的就那十来个。
@@ -86,7 +86,7 @@ def _print(name: str, m: dict, out: Path) -> None:
     "没查"之间有歧义。
     """
     sc, snap, au = m.get("scalar", {}), m.get("snapshot", {}), m.get("audit", {})
-    W = 78
+    W = 100
     print("\n" + "=" * W)
     print(f" {name}")
     print(f" {snap.get('sd','')} .. {snap.get('ed','')}   "
@@ -112,7 +112,11 @@ def _print(name: str, m: dict, out: Path) -> None:
                   ("L/S", _num(sc.get("long_short_ratio")))]),
     ]
     for head, cells in rows:
-        print(" " + _pad(head, 7) + "".join(_pad(f"{k}={v}", 26) for k, v in cells))
+        print(" " + _pad(head, 7) + "".join(_pad(f"{k}={v}", 30) for k, v in cells))
+
+    for freq, key, label in (("year", "by_year", "By year"), ("month", "by_month", "By month")):
+        if by in (freq, "both"):
+            _period_tables(m.get(key) or {}, label, W)
 
     print("-" * W)
     print(f" Gates     {m.get('n_pass','?')}/{m.get('n_total','?')} passed")
@@ -128,6 +132,63 @@ def _print(name: str, m: dict, out: Path) -> None:
     print(f" Verdict {m.get('summary','')}")
     print(f" Output  {out}/  →  daily.csv  pnl.csv  holding.csv  metrics.json")
     print("=" * W)
+
+
+MAX_ROWS = 36          # 超过三年的月表就是一堵墙, 读不出任何东西
+
+
+def _period_tables(per: dict, label: str, W: int) -> None:
+    """一段一行, 分两块印。
+
+    十九个指标塞进一行是 130+ 字符, 折行之后对齐全毁。分成"收益/成本"与
+    "交易/账本"两块, 每块都在 100 列内, 而且这两组本来就是分开看的: 一组回答
+    "这段赚没赚", 另一组回答"这段的账本长什么样"。完整字段仍在 metrics.json 里。
+    """
+    if not per:
+        return
+    keys = sorted(per)
+    note = ""
+    if len(keys) > MAX_ROWS:
+        note = f"   (showing last {MAX_ROWS} of {len(keys)})"
+        keys = keys[-MAX_ROWS:]
+
+    blocks = (
+        ("returns & cost", [
+            ("days", 6, lambda r: f"{r['days']:d}"),
+            ("sharpe", 9, lambda r: _n(r["sharpe"], 3)),
+            ("annRet", 10, lambda r: _pct(r["ann_return"])),
+            ("pnl", 12, lambda r: _money(r["pnl"])),
+            ("cost", 12, lambda r: _money(r["cost"])),
+            ("margin", 10, lambda r: _n(r["margin_bps"], 2) + "bp"),
+            ("maxDD", 9, lambda r: _pct(r["max_drawdown"])),
+            ("hit%", 8, lambda r: _pct(r["hit_rate"])),
+        ]),
+        ("trading & book", [
+            ("days", 6, lambda r: f"{r['days']:d}"),
+            ("turnover", 10, lambda r: _pct(r["turnover"])),
+            ("tradeVol", 12, lambda r: _money(r["trade_dollar"])),
+            ("longN", 9, lambda r: _n(r["avg_long_count"], 1)),
+            ("shortN", 9, lambda r: _n(r["avg_short_count"], 1)),
+            ("longV", 12, lambda r: _money(r["avg_long_value"])),
+            ("shortV", 12, lambda r: _money(r["avg_short_value"])),
+            ("long%", 8, lambda r: _pct(r["long_share"])),
+        ]),
+    )
+    kw = max(11, max(len(k) for k in keys) + 2)
+    for sub, cols in blocks:
+        print("-" * W)
+        print(f" {label} - {sub}{note}")
+        print(" " + "period".ljust(kw) + "".join(h.rjust(w) for h, w, _ in cols))
+        for k in keys:
+            r = per[k]
+            print(" " + k.ljust(kw) + "".join(f(r).rjust(w) for _, w, f in cols))
+        note = ""
+
+
+def _n(v, nd=2):
+    if v is None or (isinstance(v, float) and not np.isfinite(v)):
+        return "n/a"
+    return f"{v:,.{nd}f}"
 
 
 def _dw(s: str) -> int:

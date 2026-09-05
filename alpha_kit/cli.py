@@ -61,45 +61,8 @@ def _runtime_error(path, exc: BaseException, code: str = "RUNTIME"):
                       f"{type(exc).__name__}: {' '.join(str(exc).split())}")
 
 
-def _dry_run(spec, store, a) -> list:
-    """§15.7 的 `--dry-run`：预检之后，在**一个** session 上执行 handle，不预热。
-
-    元数据答不了的那一半问题在这里露头——handle 当日返回的形状、单/多输出写法、
-    ops 链能不能真的吃下那一天的截面（§4.2 的那张表全是运行期才知道的事）。
-
-    实现上不另写一个单日执行器，而是把引擎既有的两个旋钮拧到位：`lookback=0` 拿掉
-    yaml 声明的预热（ops 自己推导的那点下限留着——它是算子正确性的一部分，
-    拿掉反而假）；`probe=0` 让 `run()` 把 sd 收成 ed 那一天，且 probe 分支
-    **从构造上**一个字节都不写 store（§15.7「把快速路径做成构造上不落盘」）。
-    复用引擎而不是复制引擎：一份平行的单日执行器迟早与主循环漂移，
-    而它漂移的那天，正是预检开始说谎的那天。
-    """
-    import warnings
-    from dataclasses import replace
-    from .runner.node import run
-    from .runner.preflight import WARN, Diagnostic, _rel
-
-    out: list = []
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        try:
-            run(replace(spec, lookback=0), store, a.sd or store.axes.sessions[0],
-                a.ed, only=a.only, probe=0)
-        except Exception as e:                      # noqa: BLE001
-            # 这里**故意**兜住一切：dry-run 存在的理由就是把 ValueError / KeyError
-            # 一类的运行期错误变成一条诊断, 而不是一屏 traceback。
-            out.append(_runtime_error(spec.path, e, code="DRYRUN"))
-    for w in caught:
-        out.append(Diagnostic(
-            WARN, "DRYRUN_RUNTIME", _rel(spec.path), "-", "handle",
-            " ".join(str(w.message).split())[:200],
-            "--dry-run does no warmup, so a single-day window is almost all NaN; warnings "
-            "like Σ|w|=0 are expected here. Use --probe to check actual values"))
-    return out
-
-
 def cmd_run(a) -> int:
-    """§15.7：预检在**读任何数据之前**跑，而不只在 `--dry-run` 下跑。
+    """§15.7：预检在**读任何数据之前**跑, 每一次 run 都跑。
 
     一个 config 出错不中断其余的——PATH 可以是 glob，一次能带十个 yaml（§十二），
     第一个里的一个 typo 不该让后面九个连检查都跑不到。
@@ -125,13 +88,8 @@ def cmd_run(a) -> int:
             rc = 1; continue        # 有 error 就不进引擎——不让人等到第 12 秒
 
         try:
-            if a.dry_run:
-                d2 = _dry_run(spec, store, a)
-                report(d2)
-                rc = 1 if n_errors(d2) else rc
-            else:
-                run(spec, store, a.sd or store.axes.sessions[0], a.ed,
-                    only=a.only, rebuild=a.rebuild, probe=a.probe)
+            run(spec, store, a.sd or store.axes.sessions[0], a.ed,
+                only=a.only, rebuild=a.rebuild, probe=a.probe)
         except (ConfigError, StoreError) as e:
             report([_runtime_error(f, e)]); rc = 1
     return rc
@@ -194,9 +152,6 @@ def main(argv=None) -> int:
     r.add_argument("--only", help="run only the named node")
     r.add_argument("--probe", nargs="?", type=int, const=20, default=None,
                    help="trial-run the warmed tail; does not write the store")
-    r.add_argument("--dry-run", dest="dry_run", action="store_true",
-                   help="compile checks + run handle on one session; no warmup, no store write "
-                        "(§15.7). Takes precedence when given together with --probe")
     r.add_argument("--rebuild", action="store_true", help="full rebuild, bumping version")
     r.add_argument("--pnl", action="store_true")
     r.set_defaults(fn=cmd_run)
@@ -217,6 +172,9 @@ def main(argv=None) -> int:
     p.add_argument("--participation", type=float, default=None)
     p.add_argument("--halt-proxy", dest="halt_proxy", type=int, default=None,
                    help="explicit fallback when there is no is_halted field: K consecutive NaN return days count as halted (§9)")
+    p.add_argument("--by", choices=["year", "month", "both", "none"], default="both",
+                   help="period breakdown tables printed to the console; "
+                        "metrics.json always carries both")
     p.add_argument("--weight", default=None, help="entry point for externally supplied weights")
     p.add_argument("--out", default=None, help="where the four deliverables land; defaults to the region's pnl_out")
     p.set_defaults(fn=cmd_pnl)
