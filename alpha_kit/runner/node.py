@@ -76,7 +76,13 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
              verbose: bool = True) -> dict:
     t0 = time.time()
     deps = resolve_deps(store, node)
+    # 自引用节点必须把自己列进 deps（§7.2 第 1 条, 预检也是这么建议的）, 而冷启动时
+    # 它自己当然还不存在——照着建议写反而会在这里被拒, 于是那条"合法写法"永远跑不起来。
+    # 它由 PanelLoader 的 optional 分支承接: 缺数组时退化成只有当日回灌的空面板。
+    own = {str(node.ref(k)) for k in node.outputs}
     for d in deps:
+        if d in own:
+            continue
         if not store.exists(d):
             raise StoreError(
                 f"{node.name}: dependency {d} is not in the store.\n"
@@ -102,8 +108,11 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
     own = {str(node.ref(k)): PanelLoader(store, str(node.ref(k)), load_sd, load_ed,
                                          optional=True, dims=list(o.dims))
            for k, o in node.outputs.items()}
-    for ref, p in own.items():
-        panels.setdefault(ref, p)
+    # **覆盖而不是 setdefault**: 自引用节点按 §7.2 与预检的建议会把自己写进 deps,
+    # 于是 panels 里已经有一个**非 optional** 的 loader, setdefault 便什么也不做——
+    # 那个带 optional 与当日回灌的 loader 被静默丢弃, 冷启动时首次触碰就是
+    # KeyError('dims')。照着建议写反而跑不起来, 而建议本身是对的。
+    panels.update(own)
 
     dates = store.axes.sessions[i_start:i_ed + 1]
     ctx = Ctx(store, panels, universe, node, i_start, cols, dates)

@@ -27,10 +27,11 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 import pandas as pd
 
+from ..core import opspec
+
 # exp_decay 的预热下限取几个半衰期（§7.1：引擎取 max(config 声明值, 这个下限)）。
-# 递推形式自带按有效权重归一，第一天就是一个合法的加权平均，故这里要的不是「算得出」
-# 而是「与更长的历史算得一样」——4 个半衰期覆盖 93.75% 的稳态权重。
-EXP_DECAY_WARMUP_HALFLIVES = 4
+# 唯一出处在 core.opspec（预热规则与算子声明同属一处）; 这里转出来给旧调用点。
+EXP_DECAY_WARMUP_HALFLIVES = opspec.EXP_DECAY_WARMUP_HALFLIVES
 
 
 # ------------------------------------------------------------------ universe
@@ -274,32 +275,23 @@ class Delay(_TsOp):
 
 
 _TS_FACTORY = {"linear_decay": LinearDecay, "exp_decay": ExpDecay, "delay": Delay}
-_CS_OPS = ("rank", "neutralize", "truncate", "scale")
-OPS = tuple(_CS_OPS) + tuple(_TS_FACTORY)        # 与 config.OP_TYPES 的键必须一致
+_CS_OPS = tuple(sorted(opspec.CS_OPS))
+OPS = tuple(_CS_OPS) + tuple(_TS_FACTORY)
+# 接缝从测试搬进代码: 分派表与声明表对不上就是 ImportError, 不必等测试跑。
+opspec.check_covers(OPS, "runner.ops.OPS")
+opspec.check_covers(tuple(_TS_FACTORY) + _CS_OPS, "runner.ops dispatch")
+
+
+def ops_lookback(ops: list[tuple[str, object]]) -> int:
+    """一条 ops 链的预热下限——转调 `core.opspec.lookback`, 不另写一份阶梯。
+
+    runner 要在**建链之前**就知道预热多久, 而建链需要池子（neutralize 要取分组字段）,
+    所以它必须是个不依赖链实例的函数。
+    """
+    return opspec.lookback(ops)
 
 
 # --------------------------------------------------------------------- 链
-def ops_lookback(ops: list[tuple[str, object]]) -> int:
-    """ops 可推导的预热下限（§7.1）。
-
-    **TS 算子串联时窗口相加**：delay 2 接 linear_decay 5 要 2 + 4 = 6 天先前历史,
-    因为 n 日窗口只需 n-1 天**先前**数据（当日自己算第 n 天）。
-    做成模块级函数而非只挂在链上：runner 要在建链**之前**就知道该预热多久,
-    而建链需要池子（neutralize 要取分组字段）——先有鸡还是先有蛋。
-    两处各写一份的代价已经付过一次：曾经 runner 那份对 `delay:2 → decay:5` 给 5,
-    预热不足会让最初几天的输出来自未填满的缓冲, 数值看着合理却是错的。
-    """
-    need = 0
-    for op, arg in ops:
-        if op == "linear_decay":
-            need += int(arg) - 1
-        elif op == "delay":
-            need += int(arg)
-        elif op == "exp_decay":
-            need += EXP_DECAY_WARMUP_HALFLIVES * int(arg)
-    return need
-
-
 class OpChain:
     """一个输出的 ops 链 + 它的 op-state（§6.2 / §7.2）。
 

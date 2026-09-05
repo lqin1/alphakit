@@ -15,17 +15,14 @@ import yaml
 
 # 命名规则住在 naming.py；这里 re-export，既有 `from ...config import parse_ref`
 # 的写法不受影响——拆分是为了让 store 不必依赖加载器，不是为了制造迁移工作。
+from . import opspec
+from . import rank as rk
 from .naming import (KINDS, NAME_RE, NS_RE, RESERVED, ConfigError, Ref,  # noqa: F401
                      check_name, is_wildcard, parse_ref)
 TAGS = {"window": "w", "halflife": "h", "lag": "k", "quantile": "q", "count": "n"}
-CS_OPS = {"rank", "neutralize", "truncate", "scale"}
-TS_OPS = {"linear_decay", "exp_decay", "delay"}
-# 算子 → 参数类型。元组表示"这些之一"，含 NoneType 即**参数可省**：
-# `scale` 裸写时 OpChain 把 None 当作 book，编译期若不接受就会拒掉执行期明确支持的写法。
-# 键集合必须与 runner 的 OPS 一致（tests/test_core.py 与 tests/test_ops.py 各查一遍）。
-OP_TYPES = {"truncate": float, "linear_decay": int, "exp_decay": int,
-            "delay": int, "neutralize": str, "rank": type(None),
-            "scale": (str, type(None))}
+# 算子的声明只有一份, 在 core/opspec.py。这里只是转出来给老调用点用。
+CS_OPS, TS_OPS = opspec.CS_OPS, opspec.TS_OPS
+OP_TYPES = {k: v.arg for k, v in opspec.OPS.items()}
 
 
 # --------------------------------------------------------------------- Spec
@@ -96,8 +93,6 @@ class Spec:
 
 # ------------------------------------------------------------------ 加载器
 
-RANKS = {("di",), ("di", "ii"), ("di", "ii", "ti")}
-
 # yaml 的键集是**封闭**的。此前没有白名单, 认不得的键被 doc.get 静默丢掉:
 # `universe:` 拼错一个字母, spec.universe 就是 None, 池子是 None, 掩码恒 True,
 # 预检里每一处 universe 检查都在 `if spec.universe:` 后面——于是 alpha 悄悄按
@@ -120,21 +115,6 @@ def _closed(got, allowed: set[str], where: str, what: str) -> None:
         f"{where}: unknown {what} key(s) {unknown}"
         + (f"; did you mean {hint[0]}?" if hint else "")
         + f"\n  allowed: {sorted(allowed)}")
-
-
-def _dims(raw, where: str) -> tuple[str, ...]:
-    """dims 必须是三种秩之一（§3.6）。
-
-    此前这里只做 `tuple(...)`, 没有任何成员检查: `dims: [di, zz]` 会被原样收下, 然后
-    在 store / ctx / node 的每一处 `dims == (...)` 分支里全部落到 else, 最后以
-    "rank-3 必须声明 grid" 的形式炸出来——报的是另一个问题, 而错在写下 dims 的那一行。
-    """
-    d = tuple(raw)
-    if d not in RANKS:
-        raise ConfigError(
-            f"{where}: dims={list(d)} is not a rank; must be one of "
-            f"{sorted(list(r) for r in RANKS)}")
-    return d
 
 
 def _params(raw, where: str) -> dict:
@@ -263,30 +243,9 @@ def _norm_ops(raw, where: str) -> list:
             (op, arg), = item.items()
         else:
             raise ConfigError(f"{where}: malformed op entry: {item!r}")
-        if op not in OP_TYPES:
-            raise ConfigError(f"{where}: unknown op {op} (available: {sorted(OP_TYPES)})")
-        want = OP_TYPES[op]
-        if isinstance(want, tuple):                 # 参数可省
-            if arg is not None and not isinstance(arg, want):
-                raise ConfigError(f"{where}: the argument to {op} must be a name or omitted, got {arg!r}")
-            out.append((op, arg))
-            continue
-        if want is type(None):
-            if arg is not None:
-                raise ConfigError(f"{where}: {op} takes no argument, got {arg!r}")
-        elif want is float:
-            if not isinstance(arg, (int, float)) or isinstance(arg, bool):
-                raise ConfigError(
-                    f"{where}: {op} needs a number, got {arg!r} ({type(arg).__name__}). YAML will silently "
-                    f"turn a stray comma in `- {op}: 0.02,` into a string.")
-        elif want is int:
-            if not isinstance(arg, int) or isinstance(arg, bool) or arg <= 0:
-                raise ConfigError(f"{where}: {op} needs a positive integer, got {arg!r}")
-        elif want is str:
-            if not isinstance(arg, str):
-                raise ConfigError(f"{where}: {op} needs a name, got {arg!r}")
-            if op == "neutralize":
-                parse_ref(arg)          # 必须是全 ref，不能是裸名
+        opspec.validate_arg(op, arg, where)
+        if opspec.OPS[op].ref_arg:
+            parse_ref(arg)                      # 必须是全 ref，不能是裸名
         out.append((op, arg))
     return out
 
@@ -374,7 +333,7 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
                 check_name(k, f"the output name of {path}:{name}")
                 _closed(o, OUTPUT_KEYS, f"{path}:{name}.{k}", "output")
                 outs[k] = Output(k, dtype=o.get("dtype", "f4"),
-                                 dims=_dims(o.get("dims", ("di", "ii")), f"{path}:{name}.{k}"),
+                                 dims=rk.parse(o.get("dims", rk.DI_II), f"{path}:{name}.{k}"),
                                  grid=o.get("grid"),
                                  ops=_norm_ops(o.get("ops"), f"{path}:{name}.{k}.ops")
                                      or (node_ops if len(raw_out) == 1 else []))
@@ -382,7 +341,7 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
             if o.dims == ("di", "ii", "ti") and not o.grid:
                 raise ConfigError(f"{path}:{name}.{o.key}: a rank-3 output must declare grid")
             for op, _ in o.ops:
-                if op in CS_OPS and o.dims != ("di", "ii"):
+                if op in CS_OPS and not rk.is_panel(o.dims):
                     raise ConfigError(
                         f"{path}:{name}.{o.key}: the CS op `{op}` is legal only for rank-2; this output has "
                         f"dims={list(o.dims)} (§3.6)")
@@ -408,7 +367,7 @@ def load_spec(path: str | Path, repo: str | None = None) -> Spec:
 
         if kind == "alpha":
             for o in node.outputs.values():
-                if o.dims != ("di", "ii"):
+                if not rk.is_panel(o.dims):
                     raise ConfigError(f"{path}:{name}: an alpha must be rank-2 -- weights are di x ii")
                 if not o.ops or o.ops[-1][0] != "scale":
                     raise ConfigError(

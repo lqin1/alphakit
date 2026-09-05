@@ -492,3 +492,9 @@ sim:
 | L7 | 指纹覆盖 params / deps / code 三项，任一变化都换指纹 |
 | L8 | 同日重跑幂等 |
 | L9 | 两道掩码闸门：池外读到 NaN、`scale` 后池外权重恰为 0 |
+| L10 | session 轴与列轴同为 append-only：非扩展的重放被拒（日历改一天 = 全库面板错位） |
+| L11 | `dims` 必须是三种秩之一；yaml 键集封闭, 未知键带最接近候选报错 |
+| L12 | 预热 = handle 所需 + ops 链所需（**相加**）；一个 session 的值与起跑点无关 |
+| L13 | 属性未提交的半成品数组不算存在, 不入 `list_refs`, 不被当作"新鲜" |
+| L14 | 算子声明单一出处：实现方 import 时自证覆盖, 缺一个多一个都是 ImportError |
+| L15 | 自引用节点的 optional 面板不被 deps 里的同名 loader 覆盖（冷启动可跑） |

@@ -981,6 +981,57 @@ def test_param_tag_consistency():
     return f"lone case exempt / consistent family allowed / mismatched value and missing tag both rejected ({len(TAGS)} tags)"
 
 
+def test_op_registry_is_the_single_source():
+    """算子的声明只有一份, 且实现方在 import 时自证覆盖它（§6.2）。
+
+    此前同一件事写了七遍——config 四处、ops 三处——靠一条测试互相盯着。用测试守住
+    两份重复只能事后告诉你它们不一致了, 不能阻止你只改其中一份。现在 config 的
+    CS_OPS/TS_OPS/OP_TYPES 与参数校验、ops 的分派与预热, 全部由 core.opspec 派生,
+    对不上是 ImportError 而不是一条红测试。
+    """
+    from alpha_kit.core import opspec
+    from alpha_kit.runner.ops import OPS as RUNTIME_OPS, ops_lookback
+
+    check(set(RUNTIME_OPS) == set(opspec.OPS), f"分派表与声明表不一致：{set(RUNTIME_OPS) ^ set(opspec.OPS)}")
+    check(set(CS_OPS) | set(TS_OPS) == set(opspec.OPS), "CS/TS 划分没有覆盖全表")
+    check(set(OP_TYPES) == set(opspec.OPS), "OP_TYPES 没有从声明表派生")
+
+    # 覆盖检查真的会响, 否则它只是一句装饰
+    e = raises(ImportError, opspec.check_covers, [n for n in opspec.OPS if n != "rank"], "fake")
+    check("rank" in str(e), f"少一个算子没被点名：{e}")
+    e2 = raises(ImportError, opspec.check_covers, list(opspec.OPS) + ["bogus"], "fake")
+    check("bogus" in str(e2), f"多一个算子没被点名：{e2}")
+
+    # 预热规则也只有一份: TS 串联相加
+    check(ops_lookback([("delay", 2), ("linear_decay", 5)]) == 6, "delay2+decay5 应是 6")
+    check(ops_lookback([("rank", None)]) == 0, "CS 算子不吃历史")
+    check(opspec.lookback([("delay", 2), ("linear_decay", 5)]) == 6, "两个入口给出不同的预热")
+    return f"{len(opspec.OPS)} 个算子单一出处；缺/多一个都是 ImportError"
+
+
+def test_half_created_array_does_not_exist():
+    """建好数组但属性未提交 = 尚不存在（§3.3）。
+
+    write 先建数组后写属性。若 exists() 只看 zarr.json, 死在这两步之间留下的空壳会
+    通过 exists()、进 list_refs()、meta() 返回 {}——于是 effective_ed 的
+    `meta.get("last_session", last)` 把它当成**完全新鲜**, 预检的 DEP_MISSING 也不响:
+    那个专为"库还没准备好"而生的零数据检查, 会把一具尸体判成活的。
+    """
+    import zarr as _z
+    st = fresh("halfmade")
+    p = st.path(R2)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    _z.create_array(store=str(p), shape=(10, 12), chunks=(50, 12), dtype="f4",
+                    fill_value=float("nan"))          # 建了数组, 一个属性都没写
+    check((p / "zarr.json").exists(), "前提没成立：数组没建出来")
+    check(not st.exists(R2), "属性未提交的空壳被判为存在")
+    check(R2 not in st.list_refs(), f"空壳进了 list_refs：{st.list_refs()}")
+    st.write(R2, panel(SESSIONS[:2], SECURITIES))     # 补完属性后应当正常
+    check(st.exists(R2), "属性写好之后仍判为不存在")
+    check(st.meta(R2).get("dims") == ["di", "ii"], "属性没写进去")
+    return "空壳不存在 / 不入 list_refs / 补完属性后恢复"
+
+
 def test_session_axis_is_append_only():
     """di 轴与 ii 轴同一道闸门（§3.3）。
 
@@ -1254,6 +1305,8 @@ TESTS = [
     test_node_level_ops_with_multiple_outputs,
     test_node_ops_and_output_ops_conflict,
     test_param_tag_consistency,
+    test_op_registry_is_the_single_source,
+    test_half_created_array_does_not_exist,
     test_session_axis_is_append_only,
     test_dims_must_be_a_rank,
     test_yaml_key_set_is_closed,

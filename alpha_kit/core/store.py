@@ -20,13 +20,26 @@ import pandas as pd
 import zarr
 
 from .axes import Axes
-from .naming import Ref, is_wildcard, parse_ref
+from . import rank as rk
+from .naming import ConfigError, Ref, is_wildcard, parse_ref
 
-def _covered(z, dims: list[str], n: int) -> int:
-    """有数据的列数（秩-1 没有列轴, 记 0）。"""
-    if dims == ["di"]:
+def _covered(z, dims: list[str], n: int, i0: int, i1: int) -> int:
+    """本次写入的这一段里, 有数据的列数（秩-1 没有列轴, 记 0）。
+
+    **只扫 [i0, i1)**, 不是整个数组。此前这里是全量重扫: 写一行也要把全部历史
+    解压一遍再分配一个同样大小的布尔数组, 只为算出一个整数。秩-3 的 chunk 是
+    `(1, N, T)`——一个 session 一个文件——所以 `z[:, :n, :]` 会把数组里**每一个
+    chunk** 都读出来; 按 §十 给的满仓 m5 节点 7.5 GB 算, 日更要读 7.5 GB 才能更新
+    一个属性。读侧的 PanelLoader 正是为了避开这类开销才做成惰性的, 写侧却每次都做。
+
+    代价是这个数变成"单次写入区间内覆盖的列数"的高水位, 而不是全史并集: 若某一段
+    覆盖了 A 列、另一段覆盖了 B 列, 它给 max(|A|,|B|) 而非 |A∪B|。它是 catalog 里
+    的一个提示数（没有任何逻辑以它为闸门）, 为它把日更变成 O(全史) 不划算——但语义
+    必须写清楚, 不能让人以为它是精确并集。
+    """
+    if not rk.has_cross_section(dims):
         return 0
-    a = np.asarray(z[:, :n] if dims == ["di", "ii"] else z[:, :n, :])
+    a = np.asarray(z[i0:i1, :n] if rk.n_axes(dims) == 2 else z[i0:i1, :n, :])
     if a.dtype.kind == "f":
         ok = np.isfinite(a)
     else:
@@ -35,13 +48,24 @@ def _covered(z, dims: list[str], n: int) -> int:
     return int(ok.any(axis=axes).sum())
 
 
+def _committed(p) -> bool:
+    """这个路径上有没有一个**属性已提交**的数组。
+
+    建数组与写属性是两步, 中途死掉会留下一个空壳。只看 zarr.json 的话它会通过
+    exists()、进 list_refs()、meta() 返回 {}, 于是 effective_ed 把它当成完全新鲜。
+    exists() 与 list_refs() 必须用同一个谓词, 否则空壳只被挡住一半。
+    """
+    if not (p / "zarr.json").exists():
+        return False
+    try:
+        return "dims" in zarr.open_array(store=str(p), mode="r").attrs
+    except Exception:                       # noqa: BLE001 — 读不开就是不存在
+        return False
+
+
 def _fill(dt) -> object:
     """该 dtype 的"无数据"取值：浮点是 NaN, 其余是 0/False（§3.3 fill_value 必须显式）。"""
     return np.nan if np.dtype(dt).kind == "f" else 0
-
-
-CHUNK_DI = 50
-CHUNK_RANK1 = 4096
 
 
 class StoreError(RuntimeError):
@@ -71,7 +95,15 @@ class Store:
         return self.root / self.region / r.repo / r.node_dir / r.leaf
 
     def exists(self, ref: str | Ref) -> bool:
-        return (self.path(ref) / "zarr.json").exists()
+        """存在 = 数组建好**且属性已提交**。
+
+        `_open_or_create` 先建数组、后写属性。只看 zarr.json 的话, 死在这两步之间
+        留下的空壳会: 通过 exists()、出现在 list_refs()、meta() 返回 {}, 于是
+        `effective_ed` 的 `meta.get("last_session", last)` 把它当作**完全新鲜**,
+        预检的 DEP_MISSING 也不会响——那个专为"库还没准备好"而生的零数据检查,
+        会把一具尸体判成活的, 然后在 PanelLoader 里以裸 KeyError('dims') 收场。
+        """
+        return _committed(self.path(ref))
 
     def list_refs(self) -> list[str]:
         out = []
@@ -79,7 +111,7 @@ class Store:
         if not base.exists():
             return out
         for z in sorted(base.glob("*/*/*")):
-            if (z / "zarr.json").exists():
+            if _committed(z):        # 与 exists() 同一个谓词, 否则空壳只被挡住一半
                 out.append(f"{z.parent.parent.name}.{z.parent.name}.{z.name}")
         return out
 
@@ -149,14 +181,10 @@ class Store:
             return zarr.open_array(str(p), mode="r+")
         p.mkdir(parents=True, exist_ok=True)
         D, N = self.axes.n_sessions, self.axes.allocated
-        if dims == ["di"]:
-            shape, chunks = (D,), (CHUNK_RANK1,)
-        elif dims == ["di", "ii"]:
-            shape, chunks = (D, N), (CHUNK_DI, N)
-        else:
-            if not grid_len:
-                raise StoreError(f"{ref}: a rank-3 output must declare grid")
-            shape, chunks = (D, N, grid_len), (1, N, grid_len)
+        try:
+            shape, chunks = rk.shape(dims, D, N, grid_len), rk.chunks(dims, N, grid_len)
+        except ConfigError as e:                  # 形状语义归 rank, 报错要带上是谁
+            raise StoreError(f"{ref}: {e}") from None
         fill = _fill(dtype)
         return zarr.create_array(store=str(p), shape=shape, chunks=chunks,
                                  dtype=dtype, fill_value=fill, overwrite=False)
@@ -218,9 +246,14 @@ class Store:
 
         # catalog 承诺了这几列, 就必须有人填——否则它们永远是 None,
         # 而"覆盖了多少只票"正是 §5.2 一致性检查要看的第一个数。
-        covered = _covered(z, dims, self.axes.n_securities)
+        covered = _covered(z, dims, self.axes.n_securities, i0, i1)
         old = dict(z.attrs)
-        z.attrs.update({
+        # `attrs.update` 走的是 MutableMapping.update, 每个键一次 __setitem__、
+        # 每次重写一遍 zarr.json——二十来个键就是二十来次元数据写。中途被 kill
+        # 会留下一份语义上写了一半的属性集: dims/fingerprint/version 已落, 而
+        # last_session、updated_at 与整个 meta 块（deps/deps_versions/region_hash）
+        # 没落——血缘记录描述的是另一次写入。`put` 是一次原子覆写。
+        z.attrs.put({
             "dims": dims, "dtype": dtype,
             "n_cols_covered": covered,
             # §15.4 的生命周期：首次写入默认 wip；已登记的由 registry 侧改写, 不在这里降级

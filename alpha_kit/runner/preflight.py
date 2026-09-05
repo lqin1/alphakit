@@ -25,6 +25,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..core import rank as rk
 from ..core.config import CS_OPS, KINDS, ConfigError, Spec, is_wildcard, parse_ref
 
 ERROR = "error"
@@ -339,7 +340,7 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
         ranks = {len(o.dims) for o in node.outputs.values()}
         for o in node.outputs.values():
             for j, (op, arg) in enumerate(o.ops):
-                if op in CS_OPS and o.dims != ("di", "ii"):
+                if op in CS_OPS and not rk.is_panel(o.dims):
                     # load_spec 已在加载期拦下同一条（这份是给"程序化构造的 Spec"
                     # 兜底，走 cli 时它不会触发）；两处同码同文，出口也同一个。
                     add(ERROR, "CS_OP_RANK", node.name, f"outputs.{o.key}.ops[{j}]",
@@ -366,7 +367,7 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                             _suggest(fld, cat.known))
                     continue
                 gd = cat.dims(fld)
-                if gd != ["di", "ii"]:
+                if not rk.is_panel(gd):
                     add(ERROR, "NEUTRALIZE_RANK", node.name,
                         f"outputs.{o.key}.ops[{j}]",
                         f"the grouping field used by neutralize must be rank-2; {fld} has dims={gd}")
@@ -381,7 +382,7 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
         # ------------------------------------------------ alpha 的秩与 scale
         if node.kind == "alpha":
             for o in node.outputs.values():
-                if o.dims != ("di", "ii"):
+                if not rk.is_panel(o.dims):
                     add(ERROR, "ALPHA_RANK", node.name, f"outputs.{o.key}.dims",
                         f"an alpha must be rank-2 (weights are di x ii); this output has dims={list(o.dims)}")
                 elif not o.ops or o.ops[-1][0] != "scale":
@@ -481,7 +482,7 @@ def preflight(spec: Spec, store, *, sd: str | None = None,
                     f"universe is not in the store: {u}", _suggest(u, cat.known))
         else:
             ud = cat.dims(u)
-            if ud != ["di", "ii"]:
+            if not rk.is_panel(ud):
                 add(ERROR, "UNIVERSE_RANK", "-", "universe",
                     f"universe must be rank-2; {u} has dims={ud}",
                     "§3.5: a pool is a di x ii membership mask")
