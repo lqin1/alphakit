@@ -347,7 +347,11 @@ def _gate_lookahead(sim_audit, meta):
         bad.append("no delist_date field: the delisting path is dead code, delist_events identically 0")
     if nums["region_hash_match"] is False:
         bad.append("region_hash differs from the template baseline (results not comparable)")
-    unknown = [k for k in ("deps_tc_resolved", "region_hash") if nums[k] is None]
+    # `deps_tc_resolved` **不**进这个必需集: v0 不做 `_tc` 替换（预检对带 `_tc` 的 dep
+    # 直接报错, 见 §4.9.5）, 所以它恒为 None——把它算作"没查过"会让这道闸门在 v0 上
+    # 永远给不出 PASS, 那就又成了一道永远不会变绿的告警, 与 §九 的教训同一个形状。
+    # `_tc` 替换落地后再把它加回来。
+    unknown = [k for k in ("region_hash",) if nums[k] is None]
     if bad:
         return _g("lookahead status", FAIL, nums, "; ".join(bad))
     if unknown:

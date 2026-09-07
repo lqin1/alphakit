@@ -1,27 +1,32 @@
 # 中低频 Alpha 研究与回测系统 — 架构设计 v0.8
 
-> 参考 WorldQuant BRAIN 的研究流水线思想，面向内部研究团队的自建系统。
-> 市场：美股；主频率：日频。TAQ 等日内数据只作为日频字段的**原料**（BRAIN 模式），引擎不直接消费分钟数据。
+中低频 Alpha 研究与回测系统的引擎设计。**数据层现状**：250 个 session
+（2025-08-29 → 2026-08-27）× 503 只 S&P 成分，五张 L2 表，除 `calendar` 外全部逐交易日 PIT。
 
-**版本地图**（先读这张表，避免混层）：
+## 读这份文档之前
 
-| 章节 | 性质 | 说明 |
+**它规格化的是引擎的设计。** 操作说明在 `manual.md`，数据契约在 `l2_schema.md`，
+验收基准（可手算的例子 + 不变量清单）在 `acceptance.md`，**尚未实现**的部分在 `roadmap.md`。
+
+没有标记的章节都是**已实现的契约**；`[TARGET]` 标记的是目标架构，不要照着实现。
+同一件事若本文与 `l2_schema.md` 都提到，**以 `l2_schema.md` 为准**——那边是契约，这边是设计。
+
+| 章 | 内容 | 重建时的分量 |
 |---|---|---|
-| §一 ~ §五 | **目标架构** | 总览、三层仓库、数据与存储、统一 Node 模型、L2/L1 接入与日更 |
-| §六 ~ §十 | **组件规格** | ctx 与 ops、引擎、评估、退市停牌、Ctx 实现；v0 范围标注于各节 |
-| §十一 ~ §十四 | **质量与路线** | 防线、CLI、测试验收、选型与阶段 |
-| §十五 | **研究工作流与仓库管理** | 仓库组织、晋升护栏、发现、死节点、OOS 两 store、内循环、闸门、提交 |
-| 附录 | 决策记录 / NaN 规范草案 | 讨论纪要与待批口径 |
-
-**配套文档**：
-
-| 文档 | 内容 |
-|---|---|
-| [`l2_schema.md`](l2_schema.md) | **L2 数据契约**——目录布局、五张表的 schema、复权反演算法、验收断言。已落地并通过全部校验 |
-
-**本次修订**（在 v0.8 基础上）：**§4.10 / §4.11 / §十五 新增**——三例连读的完整研究链、六个名字的命名约定（含"一个节点一个目录"的仓库布局）、以及研究工作流与仓库管理。**通读全文整理出的 16 处待修问题已全部并入相应章节**（原独立的 `architecture_findings.md` 因此撤销）：自引用节点读陈旧数据、日更 `write` 毁历史、`OpChain` 拿不到池子、`frozen_value` 带符号求和、停牌 NaN 摧毁持仓、ghost 检测恒不触发、schema 缺 `return_metric` 等字段、`_tc` 在 deps 侧未定义、eager/lazy 三处矛盾、registry 三种形状、写权限三方冲突、OOS 与日更不能共存于一个 store、`append` 静默拼接两个定义、已登记节点可依赖未登记节点、"物理隔离"缺出网策略、以及 §5.3 的基准数字歧义。 另：**§3.6 新增**——L3 不再恒为 `date × instrument`，改为节点声明的秩 `[di]` / `[di, ii]` / `[di, ii, ti]`，配套改动落在 §一原则1、§3.1、§3.3（`ti` 轴与分秩分块）、§4.1（`dims`）、§4.2（按秩的返回形状）、§4.7（秩-1/秩-3 示例）、§6.1（ctx 按秩返回）、§6.2（ops 按轴分秩合法性）。**§七 新增范围声明**——v0 引擎只处理 L3 → L3，`source` / `ctx.l2` / `ctx.l1` 移出 v0，L2 入库归 ingestion 管道（§五已相应标注）。
-
-**数据层现状**：美股日频 base 数据集已落地并通过验收闸门——250 个 session（2025-08-29 → 2026-08-27）× 503 只 S&P 成分，`pv` / `cax` / `sec_master` / `industry` / `calendar` 五张表，除 `calendar` 外全部逐交易日 PIT。管道 `pipeline/{fetch_yahoo,build_l2,validate_l2}.py`，契约见 `l2_schema.md`。
+| 一 | 系统总览、三层数据模型 | 背景 |
+| 二 | 代码与仓库拓扑、模块清单、region 与可比性 | 必读 |
+| 三 | 数据体系：L3 命名与路径（**含折叠规则**）、秩、两道掩码闸门 | **核心** |
+| 四 | 统一 Node 模型：yaml schema、outputs 与返回值规则、命名约定 | **核心** |
+| 五 | L2/L1 接入 `[TARGET]` | 跳过 |
+| 六 | ctx 的 API 面；**ops 的精确语义**（§6.2）；**指纹**（§6.3） | **核心** |
+| 七 | 执行引擎：逐日主循环、预热、新鲜度回退 | **核心** |
+| 八 | 评估：仿真内核（§8.2）、交付物字段规格（§8.4b）、七道闸门（§8.5） | **核心** |
+| 九 | 退市与停牌：NaN 的三分类 | **核心** |
+| 十 | Ctx 的实现约束 | 必读 |
+| 十一 | 质量防线 `[TARGET]` | 跳过 |
+| 十二 | CLI 参考 | 必读 |
+| 十三–十四 | 测试验收、技术选型 | 背景 |
+| 十五 | 研究工作流（只剩已实现的两节） | 背景 |
 
 ---
 
@@ -81,10 +86,32 @@
 
 ```
 alpha_kit/                       ← infra 维护, pip 包, 纯引擎: 零数据定义、零口径配置
-  core/      store.py axes.py calendar.py config.py     # 存储/轴/日历/配置
-  runner/    node.py ctx.py ops.py l2_reader.py dump.py  # 统一 Node 内核
-  pnl/       simulate.py metrics.py report.py            # precise 仿真与指标
-  cli.py     run / store / pnl 三个入口
+  core/      naming rank opspec panels project freshness axes store config
+  runner/    node ctx ops preflight
+  pnl/       simulate metrics report
+  cli.py
+
+**模块清单**（17 个, 约 4470 行; 每个模块只负责一件事）：
+
+| 模块 | 行 | 负责 |
+|---|---:|---|
+| `core/naming.py` | 138 | 引用名语法、折叠规则、通配、名字合法性 |
+| `core/rank.py` | 91 | 秩：形状、分块、`is_panel`/`has_cross_section` 谓词、`dims` 解析 |
+| `core/opspec.py` | 104 | **算子的唯一声明**：名字、参数类型、预热贡献；执行方 import 时自证覆盖 |
+| `core/panels.py` | 50 | `Panels` 接口——存储的接缝（生产 zarr，测试内存） |
+| `core/project.py` | 59 | 项目根发现（`repos/` + `pyproject.toml`/`.git`），`ALPHAKIT_ROOT` |
+| `core/freshness.py` | 40 | `ed` 被哪个依赖卡住、卡在哪天（runner 与 preflight 共用） |
+| `core/axes.py` | 138 | di/ii 轴，append-only 闸门，容量预留 |
+| `core/store.py` | 295 | zarr 读写、区间 upsert、指纹闸门、catalog |
+| `core/config.py` | 458 | yaml → Spec：封闭键集、秩校验、ops 归一、参数标签一致性、region 定位 |
+| `runner/node.py` | 263 | 逐日主循环、预热（`declared + ops`）、自引用回灌、落库与血缘 |
+| `runner/ctx.py` | 278 | handle 能看到的全部世界：惰性面板、窗口、池子掩码、多输出构造 |
+| `runner/ops.py` | 410 | 算子实现与 `OpChain` 的逐日状态 |
+| `runner/preflight.py` | 571 | 零数据预检：32 个诊断码、AST 解析 handle 读了什么、编辑距离建议 |
+| `pnl/simulate.py` | 472 | precise 仿真内核：单值账本、冻结重分配、NaN 三分类 |
+| `pnl/metrics.py` | 415 | 指标集、分年/分月切分、七道闸门 |
+| `pnl/report.py` | 319 | `evaluate()` 库入口 + 控制台报表 + 四交付物 |
+| `cli.py` | 361 | `run` / `store` / `pnl`；口径从 region 摊平成参数
 
 g_common/                        ← 全员可贡献, PR + 非作者 approver; 拥有全部共享 ns
   nodes/field_base_px/           → 节点 field_base_px      (核心行情)
@@ -176,17 +203,36 @@ run nodes/alpha_yliu_rev_senti_mix/  --sd 2018-01-01          # 用数据
 ```
 仓库      g_{user}/nodes/{node_dir}/*.yaml + *.py     ← node_dir 分组, 用完整 identity 命名
 节点名    {kind}_{ns}_{name}                          ← 如 factor_yliu_liq
-L3 路径   storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/
-引用名    {repo}.{node_dir}.{node_name}-{output}      ← region 由 config 的 `region:` 提供
+L3 路径   storage/l3/{region}/{repo}/{node_dir}/{leaf}/         ← leaf 见下方折叠规则
+引用名    {repo}.{node_dir}.{leaf}                    ← region 由 config 的 `region:` 提供
 ```
 
-**引用名与路径是一一对应的纯字符串关系**，不需要索引就能互推：
+**折叠规则（必须实现）**：`node_name` 与 `node_dir` 同名时, 中间那段不携带任何信息,
+**一律省略**; 展开形是**被拒绝**的, 不是同义写法。
+
+| | 叶子形态 | 例 |
+|---|---|---|
+| `node_name == node_dir` | `{output}` | `g_common.field_base_px.adj_close_1500` |
+| 否则 | `{node_name}-{output}` | `g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight` |
+
+之所以能无歧义还原: 名字本身不许含连字符, 所以"叶子里没有连字符"唯一地表示
+`node_name == node_dir`。之所以要拒绝展开形而不是当同义词收下: 同一份数据两种拼法,
+迟早一半代码写这种、一半写那种, 而它们 hash 出两个不同的 fingerprint 却指向同一个数组。
+
+**引用名与路径是一一对应的纯字符串关系**，不需要索引就能互推（路径与引用名折叠规则一致）：
 
 ```
-g_yliu.factor_yliu_liq.adv20
+g_yliu.factor_yliu_liq.adv20                          ← 折叠（node_dir == node_name）
    ↕
-storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/
+storage/l3/us/g_yliu/factor_yliu_liq/adv20/
+
+g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight      ← 不折叠（一个 node_dir 装一族变体）
+   ↕
+storage/l3/us/g_yliu/alpha_yliu_rev/alpha_yliu_rev_w005-weight/
 ```
+
+通配同理: 折叠形写 `{repo}.{node_dir}.*`, 其余写 `{repo}.{node_dir}.{node_name}-*`;
+两者统一为"去掉末尾星号后前缀匹配"。
 
 | 段 | 含义 | 治理挂载点 |
 |---|---|---|
@@ -231,8 +277,8 @@ storage/l3/{region}/
     capacity.json      # {n_active: 6142, allocated: 6500}   ← 列预留缓冲
     grids/m5.json      # ti 轴: 日内网格 {slots: 78, start: "09:30", step: "5min"}
     grids/m30.json     #        定长; 半日市不足处留 NaN, 不缩短网格
-  _catalog.json        # 该 region 全部节点 meta 的汇总索引 (派生, 可重建)
-  g_common/field_base_px/field_base_px-adj_close_1500/
+  # 没有 catalog 文件: `store.catalog()` 是扫目录现算的（派生, 无需落盘、不会过期）
+  g_common/field_base_px/adj_close_1500/
     zarr.json          # shape/chunks/dtype/fill_value/codecs + attributes(per-node meta)
     c/0/0  c/1/0 ...   # chunk 文件
 ```
@@ -282,17 +328,20 @@ NaN 压缩率极高，未写区域零文件。因此 `read` 永远返回**对齐
 - **按日期 append 是真 O(1)**——新行落进末块，只写 1 个 chunk 文件，与历史长度无关。**三种秩同时成立**，前提是 `di` 恒为首轴（§3.6）。
 - **按标的 resize 不是 O(1)**——全宽 chunk 下加一列要重写**所有** chunk。故用 `ensure_capacity` 一次预留 500 列，把它摊薄成**约一年一次**的离线维护（与年末其他维护同期）。这也是"security_id 单调分配、列只在末尾增长"原则的第二个理由。
 
-**Store API**（~120 行）：
+**Store API**（`core/store.py`，295 行）：
 
 ```python
-store.read(name, sd=None, ed=None) -> pd.DataFrame   # z[i0:i1] + 全局轴 → DataFrame
-store.tail(name, n=1)                                # z[-n:], 只解压末块, 产线路径
-store.append(name, date, row)                        # O(1) 单行, 每日任务可重入
-store.upsert(name, df)                               # 按区间覆盖, 不动区间外, 不 bump version
-store.write(name, df, fingerprint=…, rebuild=…)      # 缺省区间 upsert; rebuild 才 bump version
-                                                     # 指纹闸门在此, 任何写入方都要过
-store.meta(name) / store.catalog()
+store.read(ref, sd=None, ed=None)          # 区间读 + 对齐到全局轴; 按秩返回 Series/DataFrame/ndarray
+store.tail(ref, n=1)                       # 末 n 行, 只解压末块
+store.write(ref, df, *, dims, dtype, grid_len, meta, rebuild, fingerprint)
+                                           # **唯一的写入口**: 缺省区间 upsert, rebuild=True 才全量重建并 bump version
+                                           # 指纹闸门在此, 任何写入方都要过（含 ingestion 脚本）
+store.exists(ref) / store.meta(ref) / store.list_refs() / store.expand(pattern) / store.catalog()
+store.path(ref) / store.check_fingerprint(ref, fp) / store.ensure_capacity(n)
 ```
+
+消费方实际用到的是其中八个（`axes` `exists` `meta` `read` `write` `expand` `list_refs` `catalog`），
+这八个由 `core/panels.py` 的 `Panels` 声明成接口——生产适配器是 zarr，测试适配器是内存 dict。
 
 **写入前必须校验指纹。** §一原则3 承诺"修数发新版本、无覆盖"，但只有 `write` 会 bump `version`，`append` / `upsert` 都不会。于是**改一行公式再跑日更，同一个数组里改动日之前是定义 A、之后是定义 B**——`version` 没变、meta 没变、catalog 看不出来，事后也无法判断断点在哪天。故 per-node meta 记 `fingerprint`（yaml 子树 + code 字节 + 解析后的 deps identity + params 的 hash），写入前重算比对，不符则**拒绝写入**，要求显式 `--rebuild`（新版本）或换 identity。
 
@@ -383,6 +432,65 @@ alpha 只是"universe 写了具体池子、ops 写了链"的普通节点。
 
 ### 4.1 Schema
 
+**键集是封闭的**：认不得的键**报错**（带最接近的候选），不是静默丢弃。拼错 `universe:`
+一个字母的代价是——池子成 `None`、掩码恒 True、alpha 悄悄按全集交易而不是 `us_top400`，
+而预检里每一处 universe 检查都在 `if spec.universe:` 后面，一句话都不会说。
+
+**文件级键**（共 9 个）：
+
+| 键 | 类型 | 必填 | 缺省 |
+|---|---|---|---|
+| `region` | str | 否 | `"us"` |
+| `nodes` | mapping | **是** | — |
+| `universe` | 全 ref | 否 | 无（= 全集；数据节点必须留空，见 §4.4） |
+| `lookback` | int | 否 | `0` |
+| `cutoff` | str | 否 | region 的 `time_cutoff` |
+| `booksize` | int | 否 | region 的 `booksize`；**不要写 `20e6`**，YAML 1.1 里那是字符串 |
+| `return_metric` | 全 ref | 否 | region 的 `return_metric` |
+| `cost_model` | 全 ref / null | 否 | region 的 `cost_model` |
+| `sim` | mapping | 否 | region 的 `sim` |
+
+**节点级键**（共 5 个，在 `nodes.{节点名}` 下）：
+
+| 键 | 类型 | 必填 | 缺省 |
+|---|---|---|---|
+| `code` | str | 否 | 与 yaml 同名的 `.py`（同目录） |
+| `deps` | list[全 ref] | 否 | `[]` |
+| `params` | mapping **或** mapping 的 list | 否 | `{}`（四种写法归一，见下） |
+| `ops` | list | 否 | `[]`；与 `outputs.*.ops` **不可并存** |
+| `outputs` | mapping | 否 | 单输出，键名 = 缺省名（见下） |
+
+**输出级键**（共 4 个，在 `outputs.{输出名}` 下）：`dims`（缺省 `[di, ii]`）、
+`dtype`（缺省 `"f4"`）、`grid`（秩-3 **必填**）、`ops`。
+
+**单输出的缺省名**：数据节点 = 节点名去掉 `{kind}_{ns}_` 前缀（`factor_yliu_liq` → `liq`）；
+**alpha 恒为 `weight`**。显式写单输出时，键名**必须等于**这个缺省名（检查 ③）——
+否则 identity 与它产出的数据对不上号。
+
+**`params` 的四种写法**归一成同一个 dict，且**归一发生在指纹之前**（否则同一份定义
+会 hash 出两个指纹却指向同一个数组）：
+
+```yaml
+params: {window: 5, halflife: 7}      params:            params:              params:
+                                        window: 5          - window: 5          - window: 5
+                                        halflife: 7          halflife: 7        - halflife: 7
+```
+
+重复键报错，不静默让后者覆盖前者。
+
+**region 文件**（`repos/{repo}/regions/{region}.yaml`，每个 repo 各存一份）：
+
+| 键 | 用途 | 进 `region_hash` |
+|---|---|---|
+| `calendar` / `time_cutoff` / `return_metric` / `universe` / `booksize` / `cost_model` / `sim` | 口径 | **是** |
+| `l3_root` / `pnl_out` | 本机路径 | **否** |
+
+`sim` 下目前两个键：`participation`（float）、`halt_proxy`（**int**，见 §九）。
+路径键不进 hash 是刻意的：`region_hash` 要回答"你我用的是同一套口径吗"，不是
+"你我的磁盘长得一样吗"——研究 repo 搬到别处时要给 `l3_root` 写绝对路径，那不该
+让你和队友被判成口径分叉。
+
+
 ```yaml
 region: us                # 环境: 见 §4.1.1; alpha 可覆盖其中 booksize / sim.*
 universe: g_common.field_common_univ.us_top3000   # 缺省 all; 数据节点通常不写
@@ -424,7 +532,8 @@ booksize: 20000000        # 必须是整数字面量
 cost_model: g_common.field_common_cost.bps_liquidity_v1
 sim:
   participation: 0.10     # cap = participation × adv_dollar (§8.2)
-  halt_proxy: null        # 无 is_halted field 时的降级口径 (§九)
+  halt_proxy: 3           # **int**; 无 is_halted field 时的降级口径 (§九)。
+                          # 写 null 会让仿真器**拒绝运行**——那正是 §九 要的: 要么显式降级, 要么别跑
 ```
 
 > **数值必须写成字面量，不能用科学计数法。** 实测 PyYAML：`booksize: 20e6` 解析出的是**字符串** `'20e6'`，`2.0e7` 同样是字符串——YAML 1.1 要求指数带符号才认作浮点。同理 `time_cutoff: 0930` 会被当字符串（幸而正是想要的），但 `0930` 若在别处被当数字读就是八进制。这与 §6.2 提到的 `truncate: 0.02,` 是同一类静默类型错误，故 §4.11.6 的检查 ⑦ 也要覆盖 region/spec 里的标量。
@@ -540,7 +649,7 @@ nodes:
     params:                      # cutoff 是参数, 不是独立字段
       cutoff: "1500"
     # 无 outputs -> 单输出, 输出名 = 节点名去掉 {kind}_{ns}_ 前缀 = intraday_vol
-    #   落 storage/l3/us/g_yliu/intraday_vol/factor_yliu_intraday_vol-intraday_vol/
+    #   落 storage/l3/us/g_yliu/factor_yliu_intraday_vol/intraday_vol/
 ```
 
 ```python
@@ -562,10 +671,12 @@ region: us
 
 nodes:
   field_macro_cpi:
-    deps: 
+    deps:
         - g_common.field_macro_cpi.index
     outputs:
-      yoy: {dtype: f4, dims: [di]}         # 秩-1: 无 ii 轴 -> …/field_macro_cpi-yoy/
+      cpi: {dtype: f4, dims: [di]}         # 秩-1: 无 ii 轴 -> …/field_macro_cpi/cpi/
+      # 单输出的键**必须**等于缺省名（节点名去掉 kind_ns_ 前缀 = `cpi`, 见 §4.11.6 检查③）;
+      # 想叫 `yoy` 就得显式声明多个输出, 或者把节点改名成 field_macro_yoy
 ```
 
 ```python
@@ -614,7 +725,7 @@ lookback: 30
 nodes:
   alpha_yliu_rev_w005:
     params:
-      days: 5
+      window: 5
     deps: [g_common.field_base_px.*]
     ops:
       - rank
@@ -639,7 +750,7 @@ nodes:
 ```python
 # g_yliu/nodes/alpha_yliu_rev/rev.py
 def handle(ctx):
-    n  = ctx.params["days"]
+    n  = ctx.params["window"]
     px = ctx.win("g_common.field_base_px.adj_close_tc", n + 1)
     return -(px.loc[0] / px.loc[-n] - 1)                  # 单输出, 裸值
 
@@ -714,7 +825,7 @@ def handle(ctx):
 **落库位置**——叶子里**节点名与输出名都在**：
 
 ```
-storage/l3/us/g_yliu/liq/factor_yliu_liq-adv20/    -illiq20/    -rvol20/
+storage/l3/us/g_yliu/factor_yliu_liq/adv20/    -illiq20/    -rvol20/
 ```
 
 这是 §3.2 的规则：叶子 = `{node_name}-{output}`。节点是"一次计算"的单位（一次窗口读取算出三个产物，避免重复读盘），输出是"一份数据"的单位——两者都要能读出来，所以两者都在名字里。这也让唯一性由路径结构保证：别的节点即便也产出叫 `adv20` 的东西，落的是自己的 `{node_name}-adv20`，不会撞车。
@@ -733,7 +844,7 @@ nodes:
   alpha_yliu_rev_w005:              # 标签形式: 一族有 2 个成员即强制 (§4.11.4)
     code: rev.py                    # 全族共用一份代码
     params:               # 与名字里的 w005 编译期校验一致
-      days: 5
+      window: 5
     deps:
       - g_common.field_base_px.adj_close_tc
       - g_yliu.factor_yliu_liq.rvol20          # 吃例 5 的产出
@@ -751,7 +862,7 @@ nodes:
   alpha_yliu_rev_w020:              # 变体手写展开 (§4.9.4), 同一个 yaml
     code: rev.py                    # 同一份代码
     params:
-      days: 20
+      window: 20
     deps: [g_common.field_base_px.adj_close_tc, g_yliu.factor_yliu_liq.rvol20, g_common.factor_common_gics.sector]
     ops:
       - rank
@@ -764,7 +875,7 @@ nodes:
 ```python
 # g_yliu/nodes/alpha_yliu_rev/rev.py  —— 两个变体共用, 差异全在 params
 def handle(ctx):
-    n   = ctx.params["days"]
+    n   = ctx.params["window"]
     px  = ctx.win("g_common.field_base_px.adj_close_tc", n + 1)
     raw = -(px.loc[0] / px.loc[-n] - 1)               # 反转: 跌得多的买
     return raw / ctx.f("g_yliu.factor_yliu_liq.rvol20")          # 波动归一, 单输出直接 return
@@ -772,7 +883,7 @@ def handle(ctx):
 
 **`ops` 用到的分组 field 也必须写进 `deps`。** `neutralize: g_common.factor_common_gics.sector` 由引擎在 ops 链里解析，handle 里根本没提它——但它是**编译期就要能解析、运行期要能加载**的依赖，漏写则 §7.1 的"deps 不存在则报错"兜底会在运行时才炸，而且报错点在算子链里、离 yaml 很远。规则：**凡是这个节点跑起来需要读到的 L3，无论谁去读它，都要出现在 `deps` 里**。
 
-落库：`…/g_yliu/rev/alpha_yliu_rev_w005-weight/` 与 `…-rev_w020-weight/`——**单输出 alpha 的输出名缺省为 `weight`**（§3.2）。两个变体是**两个独立节点、独立评估**——这正是 §4.9.4 "多参数变体手写展开"的形态，代价是 yaml 里有重复，换来的是每个变体在 store / catalog / alpha 池里都是一等公民，可以被单独引用、单独去重、单独晋升。
+落库：`…/g_yliu/alpha_yliu_rev/alpha_yliu_rev_w005-weight/` 与 `…-rev_w020-weight/`——**单输出 alpha 的输出名缺省为 `weight`**（§3.2）。两个变体是**两个独立节点、独立评估**——这正是 §4.9.4 "多参数变体手写展开"的形态，代价是 yaml 里有重复，换来的是每个变体在 store / catalog / alpha 池里都是一等公民，可以被单独引用、单独去重、单独晋升。
 
 #### 例 7：多个 alpha → 一个 combo
 
@@ -823,10 +934,10 @@ pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight  # 评估
 
 ```
 storage/l3/us/
-  g_yliu/liq/  factor_yliu_liq-adv20/  -illiq20/  -rvol20/     ← 例 5
-  g_yliu/rev/  alpha_yliu_rev_w005-weight/  alpha_yliu_rev_w020-weight/   ← 例 6
+  g_yliu/factor_yliu_liq/  factor_yliu_liq-adv20/  -illiq20/  -rvol20/     ← 例 5
+  g_yliu/alpha_yliu_rev/  alpha_yliu_rev_w005-weight/  alpha_yliu_rev_w020-weight/   ← 例 6
                alpha_yliu_rev_mix-weight/                       ← 例 7
-  g_lqin/senti/ alpha_lqin_senti-weight/                        ← 他人产出, 只读
+  g_lqin/alpha_lqin_senti/ weight/                        ← 他人产出, 只读
 weights/
   g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight.feather + meta.json      ← §7.4 dump, pnl 的正式接口
 ```
@@ -908,98 +1019,11 @@ ref       ::= {repo}.{node_dir}.{node_name}-{output}
 
 编译期检查：① 语法 / 长度 / 标识符 / 关键字 / 保留字 · ② 节点名的 `{ns}` 段对本 repo 可写 · ③ 单输出 key == 缺省名（数据节点去前缀 / alpha 为 `weight`）· ④ 标签与 `params` 一致、同族定宽 · ⑤ `_tc` 按**消费节点**的有效 cutoff 解析（§4.9.5），解析后断言该名字在 store 中存在，报错时列出可用的 cutoff · ⑥ 通配展开非空并冻进 meta · ⑦ 算子参数按签名类型校验（`truncate` float / `linear_decay` 正 int / `neutralize` 一个 int field 的全 ref）· ⑧ alpha 节点 `dims == [di, ii]` 且 ops 以 `scale` 收尾 · ⑨ 往返断言 `ref` 拆解后能拼回原路径。
 
-## 五、L2/L1 接入与日更
+## 五、L2/L1 接入与日更 `[TARGET]`
 
-> **本章不在 v0 引擎范围内**（§七 范围声明）。v0 引擎只吃 L3、只吐 L3；L2 → L3 的入库由独立的
-> ingestion 管道承担。本章描述的是**目标架构**下把这件事收回统一 Node 模型时的形态，以及当前
-> ingestion 管道事实上遵循的语义（路径模板、缺文件告警、schema 强制、逐列容错）。
-> 已落地的美股 base 数据集见 [`l2_schema.md`](l2_schema.md)。
-
-### 5.1 L2 = 外部文件路径模板
-
-L2 不是引擎管理的存储，是**外部文件**（vendor 落地、上游管道产出），在节点的 `source` 里声明：
-
-```yaml
-source:
-  pv:
-    path: storage/data/base/l2/us/pv/{date:%Y}/{date:%m}/pv.{date:%Y%m%d}
-    format: psv                                  # {date} 按 session 渲染, 支持 strftime
-    cols: [open, close]
-    key: security_id                             # 标的列, 归一到全局轴
-  bars:
-    l1: minute_bar                               # L1 源同理
-```
-
-> **`format` 是必填的，不能再靠扩展名推断。** 本节初稿写「格式由扩展名判定」，但已定稿的 L2 命名是
-> `{subdata}.{YYYYMMDD}`（如 `pv.20250829`）——**不带扩展名**，那条规则在真实布局上失效。
-> 当前只有一种取值 `psv`（pipe-separated，`|` 分隔、首行表头、缺失为空字段，见 `docs/l2_schema.md` §2）；
-> 将来接入 parquet 源时再扩枚举。缺省 `psv`。
-
-引擎行为：格式按 `format` 声明；psv/csv 按 meta 强制 schema（防 dtype 漂移：日期解析、代码前导零）；**文件缺失 = 该源当日全 NaN + warning**（数据晚到不崩管道，catalog 可见落后）；路径模板进节点 meta，血缘可追。`ctx.l2("名字")` 返回当天的长表切片（index=security_id，已归一到全局轴），`ctx.l1("名字")` 返回当天原始数据并按 `cutoff` 物理截断。
-
-**两者仅在节点声明了 `source` 时存在**——没声明的节点语法上碰不到外部文件，这是"策略只吃标准化数据"的机械保障。
-
-**声明式简写**（无 `code` 的纯拆列节点）：
-
-```yaml
-nodes:
-  field_base_bar:
-    source: {bar: {path: storage/data/base/l2/us/pv/{date:%Y}/{date:%m}/pv.{date:%Y%m%d}, format: psv}}
-    outputs:
-      open_tc:      {col: open,  dtype: f4}
-      adj_close_tc: {expr: "close * adj_factor", dtype: f4}
-      sector:       {col: gics_sector, dtype: i1}
-```
-
-`col` 取列，`expr` 限同表内简单表达式——**field 的定义应该看一眼就懂，需要解释的写 code**。声明式编译出的 handle 内部逐列 try：失败列当日 NaN + 告警，其余正常。
-
-### 5.2 日更
-
-没有独立的数据管理组件——日更就是 **cron 按 registry 逐个调 `run --ed today`**。registry 在 g_common：
-
-```yaml
-version: 2
-pipelines:
-  - node: g_common.field_base_px.adj_close_1500      # 按 identity 登记, 不按文件路径
-    repo: g_common
-    commit: 7e21ab...                    # 钉死 commit, 永不写分支名
-    fingerprint: sha256:4d02...
-    owner: infra
-    tier: 1
-  - node: g_yliu.factor_yliu_resid_mom.resid_mom
-    repo: g_yliu
-    commit: f3a9c1...
-    fingerprint: sha256:9c1e...
-    owner: yliu
-    backup_owner: lqin
-    tier: 2
-    sla: {max_lag_sessions: 1, min_coverage: 0.50, max_nan_ratio: 0.40}
-```
-
-**按 identity 登记而非按文件路径**，两个理由：① 仓库内的文件布局可以自由调整（§15.1），路径键会让每次重组都变成生产事故；② 一个 repo 里有几十个实验节点，按 `config:` 或按整个 repo 登记都会把它们一并拖进生产日更。
-
-**`commit` 钉死，不写 `ref: main`。** §二 规定个人 repo 无需 review——若登记的是分支，"晋升时 review 一次"审的是**今天的产物**，明天早上跑的是**另一个产物**。钉 commit 把"未经审查的生产依赖"变成"经过审查的发布"，代价是每次有意变更多提一个 PR，而这正是目的。
-
-每日流程：全局轴 `ensure_session` → **按冻结的 deps 做拓扑排序**后逐节点 `run --ed today`（区间 upsert，非 `write`，见 §7.2）→ 指纹校验 → 重建 catalog → 一致性检查告警。晋升 = 提 PR 登记进 registry（**identity 不变**，review 一次）。
-
-依赖既已冻结在 meta 里，调度器就能自己拓扑排序，不必依赖人工维护的登记顺序——顺序只在**单个 config 内部**才是研究员的责任（§7.1）。
-
-数据侧只剩一个**查询工具**（不是执行器）：
-
-```
-store status [NODE | --base]     # last_session / 覆盖率 / NaN 比例 / 落后告警
-store catalog rebuild
-```
-
-engine 的 `effective_ed`（取依赖 last_session 的 min）由 registry 顺序保证上游先跑。
-
-### 5.3 批量性能出口（可选，不进手册）
-
-统一逐日 handle 后实测无性能损失。基准：2000 天 × 6000 标的、20 日均值——**逐日循环跑完全程 235 ms**（即约 **118 µs/日**）vs pandas 一次性向量化 713 ms；配 state 增量 46 ms。
-
-> **这三个数都是"跑完 2000 天的总耗时"，不是单日耗时。** 读成单日会得出完全相反的结论：235 ms/日 × 2000 天 = 7.8 分钟，比向量化慢 **659 倍**，与本节"无性能损失"的结论直接矛盾。逐日之所以能反超，是因为它只在窗口上做一次增量更新，而向量化要物化整张中间表。
-
-极少数需要跨全样本的计算（PCA、协方差矩阵类）可选实现 `build(ctx, sessions)`，引擎检测到即优先使用——渐进式复杂度，新人只学 handle。
+**不在 v0 范围内。** v0 引擎只吃 L3、只吐 L3（§七）；把 L2 变成 L3 是
+`pipeline/build_l3_base.py` 一次性的事，契约见 `l2_schema.md`。
+把摄入也统一进 Node 模型（`source:` 字段、日更编排、registry）的设计见 `roadmap.md`。
 
 ---
 
@@ -1024,7 +1048,7 @@ engine 的 `effective_ed`（取依赖 last_session 的 min）由 registry 顺序
 | `[di, ii]` | `Series(N)` | `DataFrame(w × N)` |
 | `[di, ii, ti]` | `DataFrame(N × T)` | **`ndarray(w, N, T)`** |
 
-秩-3 的窗口**是 ndarray 不是 DataFrame**——pandas 没有三维结构，而 §3.3 已经说明 Zarr 解压后本就是普通 ndarray，多包一层只会增加拷贝。轴序固定为 `(di, ii, ti)`，`ctx.cols` / `ctx.grid(name)` 给出后两轴的标签。
+秩-3 的窗口**是 ndarray 不是 DataFrame**——pandas 没有三维结构，而 §3.3 已经说明 Zarr 解压后本就是普通 ndarray，多包一层只会增加拷贝。轴序固定为 `(di, ii, ti)`；`ctx.cols` 给出 `ii` 轴的标签（= `security_id` 列表，长度 `n_active`）。ti 轴的标签在 v0 里不由 ctx 提供。
 
 **`ctx.l2` / `ctx.l1` 不在 v0 的 ctx 里**——v0 引擎只吃 L3、只吐 L3（§七 范围声明）。目标架构中它们的语义见 §五。
 
@@ -1034,20 +1058,141 @@ engine 的 `effective_ed`（取依赖 last_session 的 min）由 registry 顺序
 
 | op | 类型 | 作用轴 | 适用秩 | 语义 |
 |---|---|---|---|---|
-| `rank` | CS | `ii` | 仅 2 | scope 内映射 [-0.5, 0.5]，NaN 保持 |
-| `neutralize: <int field 全 ref>` | CS | `ii` | 仅 2 | 分组 demean。**必须写全 ref**，裸名会解析进研究员自己的 ns（§4.11.6） |
-| `truncate: x` | CS | `ii` | 仅 2 | 单票 \|w\| ≤ x × gross |
-| `scale: book` | CS | `ii` | 仅 2 | Σ\|w\| = 1；**不自动补**，改编译期校验（§4.4） |
-| `linear_decay: n` / `exp_decay: h` | TS | `di` | 1 / 2 / 3 | 滚动缓冲由引擎持有（op-state） |
-| `delay: k` | TS | `di` | 1 / 2 / 3 | **显式**滞后；执行滞后归撮合边界统一施加，勿惯性加 |
+| op | 类型 | 作用轴 | 适用秩 | 参数 | 预热贡献 |
+|---|---|---|---|---|---|
+| `rank` | CS | `ii` | 仅 2 | 无 | 0 |
+| `neutralize: <ref>` | CS | `ii` | 仅 2 | int field 的**全 ref** | 0 |
+| `truncate: x` | CS | `ii` | 仅 2 | float | 0 |
+| `scale: book` | CS | `ii` | 仅 2 | `book`，可省（省略即 `book`） | 0 |
+| `linear_decay: n` | TS | `di` | 1/2/3 | 正 int | `n - 1` |
+| `exp_decay: h` | TS | `di` | 1/2/3 | 正 int（半衰期） | `4h` |
+| `delay: k` | TS | `di` | 1/2/3 | 正 int | `k` |
+
+**这七行是算子的完整清单**——多一个少一个都是错。预热贡献沿链**相加**（§7.1）。
+
+#### 逐个的精确语义
+
+设当日截面为 `v`（Series，index = `ctx.cols`），`m` = `v` 中非 NaN 的个数。
+
+**`rank`** — `r = v.rank(method="average")`（skipna；NaN 不参与排名、不占名次，输出位仍是 NaN）
+
+```
+m ≤ 1:  非 NaN 位 → 0.0            # 独苗没有截面, 给 0 而非 ±0.5, 免得它在 scale 后独吞整本账
+m > 1:  out = (r - 1) / (m - 1) - 0.5
+```
+
+端点**取到** ±0.5（闭区间）。平均名次法下名次和恒定，故输出截面均值恒为 0——rank 之后天然美元中性。
+
+**`neutralize: <ref>`** — 分组 demean：
+
+```
+out = v - v.groupby(g, dropna=False).transform("mean")     # g 为分组字段, 按 index 对齐
+```
+
+`dropna=False` 是**要害**：默认的 `dropna=True` 会把分组字段缺失的名字整组丢掉，
+它们的组均值变 NaN，于是原本有值的票静默变 NaN——覆盖率掉一块而不报错。
+分组缺失的名字自成一组；组内均值 skipna；**单元素组 demean 后恒为 0**（一只票的组不携带截面信息）。
+
+**`truncate: x`** — 单票 |w| 上限：
+
+```
+gross = nansum(|v|)                 # 截断**前**的 gross
+gross ≤ 0 或非有限:  原样返回        # 无仓可截; cap=0 会把全票夹成 0
+否则:  out = clip(v, -x*gross, +x*gross)     # 保持 NaN
+```
+
+**单次夹紧，不迭代到不动点。** 迭代在 `x < 1/有效票数` 时没有非退化解，会把整本账
+迭代成 0。代价是紧随其后的 `scale` 按缩水后的 gross 归一，把被夹的票顶回 x 之上
+一点点（比例 `gross_前 / gross_后`）；被夹的是少数票时可忽略。
+
+**`scale: book`** — Σ|w| = 1，并落下 §3.5 的第二道闸门：
+
+```
+v = v.where(mask)                   # ① 池外先出局
+g = nansum(|v|)                     # ② 再算 gross
+g ≤ 0 或非有限:  out = as_weights(v)          # 不做除法
+否则:            out = as_weights(v / g)
+
+as_weights(w) = w.where(mask).fillna(0.0)     # 池外 → 0, NaN → 0
+```
+
+**顺序要紧**：反过来（先归一、再抹池外）两条承诺不能同时成立——TS 算子会把昨天的值
+搬到今天，那只票今天若已出池，它的权重先进了分母再被抹掉，Σ|w| 就悄悄小于 1。
+`g = 0`（全抵消 / 全 NaN）时**不做除法**：0/0 会把整本账变成 NaN 或 inf。
+收口强制 **0 而不是 NaN**：NaN 的权重会在 pnl 的 `pos * (1 + NaN)` 里摧毁持仓并向后传染。
+`scale` **不改变净敞口**——美元中性来自 `rank` / `neutralize`，不来自这里。
+
+**`linear_decay: n`** — 按 age 加权，权重 `[n, n-1, …, 1]`（今日 `n`，`n-1` 天前为 `1`）：
+
+```
+out = Σ_j w_j · x_{t-j}  /  Σ_{j: x_{t-j} 非 NaN} w_j        w_j = n - j,  j = 0..n-1
+分母全为 0（整条缓冲皆 NaN）→ NaN
+```
+
+分母是**有效权重之和**而非常数 `n(n+1)/2`：缓冲里的 NaN 只是"该票该日按权重 0 参与"，
+不传染整条缓冲。预热期走同一条路（少一天历史 = 少一个观测），所以无需特判。
+
+**`exp_decay: h`** — `h` 是**半衰期**，lag `j` 的权重 `0.5^(j/h)`，递推实现：
+
+```
+a = 0.5 ** (1/h)
+num ← a·num ;  den ← a·den
+x 非 NaN 处:  num += (1-a)·x ;  den += (1-a)
+out = num / den   （den > 0 处），否则 NaN
+```
+
+递推是同一个加权平均的**精确**形式（窗口无限长），只占 O(N)；定长缓冲要约 10 个
+半衰期才能把权重截到可忽略（h=250 时是 2500 天 × N，百 MB 级）。两个累加器同步衰减，
+故与整体缩放无关。NaN 那天两个累加器都不加 = 权重 0。
+预热取 **4 个半衰期**（覆盖 93.75% 的稳态权重）——递推第一天就是合法加权平均，
+这里要的不是"算得出"而是"与更长的历史算得一样"。
+
+**`delay: k`** — 显式滞后 k 个 session；**前 k 次调用无历史，输出 NaN**。
+执行滞后由撮合边界全局施加一次，这里只服务**故意**做的滞后版本；惯性再加一次会白白
+多丢一天信息且不报错。
 
 **算子参数在编译期按签名做类型校验。** `truncate` 收 float、`linear_decay` 收 正 int、`neutralize` 收一个 int field 的全 ref、`scale` 收枚举值。理由是 YAML 会**静默**把类型写错的值收下：`- truncate: 0.02,`（多一个逗号）解析出来是**字符串 `"0.02,"`** 而非数字 `0.02`，不报任何错，然后在算子里变成一次隐晦的比较失败或一个恒不触发的截断。这类错误不检查就只能靠回测结果异常时倒查。
 
 **CS 类只对秩-2 合法**（§3.6）：秩-1 没有 `ii` 轴可截面；秩-3 有 `ii` 也有 `ti`，"在哪根轴上排序"无唯一答案——与其猜一个默认值，不如编译期报错，要日内截面就先在 handle 里显式压成秩-2。TS 类沿 `di` 作用，对三种秩都是同一份实现（op-state 的缓冲形状随秩而变，语义不变）。
 
-顺序即语义。ops 算子与普通算子共用实现；handle 内 `ctx.to_weight(x, **overrides)` 可就地调用同一链。**delay 双重身份**：执行 delay 全局一次（所有节点以数据 ≤ T cutoff 算 T 日权重，combo 读上游为同日权重无隐式滞后）；ops 的 `delay: k` 仅用于故意的滞后版本。**推荐风格**：塑形 ops（rank/neutralize）放叶子，换手类（decay/truncate）上提到靠近 output。
+顺序即语义。`ctx.cs.*` 与 ops 的 CS 算子**共用同一份实现**（`ctx.cs.rank` 即 `cs_rank`，`ctx.cs.demean(x, by=)` 即 `cs_neutralize`），所以在 handle 里做和在链里做给出同一个数。**delay 双重身份**：执行 delay 全局一次（所有节点以数据 ≤ T cutoff 算 T 日权重，combo 读上游为同日权重无隐式滞后）；ops 的 `delay: k` 仅用于故意的滞后版本。**推荐风格**：塑形 ops（rank/neutralize）放叶子，换手类（decay/truncate）上提到靠近 output。
 
 ---
+
+
+### 6.3 指纹（写入闸门的判据）
+
+指纹守的是「**定义变了而名字没变**」：改一行公式再跑日更，同一个数组里改动日之前是
+定义 A、之后是定义 B，且无从察觉。`store.write` 在写之前比对，不符即拒绝（`--rebuild`
+显式绕过并 bump version）。因此**指纹的组成必须逐字实现**——组成不同的两个实现无法
+写入对方的库。
+
+```python
+h = sha256()
+h.update(src.encode())                                  # ① 节点 yaml 子树的规范化文本
+h.update(f"|universe={universe}|lookback={lookback}".encode())   # ② spec 级口径
+h.update(code.read_bytes() if code.exists() else b"")   # ③ handle 源码的原始字节
+for d in sorted(deps):                                  # ④ 解析后的依赖, 排序
+    h.update(d.encode())
+fingerprint = "sha256:" + h.hexdigest()[:16]            # 取前 16 个十六进制字符
+```
+
+- **① `src`** = `yaml.safe_dump(解析后的节点子树, sort_keys=True, allow_unicode=True)`。
+  是**解析后**的对象再 dump，不是原始文本——所以缩进、行序、`{a: 1}` 与块式写法都不影响指纹。
+  `params` 的四种写法（见 §4.2）已在此之前归一，故它们 hash 相同。
+  例：`factor_yliu_mom` 的 `src` 是
+  `'deps:\n- g_common.field_base_px.adj_close_1500\nparams:\n  window: 60\n'`。
+- **② `universe` / `lookback`** 写在 yaml **顶层**而不在节点子树里，故不在 ① 中，必须单列。
+  两者都逐值改变输出（池外整列 NaN；预热决定 TS 算子初值），不进指纹就能靠改一行
+  yaml 头绕过闸门。
+- **③ 代码是原始字节**，所以 CRLF 与 LF 会给同一份逻辑算出两个指纹——仓库须以
+  `.gitattributes` 钉死 `eol=lf`。
+- **④ 依赖是 yaml 里写的那一份**，只做过 `_tc` 替换，**通配保持字面**（`…-*` / `….*`
+  原样喂入），排序后逐个 `update`。通配的展开发生在别处（执行期 `resolve_deps`，
+  结果进 `meta["deps"]`），**不进指纹**——所以上游多出一个输出不会改变本节点的指纹。
+
+`region_hash` 是另一回事：它只覆盖 region 文件里的**口径**键，不含 `l3_root` / `pnl_out`
+这类本机路径键（§4.1.1）。
 
 ## 七、执行引擎（v0：无 cache、顺序执行）
 
@@ -1060,8 +1205,18 @@ engine 的 `effective_ed`（取依赖 last_session 的 min）由 registry 顺序
 ### 7.1 执行语义
 
 - **声明顺序 = 执行顺序**：被依赖的节点写在前面（先跑完落 store，后者读到）。跨 config 依赖须已在 store（`store status <名>` 可查），引擎唯一兜底：deps 不存在则报错，不做图分析。
-- `--only` 只跑指定节点。`--pnl`（对本次运行中每个 alpha 节点都评估）**尚未实现**：它曾经作为一个 argparse 参数存在但从不被读取——声明了却什么都不做的开关比没有更坏, 故已移除, 待 §15.8 的扫描运行器一并落地。当前评估用独立的 `pnl --node <ref>`。
-- **lookback 预热**：config 声明，引擎取 **max(声明值, ops 可推导下限)**；预热段照常执行 handle 推进 state，只喂状态不进输出。语义承诺"预热充分则一致"，严格逐位一致等 cache 版。
+- `--only` 只跑指定节点。**`run` 缺省会评估本次跑过的每个 alpha**（`--no-pnl` 关掉）：算完紧接着看指标是研究期最短的回路。因子与数据节点不评（没有权重可仿真）；`--probe` 也不评——那一趟本来就不落库。
+- **lookback 预热**：`warmup = lookback(声明值) + ops 链的预热贡献`（§6.2 那张表, 沿链**相加**）。
+  预热段照常执行 handle 推进 state，只喂状态不进输出。
+
+  > **是相加, 不是取大。** 链吃的是 handle 的产出: 要让链在第一个**请求日**就已填满缓冲,
+  > handle 必须在那之前 `ops_lookback` 天就在产出有效值——而 handle 本身要 `lookback` 天
+  > 才有效。两段不是同一段时间。这里曾经写的是 `max()`: `lookback: 5` + `ctx.win(px, 6)`
+  > + `linear_decay: 3` 的真实需求是 5+2=7, max 给 5, 于是起跑后前 2 天的输出来自未填满的
+  > 衰减缓冲——实测同一个 session 与预热充足时相比 **501/503 只票全不一样, 最大差 0.11**,
+  > 且不报任何警。取大之所以诱人, 是两段各自都"够"。
+  >
+  > 由此可导出一条可测的不变量：**一个 session 的值不该取决于从哪天起跑**。
 
 ### 7.2 主循环
 
@@ -1117,13 +1272,16 @@ def run_node(node, spec, sd, ed, flags):
 
 **评估窗口，非计算窗口**。`ed = today` 的可用性由数据新鲜度决定：任一依赖最新 session 未落地则自动回退并提示 `effective_ed=...`，绝不静默算半截数据。
 
-### 7.4 dump
+### 7.4 权重的对外接口
 
-```
-weights/g_yliu.alpha_yliu_rev.alpha_yliu_rev_senti_mix-weight.feather     # 或 per-day CSV (--dump-format)
-+ meta.json  # region_hash / return_metric / universe / booksize / sd / ed / code_ref
-             # + deps_versions（每个依赖当时的 version）+ cutoff + l2_asof
-```
+权重的正式对外接口就是 **`pnl_out/{ref}/` 的四交付物**（§8.3），不是另一套 dump：
+`daily.psv` / `pnl.psv` / `holding.psv` / `metrics.json`。`metrics.json` 的 `snapshot`
+块携带口径（`region_hash` / `return_metric` / `booksize` / `sd` / `ed` / `cost_bps` /
+`participation`），落库节点的血缘（`deps_versions` / `code_ref` / `cutoff`）在 L3 的
+`zarr.json` 里（见 `l2_schema.md` §14）。
+
+> 早期设计里另有一套 `weights/*.feather + meta.json` 的 dump，**未实现且已取消**：
+> 同一份权重两种出口, 迟早两边不一致, 而四交付物已经覆盖了它的全部用途。
 
 ---
 
@@ -1222,6 +1380,118 @@ gap_participation / gap_realloc / gap_reprice     # 目标 vs 实现的三分解
 
 ---
 
+
+
+### 8.4b 交付物字段规格
+
+四个文件, 全部 `|` 分隔的纯文本（`metrics.json` 除外）。
+
+**`daily.psv`** —— 每个 session 一行, `date` + **29 列**, 顺序固定如下表：
+
+| 列 | 定义 |
+|---|---|
+| `long_value` / `short_value` | 当日多头市值 / **空头市值（负数, 带符号）** |
+| `long_count` / `short_count` | 多空各多少只 |
+| `trade_dollar` | `Σ\|delta\|`, 当日成交额（结算流不计入） |
+| `holding_pnl` / `trading_pnl` | 持仓损益 / 交易损益（v0 恒 0, 留列） |
+| `cost` | 当日成本 |
+| `cash` | `booksize − Σ\|pos\|`——**投不出去的那部分**, 偏大即容量警报 |
+| `pnl` | `holding_pnl + trading_pnl − cost` |
+| `return` | `pnl / booksize`（**分母恒定**, 不是上期净值） |
+| `alpha_turnover` / `realloc_turnover` | 见下 |
+| `gap_participation` | `Σ\|想交易的量 − 实际成交\|`（仅可交易票）= 被 ADV 参与率卡掉的部分 |
+| `gap_realloc` | `Σ\|target_value − target_free\|`（仅可交易票）= 冻结重分配把瞄准点挪走的量 |
+| `gap_reprice` | `Σ\|target_free − pos\|`（仅**不可**交易票）= 停牌票与目标的偏离 |
+| `cash_account` / `nav` | 现金腿 / 净值 |
+| `frozen_value` / `frozen_count` / `avail` / `frozen_reprice_pnl` | 冻结仓位的 **gross**（非带符号和）、只数、可投金额、复牌重估损益 |
+| `ghost_count` / `ghost_value` / `delist_close_value` | 幽灵持仓只数 / 价值 / 当日因退市清掉的价值 |
+| `market_ret` / `weight_gross` / `target_count` / `oop_weight` | 市场收益、`Σ\|w\|`、目标持仓只数、池外权重最大值 |
+
+**两个换手的拆分规则**（这是唯一非显然的一处）：
+
+```
+d_alpha   = target_free  - pos_adv        # 无冻结时这就是全部想交易的量
+d_realloc = target_value - target_free    # 冻结重分配把瞄准点挪走的部分
+den       = |d_alpha| + |d_realloc|
+share_a   = |d_alpha| / den               # den = 0 处取 1
+alpha_turnover   = Σ(|delta| · tradable · share_a)       / booksize
+realloc_turnover = Σ(|delta| · tradable · (1 - share_a)) / booksize
+```
+
+按**实际成交额**成比例分摊, 使 `alpha_turnover + realloc_turnover ≡ trade_dollar/booksize`
+**恒成立**。直接取 `|d_alpha|` 与 `|d_realloc|` 的话, 两者反号时和会大于真实换手,
+"换手拆不平"就成了报表上的常态噪声。
+
+**`holding.psv`** —— `date` + `2N` 列, 两块拼接, 块内按 `ctx.cols` 顺序：
+`holding_value:{security_id}` × N, 然后 `holding_weight:{security_id}` × N。
+`holding_weight ≡ holding_value / booksize`（booksize 为常量, 见 `metrics.json` 的 snapshot）。
+列名接缝是**冒号**——`|` 已是字段分隔符。
+
+**`pnl.psv`** —— `date` + N 列, 逐股逐日**持仓**损益（不减成本；成本只在 `daily.psv` 里）。
+
+**`metrics.json`** —— 五个顶层块：
+
+| 块 | 内容 |
+|---|---|
+| `scalar` | **26** 个全区间标量：`sharpe` `ann_return` `ann_return_dollar` `ann_return_long_side` `turnover` `margin_bps` `fitness` `max_drawdown(_dollar/_from/_to)` `avg_long_value` `avg_short_value` `avg_long_count` `avg_short_count` `long_short_ratio` `pnl_total` `holding_pnl_total` `trading_pnl_total` `cost_total` `trade_dollar_total` `cost_share_of_gross` `net_share_of_gross` `return_std_daily` `hit_rate` `n_days` |
+| `by_year` / `by_month` | 每段 **19** 个字段（键为 `"2026"` / `"2026-03"`）（同口径）：`days` `sharpe` `ann_return` `pnl` `holding_pnl` `cost` `cost_share_of_gross` `margin_bps` `max_drawdown` `hit_rate` `return_std_daily` `turnover` `trade_dollar` `avg_long_value` `avg_short_value` `avg_long_count` `avg_short_count` `long_share` `long_short_ratio` |
+| `audit` | **23** 个：`ghost_detection` `ghost_days` `ghost_cells` `ghost_rate` `ghost_examples` `delist_source` `delist_events` `halt_cells` `frozen_*` `realloc_turnover_avg` `alpha_turnover_avg` `cash_*` `gap_*` `weight_nan_cells` `adv_uncapped_cells` `nav_final` |
+| `gates` / `n_pass` / `n_total` / `all_pass` / `summary` | 见 §8.5 |
+| `snapshot` | **18** 个口径字段：`booksize` `participation` `sd` `ed` `n_sessions` `n_securities` `ann_days` `cost_model` `cost_bps(_avg)` `adv_constrained` `ghost_detection` `delist_source` `node` `return_metric` `known_defects` |
+
+**标量的定义**（`ann = 252`）：
+
+```
+sharpe      = mean(return) / std(return, ddof=1) · √ann        # 无无风险利率
+ann_return  = mean(return) · ann                               # 算术年化, 分母恒定不复利
+turnover    = mean(trade_dollar) / booksize                    # 日均
+margin_bps  = Σpnl / Σtrade_dollar · 1e4
+fitness     = sharpe · √( |ann_return| / max(turnover, 0.125) )   # TO 下限 0.125
+max_drawdown = 最大回撤(累计 pnl) / booksize
+hit_rate    = mean(pnl > 0)
+cost_share_of_gross = Σcost / Σholding_pnl
+```
+
+**`--weight FILE`（外来权重）的 schema**：首列是日期, 其余列名为 `security_id`,
+值为目标权重；日期必须是 session 轴上**连续**的一段（有洞会被拒绝, 见 §8.2）。
+认 `.psv`（`|` 分隔）/ `.csv` / `.feather` / `.parquet`。
+
+### 8.5 七道闸门（每次评估自动亮）
+
+设计约束取自 §九 的教训（`ghost_days` 恒为 0——"一道永远不会触发的告警比没有更危险"）：
+**每道闸门都打印自己的状态和数字，通过也打印**。空白绝不能在"干净"与"没查"之间有歧义，
+所以没有判据时报 **`NO-BASIS`** 而不是 `PASS`——三态，不是两态。全部七道 < 200 ms，
+全部从四交付物派生。
+
+缺省阈值（可整体替换）：
+
+```python
+beta_r2_max = 0.25          conc_top1_max = 0.20      conc_top5_max = 0.50
+conc_day1_max = 0.20        stab_half_ratio_min = 0.25
+stab_roll1y_sharpe_min = 0.0    breakeven_min = 2.0
+ls_ratio_lo = 0.67          ls_ratio_hi = 1.50        pool_gross_tol = 1e-6
+```
+
+| # | 闸门 | 输入 | PASS 条件 | NO-BASIS 条件 |
+|---|---|---|---|---|
+| 1 | `market beta` | 组合日收益对 `market_ret` 回归 | `r2 ≤ beta_r2_max` | 有效观测 < 30，或方差为 0 |
+| 2 | `concentration` | 逐股 `Σ\|pnl\|`、逐日 `\|pnl\|` | `top1 ≤ .20` **且** `top5 ≤ .50` **且** `单日 ≤ .20` | 全区间 `Σ\|pnl\| = 0` |
+| 3 | `period stability` | 分年 Sharpe、上下半场、滚动 1 年 | `滚动1年 > 0` **且** `下半场/上半场 ≥ .25` | 样本 < 253 天**且**半场比不可算 |
+| 4 | `cost breakeven` | `breakeven = pnl_gross / cost_total` | `breakeven ≥ 2.0` | `cost ≡ 0`（未接成本模型） |
+| 5 | `long/short balance` | 多空日均市值 | `0.67 ≤ 多/空 ≤ 1.50` | 账本每日皆空仓（纯多头是 **FAIL**，不是 NO-BASIS） |
+| 6 | `pool hygiene` | 池外权重最大值、`Σ\|w\|` 偏差 | 池外恰为 `0.0` **且** `\|Σ\|w\|−1\| ≤ 1e-6` | 没有提供 universe 面板 |
+| 7 | `lookahead status` | `ghost_detection` / `delist_source` / `region_hash` | 三项皆无异常 | `deps_tc_resolved` 或 `region_hash` 为 None |
+
+闸门 7 的 **FAIL** 条件（任一命中）：`ghost_detection == "disabled"`；`delist_source == "none"`；
+`region_hash != region_hash_canonical`（前者是本次评估用的口径，后者是权重**算出来时**
+所用的口径，取自节点 meta）。
+
+**成本临界倍数值得单独说**：报告 turnover 回答不了"这东西能不能投"，**它能**——
+量纲恰好是"成本模型可以错多少倍"。
+
+末行恒打一行 `submission readiness: n/7 gates pass`。研究期只 warn（硬失败只会教会
+大家绕过它）。
+
 ## 九、退市与停牌
 
 **总原则**：权重是"意图"，pnl 是"现实"。引擎落盘的目标权重表达**纯意图，不做停牌处理**；冻结、重分配、强平全部收在仿真侧。
@@ -1309,36 +1579,57 @@ pipelines:
 
 ---
 
-## 十二、CLI 参考
+## 十二、CLI 参考 `[SHIPPED]`
 
-三个可执行文件：`run` 算、`store` 查、`pnl.py` 评。
+装上四个 console script：`alphakit` 与 `ak`（同一个入口）、`run`、`pnl`。
+`run`/`pnl` 只是 `ak run`/`ak pnl` 的直呼形式。
 
 ```
-run PATH                         # 唯一执行入口; PATH 可是节点目录、yaml、或 glob
-    --only NODE                  # [v0] 只跑指定节点; 缺省全跑
-    --probe [K=20]               # 暖机尾段试跑, 不写 store (§15.7)
-    --rebuild                    # 全量重建并 bump version; 缺省是区间 upsert (§7.2)
-    --universe NAME              # 探索期临时覆盖
-    --time                       # 分阶段耗时
-    --sd DATE --ed DATE          # 评估窗口; ed 缺省 today(按数据新鲜度回退)
-    --dump-format feather|csv
-    --cache-read / --cache-write full|off|lag:k / --force    # [目标] cache 版引入
+ak [--store PATH] [--region NAME] {run|store|pnl} ...
+        --store    L3 根目录; 缺省取 region 的 l3_root（相对路径钉到项目根）
+        --region   缺省 us
 
-store status [NODE | --base]     # last_session / 覆盖率 / 落后告警
-store catalog rebuild
+run PATH                        # 唯一执行入口; PATH 可是节点目录、yaml、或 glob
+    --sd DATE --ed DATE         # ed 缺省 = 轴末日, 并按依赖新鲜度回退（§7.3）
+    --only NODE                 # 只跑指定节点
+    --probe [K=20]              # 暖机尾段试跑 K 天, 不写 store; 也不评估
+    --rebuild                   # 全量重建并 bump version; 缺省是区间 upsert（§7.2）
+    --no-pnl                    # 跳过对 alpha 的自动评估
+    --by year|month|both|none   # 自动评估里的分段表; 缺省 both
+    --record PATH               # 落一份机器可读的运行记录（JSON）
 
-pnl.py --weight FILE | --node NODE
-    [--sd DATE --ed DATE] [--rm REF] [--booksize N] [--cost-model REF]
-    [--adv REF] [--delist-date REF]          # §8.1 必备面板, 需可配置
-    [--halt-proxy consecutive:K | none]      # 无 is_halted 时的显式降级 (§九)
-    [--gate strict]                          # CI: 七道闸门任一红即非零退出
+store {status|ls|meta} [REF]    # 查询工具, 不是执行器
+        status [PREFIX]         # catalog 表 + 打开的是哪个库 + 轴规模
+        ls     [PREFIX]         # 逐行列出 ref
+        meta   REF              # 该 ref 的完整 meta; 打错名字给编辑距离候选
 
-alpha submit PATH [--dry-run]    # §15.10: 规范化 region → canonical 复评 → 去重 → 冻结提交
-store search [--tag T] [--dims D] [--similar-to REF --min-corr X] [--all] [--tombstones]
-store set-status REF {wip|keep|deprecated}   # §15.4 的生命周期迁移
+pnl --node REF | --weight FILE  # 权重 → 四交付物 + 指标
+    --sd DATE --ed DATE
+    --booksize N                # 缺省取 region
+    --rm REF                    # return_metric; 缺省取 region
+    --cost-bps X                # 常数 bps 成本模型; 缺省 10.0
+    --participation X           # ADV 参与率上限; 缺省取 region（0.10）
+    --halt-proxy K              # int; 无 is_halted 时的显式降级（§九）。缺省取 region
+    --by year|month|both|none   # 缺省 both
+    --out DIR                   # 四交付物落地处; 缺省取 region 的 pnl_out
 ```
+
+**缺省值的来源顺序**：命令行 > region 文件 > 内置常量。相对路径**只在取缺省值时**
+钉到项目根；使用者亲手敲的 `--store ./x` 照 cwd 解析（那个 `./` 是他相对自己说的）。
+
+**项目根**的判据：向上找同时含 `repos/` 与 `pyproject.toml`(或 `.git`) 的那一层；
+`ALPHAKIT_ROOT` 覆盖。研究 repo 搬到引擎仓库之外时用它（或在自己的 region 里给
+`l3_root` 写绝对路径——那不影响 `region_hash`）。
+
+**`run` 缺省会评估本次跑过的每个 alpha**（`--no-pnl` 关掉）。因子与数据节点不评
+（没有权重可仿真）；`--probe` 也不评（那一趟不落库，评的会是上一次的权重）。
 
 日更 = cron 按 registry 逐个调 `run --ed today`，无需独立命令。
+
+> **以下命令属于目标架构, 尚未实现** `[TARGET]`——不要照着实现：
+> `alpha submit`、`store search`、`store set-status`、`store catalog rebuild`、
+> `pnl --gate strict`、`run --universe/--time/--dump-format/--cache-*`、
+> `pnl --cost-model/--adv/--delist-date`。设计意图见 `roadmap.md`。
 
 ---
 
@@ -1391,112 +1682,10 @@ store set-status REF {wip|keep|deprecated}   # §15.4 的生命周期迁移
 
 ---
 
-## 十五、研究工作流与仓库管理
+## 十五、研究工作流 `[SHIPPED 的那两节]`
 
-> 本章回答两个问题：**5 个人各积累 100+ 节点之后，仓库怎么不烂**；以及**一个 alpha 从想法到进池，每一步怎么才最省事**。
-> 前者的约束大多来自 §二 / §十一，后者的约束来自 §七（v0 无 cache、顺序执行）。
-
-### 15.1 个人 repo：一个节点一个目录，扁平摆放
-
-先纠正一个前提。§十一 说"**路径不变**是关键：移动文件会改变引用名"——**这个理由不成立**。§3.2 规定引用名 = `{repo}.{node_dir}.{node_name}-{output}`，其中只有 `{node_dir}` 与仓库目录同名——而它是**分组名**，不是"文件放在哪"；把一个 yaml 在同一个 `node_dir` 内挪来挪去、或增删同目录下的 yaml，引用名一个字都不变。`code_ref` 是 `{repo, commit, path}`，commit 已把那一刻的树钉死，旧 path 在那个 commit 里永远存在。**真正会被打断的只有两件事：改 `node_dir` 名（那等于改 identity，本就不该做）与 §5.2 registry 里的 `config:` 路径键。**
-
-所以规则是 **「identity 不变、只改状态」**，仓库布局自由。配套两件事：registry 改为按 identity 登记（§15.2），以及 CI 生成一份 identity → 文件路径的索引 `nodes.lock`（提交入库、禁止手改、陈旧则 CI 失败）。
-
-```
-g_yliu/
-  nodes.lock                       # CI 生成: identity -> {path, node, code, fingerprint, status, tags}
-  regions/us.yaml
-  lib/                             # 跨节点共用的代码 (扫描族的那一份就在这)
-  nodes/
-    alpha_yliu_rev/                # node_dir 用完整 identity, ls 一眼看清 kind 与归属
-      README.md                    # 假设 / 数据 / 结论 —— 一年后唯一还记得"为什么"的地方
-      rev.yaml  rev.py             #   alpha_yliu_rev_w005 / _w020
-      rev_mix.yaml  rev_mix.py     #   alpha_yliu_rev_mix
-    factor_yliu_liq/       README.md  liq.yaml  liq.py
-    factor_yliu_resid_mom/ README.md  ...
-```
-
-**`node_dir` 按"常一起重跑的东西"分组，一个 README 说清这组在做什么。** 而节点自身的 kind / ns / 参数全在**节点名**里（`alpha_yliu_rev_w005`），所以 `ls storage/l3/us/g_yliu/rev/` 出来就是 `alpha_yliu_rev_w005-weight/`、`alpha_yliu_rev_w020-weight/`——**分组由目录给、身份由名字给，两者不重复**。四种曾经的备选方案各自的代价：
-
-| 方案 | 代价 |
-|---|---|
-| 按 kind 分子目录（`factors/` vs `alphas/`） | 重复了节点名里已有的 `{kind}_` 段，且一个 node_dir 里本来就可能既有 factor 又有 alpha（例：`rev/` 下的因子与它的 combo） |
-| 按主题分（`reversal/`…） | 分类会漂；一个节点常同时属于两个主题；重新切分主题 = 大规模移动。主题应当是 **tag**（写进节点 meta）而非目录 |
-| 按状态分（`wip/` vs `promoted/`） | 恰恰在 registry 指着这个节点的那一刻强迫移动文件。状态应当写在 meta 里（§15.4） |
-| 按 study/年份分 | `node_dir` 本身就已经是 study 的粒度；再套一层年份只会让路径变长，而归档靠的是 `status`（§15.4）不是目录 |
-
-> 一个 yaml 里的多个节点共享文件级的 `region` / `universe` / `lookback`。若同一组里的节点需要不同的 `lookback`，拆成同目录下的另一个 yaml 即可——`node_dir` 允许多个 yaml，这正是 `rev.yaml` 与 `rev_mix.yaml` 并存的形态。
-
-### 15.2 晋升：登记而非搬家，以及它的护栏
-
-§十一 规定晋升是提 PR 登记进 registry、**节点仍住在个人 repo**。这条设计避免了改名，但它要能站住，需要四件配套的东西——它们的规则已分别写在 §5.2（按 identity 登记、钉 commit）、§二（写权限在晋升时翻转）、§3.3（写入前指纹校验）与 §十一（已登记节点的未登记依赖 = 编译期错误）。本节只补**运维侧**剩下的两件：
-
-**归档与所有权。** 一次 force-push 若丢掉了被钉的 commit，会让所有历史 `code_ref` 真正悬空（这跟文件移动不同，后者不会）。故：repo 归组织所有而非个人；个人 `main` 开启分支保护（禁止 force-push / 改写历史 / 删库，作者照常推送不受影响）；**登记时把该 commit 的 git bundle 归档进 g_common**——晋升不搬文件，但要取一份不可变副本。registry 条目带 `owner` + `backup_owner`：5 个人一年下来，所有权移交是必然会发生的事。
-
-**落库后的验收检查**，把 §5.2 承诺的"一致性检查告警"说具体：覆盖率对比滚动中位数、NaN 比例落在声明的 `sla` 带内、分位漂移检查、无未来日期的值。任一不过则**不落库**、告警 owner、并在 catalog 标 `stale` 让下游看得见。
-
-**晋升清单**（g_common 的 PR 模板，CI 阻断项）：`nodes.lock` 已重新生成且与钉住的 commit 一致 · registry 钉的是 commit 而非分支 · `owner` / `backup_owner` 均在职 · meta 带 `title` / `tags` / `status` / `region_hash` / `l2_asof` · **所有 deps 均已登记** · 不依赖任何 `status: wip` 的节点 · `region_hash` 等于模板标准值 · 毒化测试与 cutoff 静态检查绿 · alpha 另需 `dims == [di, ii]` 且 ops 以 `scale` 收尾 · 最近 250 个 session 的覆盖率与 NaN 比例在 `sla` 内 · 探针 PnL 已算、与任一已登记节点的最大相关性写进 PR 正文 · 回填 dry-run 对最近 20 个 session 与 store 现值逐位一致。
-人工项（非作者 approver）：读该节点目录里的 README，假设是否说清、节点是否与假设相符 · 若最大相关性 > 0.7 需书面说明或撤回 · 商定 tier 与 SLA · 被它取代的旧节点要有废弃计划并设 `replaced_by`。
-合并时自动执行：store 节点目录 `chown` 给日更用户、归档 git bundle、meta 置 `status: registered` 与 `promoted_at`、接入监控并把 owner 挂上滞后告警。
-
-### 15.3 发现：靠 PnL 相关性，不靠名字
-
-500+ 节点跨 6 个 repo 时，"是不是已经有人做过 5 日反转"这个问题，**靠名字和 tag 大概只能查到六成**——人取名字是不可靠的。真正能回答的是 **PnL 向量相关性**，而 §十一 为了 alpha 池去重本来就要这套机制。把它变成全局的、每晚跑的：
-
-每个 `dims: [di, ii]` 且非 wip 的节点，夜间跑一次**标准探针**（`ops: [rank, neutralize, scale]`，canonical region/universe）→ `pnl.py` → 存下日收益向量。**4000 session × f4 = 16 KB/节点**，500 个节点 8 MB，500×500 相关矩阵瞬时完成。这是整份计划里性价比最高的一项，也是唯一能抓到"同一个信号、不同公式"的方法。
-
-```
-store search --tag reversal --dims di,ii
-store search --similar-to g_yliu.factor_yliu_rev.w005 --min-corr 0.6
-  → g_lqin.factor_lqin_rev.st     corr 0.93   registered, owner lqin
-  → g_common.factor_common_rev.w005 corr 0.88   registered
-```
-
-为此 §3.3 的 per-node meta 必须补上：`title` / `tags[]` / `status` / `owner`（CI 强制，缺则不给合）· `node` / `config` / `params`（现有 `code_ref` 只指到**文件**，而 §4.10 里两个变体共用一个 `.py`，光靠 path 说不清是哪个节点、哪组参数）· `fingerprint` · **`l2_asof`**（L2 的 `adj_factor` 是向后复权、每次新分红都会改写历史，见 `l2_schema.md` §0.1.3——不记这个，"重建"在原理上就不可复现）· 探针指标与最近邻。
-
-### 15.4 死节点：不是磁盘问题，是可见性问题
-
-研究产出的绝大多数是失败品。但先把量级摆正：秩-2 稠密节点 96 MB、稀疏的 1–12 MB，500 个约 10–48 GB，**不算问题**；而**一个 m5 秩-3 节点就是 7.5 GB、m1 是 37 GB**。所以策略是：秩-3 激进回收、秩-2 懒回收、**可见性对所有秩都激进**。真正的成本是 catalog 污染与通配的波及面。
-
-**扫描产物靠 `status: wip` 隔离，而不是靠一个沙箱 ns**。§4.9.4 强制手写展开变体，一次扫描就是 20 个节点——"每年 100+ 节点"主要就是这么来的；只有胜出者才被作者显式改成 `keep`。
-
-> 早先的方案是把扫描产物丢进 `{user}_lab` 这样一个沙箱 ns，**但它在本文档自己的语法下不可表达**：§4.11.1 规定 `ns ::= ^[a-z][a-z0-9]*$`（单段、不含下划线，否则 `{kind}_{ns}_{name}` 无从切分），`yliu_lab` 过不了；§4.11.6 又要求 ns 段等于所在 repo 的 owner，个人 repo 也写不出它。而 `wip` 状态已经做到了同样的三件事——不进 `*` 通配、不进默认 catalog、有 TTL——**用一个已有的机制，胜过为同一件事新增一个不可表达的命名空间**。
-
-| status | 进通配 `*` | 默认 catalog | 数据保留 |
-|---|---|---|---|
-| `wip`（首次写入的默认值） | 否 | `--all` 才见 | 90 天无写入 → tombstone |
-| `keep`（作者显式设，需写一行理由） | **是** | 是 | 至废弃 |
-| `registered` | **是** | 是 | 永久 |
-| `deprecated` | 否 | 灰显 | 180 天 → tombstone |
-| `tombstone` | 否 | `--tombstones` | **数据删除，meta 卡片永久保留** |
-
-**`{node_name}-*` 通配应当展开成什么**：仅 `keep` / `registered`；**永不含秩-3**（§7.2 第 4 条：通配 + eager 加载 + 一个 m5 节点 = 直接 OOM，而 §4.7 恰恰鼓励秩-3 与秩-2 同 ns 混放）；且引擎要把本次展开与 meta 里冻结的上次展开做 diff，**移除项报错**（新增才是通配的目的，移除是危险）。
-
-**GC 的正当性来自"L3 是 cache"这个声明本身**（README 已明说 `cache/` 丢了跑一遍就有）。所以 GC 删数据、留 **tombstone 卡片**：`code_ref`、fingerprint、冻结的展开 deps、params、`region_hash`、`l2_asof`、覆盖率、探针指标、以及一条字面的 `rebuild_cmd`。GC **拒绝**碰：已登记的、任何已登记节点冻结依赖列表里的、alpha 池条目引用的、90 天内写过的。
-
-### 15.5 OOS 隔离：两个 store，以及一笔要单独计价的成本
-
-规则已写在 §十一——研究 store 截断于 `T_embargo`、生产 store 全史、单向推送、且"物理隔离"这句话需要出网策略才成立。本节补提交侧的两个设计点：
-
-**每个 alpha 的提交时点才是基准。** 固定的墙会过期；纯滚动的封禁期对一个反复提交的人最终会把一切都揭开。两者都要：封禁期保证提交时**至少**有多长的 OOS 窗口，而池子为每个 alpha 冻结 `submitted_at` / `is_end` / `oos_start = is_end + 1`。评估器此后永远从 `oos_start` 跑到今天——**OOS 证据按 alpha 单调累积**，即使封禁期后来滑过了那一段。
-
-**提交次数预算**（如每人每季 6 次，同 `family` 的变体共用一份家族预算）。没有预算，评估器就是一台神谕机，OOS 会以每次提交约一比特的速度退化成 IS——**这才是真正的失效模式，而不是数据泄漏**。
-
-### 15.6 研究内循环：时间花在哪
-
-先看清 §5.3 的基准（注意那些数是**跑完 2000 天的总耗时**，不是单日）：逐日 handle 约 **118 µs/日**，与"每天做几次全窗口 pandas 运算"相比可以忽略。真正的驱动因素不是你**请求**多大的窗口，而是 handle 在窗口上**做几遍全量运算**：
-
-| | w=6 | w=251 |
-|---|---|---|
-| 只碰窗口的两行（`rev_w005` 那种） | ~0.3 ms/日 | ~0.9 ms/日 |
-| 做一遍全窗口运算 | ~1.4 ms/日 | ~5.4 ms/日 |
-| §4.5 `beta_decomp` 那种（约 7 遍，w=251） | — | **~36 ms/日** |
-
-**经验法则：w=250、N=6000 上做一遍全窗口 pandas 运算 ≈ 4 ms/日 ≈ 8 年跑一次多 8 秒。** `ctx.win(250)` 不贵，贵的是在它上面 `pct_change()`。
-
-一次 8 年迭代的构成（短窗口 alpha、`deps: [g_common.field_base_px.*]` 展开约 20 个 field）：进程启动 0.3 s + **读 20 个面板的全史 6.2 s（约 1 GB 常驻）** + handle 循环 0.6 s + ops 链 2.7 s + 落库与 dump 0.7 s + `--pnl` 子进程 3.6 s ≈ **14 秒，其中研究员自己的代码只占 4%**。长窗口 factor 则相反：`beta_decomp` 约 86 秒、95% 在 handle 里。
-
-**所以最高杠杆的改动不是加 cache。** 没有任何 cache 能把第一种情形压到"进程启动 + I/O + 写产物"这约 10 秒之下；第二种情形的开销是研究员自己的算术，cache 同样跳不过。而且**store 本身就已经是叶子 cache**——每个 field、每个节点输出都是物化的 Zarr 数组；v0 缺的不是存储，是失效判定，而 `--only NODE` 已经是手工替代品。
+本章的绝大部分是**研究组织方式的提案, 尚未实现**, 已整体移入 `roadmap.md`。
+留在这里的两节是真的在跑的：
 
 ### 15.7 `--probe`：最高杠杆的一项，且它顺带堵掉一个地雷
 
@@ -1517,76 +1706,12 @@ run ... --probe 20      # 再往前一步: 暖机尾段试跑 20 天, 不写 sto
 
 它检查的全是元数据（catalog 查询，< 50 ms）：deps 是否存在、`dims`/秩 与 CS 算子的合法性（§3.6）、alpha 的 ops 链是否以 `scale` 收尾（§4.4）、`_tc` 能否解析到存在的名字（§4.9.5）、universe 是否秩-2 bool、`output:` 是否单输出、声明的 outputs 键与 handle 返回是否一致。**这些在每一次调用读取任何数据之前就跑——它不是一个可选开关。**
 
-### 15.8 变体比较：把 6 个 metrics.json 变成一个决策
+### 15.9 闸门的严重度策略
 
-§7.2 已经在一个进程里 `for node in spec.nodes` 循环了，离扫描运行器只差一步：**`--pnl` 对每个 alpha 类节点都评估，而不只对 `output:`**。一行改动，且它是让"一个 yaml 装一次扫描"真正可用的前提；顺带把 6 次独立运行（84 秒）变成一次（约 28 秒），因为面板只读一遍。
+七道闸门本身**已实现**，规格见 **§8.5**。这里只留策略：研究期只 warn（硬失败只会
+教会大家绕过它），提交路径（15.10，未实现）则七道全部转为硬阻断。
 
-产出 `pnl_out/_compare/{config}.md`，一行一个变体，列是 §8.4 的指标集，按 Fitness 排序。两件事让它成为**决策面**而非表格转储：
-
-- **自动识别参数轴**——从各节点 meta 里读 `params`，跨变体做 diff，把有差异的键提到前列。免费，且它把手写展开丢掉的扫描结构又找了回来，不需要 Jinja。
-- **一行 `spread`**（各指标在变体间的极差）。这是最具决策价值的一个数：Sharpe 跨度 1.78–1.91 说明这个参数不重要、别再调了；跨度 0.4–2.1 说明你几乎肯定在拟合噪声。
-
-```
-                 days  decay | Sharpe  Ret    TO    Fitness  MaxDD | gates
-rev_w005_dc7        5      7 |   1.91  10.4%  0.31     1.42  -7.1% | ok      ← best
-rev_w005_dc3        5      3 |   1.82  11.2%  0.42     1.31  -8.4% | ok
-rev_w020_dc7       20      7 |   1.44   8.1%  0.18     1.19  -9.2% | WARN conc
-spread                       |   0.47   3.1%  0.24     0.23   2.1% |
-```
-
-外加两张单个 metrics.json 永远给不出的图：**变体间 PnL 相关矩阵**（同一想法的变体通常 0.95+，某个掉到 0.6 要么是另一个想法要么是 bug，且这与 §十一 池去重是同一套计算）与**变体 × 年份的 Sharpe 网格**（这是过拟合的读数：如果 Fitness 冠军只在 2019 年冠军，那个排名就是噪声）。
-
-### 15.9 每次 `--pnl` 自动亮的七道闸门
-
-设计约束直接取自 §九 的教训（`ghost_days` 恒为 0——"一道永远不会触发的告警比没有更危险"）：**每道闸门都打印自己的状态和数字，即使通过也打印。空白绝不能在"干净"与"没查"之间有歧义。** 全部七道总开销 < 200 ms，且全都从既有的四交付物派生。
-
-| 闸门 | 抓的失败模式 | 打印 |
-|---|---|---|
-| **market beta** | "其实是个 beta 押注" | beta、R²、对冲后 Sharpe |
-| **集中度** | "收益就是三只票" / 就是一天 | top-1/5/20 名占 `Σ\|pnl\|` 的比例 + 票名 |
-| **区间稳定性** | "只在 2015 年前有效" | 分年 Sharpe、上下半场比、滚动 1 年最差 |
-| **成本临界倍数** | "算完成本没法投" | `breakeven_cost = 2.7x` |
-| **多空平衡** | 号称中性实则 80% 多头 | L/S 比、多空只数 |
-| **池子卫生** | §7.2 第 3 条那道两端夹住的掩码是否真的生效 | `scale` 后池外权重（必须恰为 0）、覆盖率序列 |
-| **前视状态** | cutoff 静默改绑、region 不可比 | `ghost_detection` 取值、各 dep 解析出的 `_tc` 实名、`region_hash` 是否等于模板标准值 |
-
-**成本临界倍数值得单独说**：报告 turnover 并不能回答"这东西能不能投"，**成本临界倍数能**——它是一个数，量纲恰好是"成本模型可能错多少倍"。§8.4 已指出 precise 仿真让容量扫描"白拿"，这是同一个技巧换到成本维度。
-
-严重度policy 对齐 §二 的"自由研究、统一提交"：研究期只 warn（硬失败只会教会大家打 `--force`），`--gate strict` 供 CI 用非零退出，提交路径（15.10）则七道全部转为硬阻断。每次 `--pnl` 末尾恒打一行：`submission readiness: 5/7 gates pass`。
-
-### 15.10 从想法到 alpha 池：一条命令
-
-§十一 要求四件事（PnL 相关性去重 <0.7、canonical universe 复评、独立进程 OOS、`region_hash` 等于模板标准值）。**清单会被跳过，命令不会。**
-
-```
-alpha submit nodes/alpha_yliu_rev_mix/ [--dry-run]
-```
-
-它是**对 `run --pnl` 的一次预设，不是新机器**：① 把研究员的 `regions/us.yaml` 换成模板标准值、重算 `region_hash`、**在该口径下重跑**（§二 允许本地自由修改，正是因为有这一步——工具必须**执行**这次重跑，而不是只校验 hash 然后拒绝）· ② canonical universe 复评，并把 `us_top3000` 与 `us_top1500` **并排打印**（§十一 点名了这个诊断："top3000 Sharpe 2.5 → top1500 掉到 0.8 的基本是小票流动性溢价"），不要等 reviewer 来问 · ③ 对池中已有向量做相关性去重（5000 个 alpha 实测 13 ms，池就是 store 里一个 (K×D) f4 数组、5000 个才 40 MB，不需要 DB），**报告最近的 5 个及其相关系数而非只给判决**——"0.68 vs `g_lqin.alpha_lqin_rev_w003.weight`"是可行动的，"拒绝"只会让人瞎猜 · ④ 毒化测试作为提交闸门而非只在 CI · ⑤ 七道闸门全部硬阻断 · ⑥ 冻结提交记录（`code_ref`、config hash、`region_hash`、权重 hash、IS 指标、闸门块、最近邻）· ⑦ 交给 OOS——研究员的环境物理截断于 OOS 边界，他**跑不了**这一步。
-
-回传的东西刻意很窄：accept/reject、完整的 canonical IS 指标、以及 OOS **只以有界摘要形式**返回（Sharpe 分桶、收益符号、OOS/IS 衰减比、与池中最相关成员及其名字）。**OOS 日收益向量永不回传。** 再加一个**提交次数预算**（如每人每季 6 次，同 `family` 的变体共用一份家族预算）——没有预算，评估器就是一台神谕机，OOS 会以每次提交约一比特的速度退化成 IS，**这才是真正的失效模式，而不是数据泄漏**。
-
-`--dry-run` 在本地跑完 ①–⑤ 并打印清单但不建记录，让研究员的最后一公里迭代就是对着真闸门做的，提交本身永远不会有意外。让这条路径立得住的设计性质是：**submit 是拿到 OOS 数字的唯一途径，而且它比手工凑齐证据更省事。**
-
----
-
-## 附录 A：已定决策记录
-
-**数据与存储**：日频主体、TAQ 仅作原料 · L3 三分类 field/factor/alpha，**由节点名 `{kind}_{ns}_{name}` 承载，yaml 里不再声明 kind/ns** · 路径 `storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/`，引用名 `{repo}.{node_dir}.{node_name}-{output}` 与之一一对应、纯字符串可互推；无 `.zarr` 后缀，`ls` 出来就是 catalog · 单输出 alpha 的输出名缺省为 `weight`· **L3 主存 Zarr**：全局共享轴 + per-node meta(zarr attributes) + catalog 派生索引；chunks=(50,N)、默认 zstd、fill_value=NaN、bool/int8 省空间；稀疏免费（成本正比实际数据量）；按日期 append 真 O(1)、按标的 resize 需预留 500 列摊薄成年度维护 · feather 保留于 L2 与 dump 出口 · securities master + 全局轴 append-only 单调分配。
-
-**配置与组织**：**三层 repo：alpha_kit（infra，纯引擎，零数据定义零口径配置）+ g_common（全员贡献，拥有全部共享 ns：base/各 dataset/common，含 registry 与 template）+ g_{user}（个人 region + factor + alpha）** · ns 与 repo 解耦（保留 `base` ns 以保证 `g_common.field_base_px.*` 通配的精确性）· 写权限按 repo 分组（共享 ns 仅 g_common CI 可写 / 个人 ns 直写 / 他人只读），fork 靠 copy · **region 每人一份、可自由修改，规范化内容 hash 进权重 meta；提交 alpha 池时按 hash 校验可比性——自由研究、统一提交**（原 `region@vN` 版本耦合方案由此取消）· **deps 必须显式，通配 `{repo}.{node_dir}.{node_name}-*` 是简写而非豁免**；template 默认给 `g_common.field_base_px.*`，编译期展开进 meta，引擎按实际调用惰性加载 · 成本模型 = 有版本的 L3 field · 多参数变体手写展开（Jinja 暂缓，原则"渲染前置"）· time_cutoff 模板替换 + 一行前视静态检查 · return_metric 显式声明与 t 行对齐约定 · 晋升 = 登记进 g_common 的 registry 日更（**identity 不变**，按 identity 登记、钉 commit 不钉分支，写权限同时翻转给日更用户）。
-
-**秩与引擎范围**：**L3 不再恒为 `date × instrument`**，改为节点声明的秩——`[di]`（宏观）/ `[di, ii]`（缺省）/ `[di, ii, ti]`（日内），`di` 恒为首轴以保住"按日 append 真 O(1)"对三种秩同时成立 · `ti` 网格是 `_axes/grids/` 里的注册表条目、定长、半日市留 NaN；换网格 = 换节点名 · 分块 (50,N) / (1,N,T) / (4096,) 按秩取 · **alpha 必须是秩-2**（权重是 `di×ii`），`universe` 仅对秩-2/3 有意义，**CS 类 ops 仅秩-2 合法**（秩-1 无 `ii`；秩-3 的 `ii`/`ti` 二义，与其猜默认值不如编译期报错），TS 类三秩通用 · 同一节点可同时产出不同秩的输出（TAQ 原料模式：细网格 + 日频聚合出自同一次遍历）· 秩-3 体积须先算：m5 网格满仓 7.5 GB/节点、m1 达 37 GB，故「TAQ 只作原料」的建议依然成立 · **v0 引擎只处理 L3 → L3**：`deps` 是唯一输入来源，`source` / `ctx.l2` / `ctx.l1` 移出 v0，L2 → L3 入库归 ingestion 管道（它要背文件格式、路径模板、vendor 容错三副担子，与 alpha 研究无关）。
-
-**组件与契约**：**统一 Node 模型（终态）：系统唯一可执行单元，多 L2/L3 进、一或多 L3 出；一种 yaml、一个 init/handle 契约、一条 run 命令；执行期无任何 kind 分支**（handle → mask(universe) → ops → 落库，三行）· **universe 缺省 all（全集）、ops 缺省 []，alpha = 写了池子和 ops 的普通节点**；数据节点全集计算是语义必需（池内算会让边缘票取不到值、进出池处留窗口断口）· `kind` 纯路径标签（缺省 alpha），**存储路径 = §3.2 的四段式** · **outputs 省略 = 单输出（名 = 节点名、dtype f4）**；单输出直接 return 裸值，**多输出必须 `ctx.multi_outputs(...)`**——一种情形一种写法，构造器在写错那一行抛错（未声明/缺失/dtype 不可转，typo 带修复建议）；NaN 是合法值、缺 key 是结构错误；keys 跨日恒定 · `scale` 不再自动补，改编译期校验（output 或被当 alpha 引用的节点必须以 scale 收尾）· **dmgr 组件取消**：日更 = cron 按 registry 调 run，数据侧只剩 `store` 查询工具 · **L2/L1 = 外部文件路径模板**（`format` 显式声明——L2 文件名无扩展名，{date} strftime，key 列归一全局轴，缺失 = 当日 NaN + warning，强制 schema）；`ctx.l2/l1` 仅在声明 source 时可用，**且 v0 不在引擎内**（见上条「秩与引擎范围」）；声明式简写（无 code + outputs 的 col/expr）保留，逐列 try 部分失败不回滚 · **逐日 handle 实测不慢于批量向量化**（2000×6000：235ms vs 713ms；state 增量 46ms），批量 build(sessions) 仅作可选性能出口不进手册 · 数据节点尽量无状态（保任意区间可重算）· ctx DataFrame 0/-1 行标签、永远返回副本、win 无上限、op-state 归 OpChain · 掩码两端夹住（ops 前 NaN、scale 后 0）· combo 概念取消（deps 含 alpha 的普通节点）· v0 无 cache/无依赖解析：声明顺序 = 执行顺序 + lookback 预热 · sd/ed = 评估窗口、ed 按新鲜度回退。
-
-**退市与停牌（本次修订）**：`frozen_value` 取 **gross**（`.abs().sum()`）而非带符号和——多空两侧同时停牌时带符号和 ≈ 0，会把"停牌 = 资金占用"静默抹掉 · 停牌日 NaN **不得进入推进式**，推进用 `fillna(0)`、可交易性判据用原始 NaN，`prev` 须在推进前捕获 · **NaN 三分类**（退市后 / 停牌 / ghost），停牌须由**独立正向信号 `is_halted`** 判定而非"非退市即停牌"的兜底推断——后者使第三类恒空、ghost 检测永不触发；**判据必须正向可证，不能是排除法剩下的** · `is_halted` 缺失时**拒绝运行或显式降级**（`--halt-proxy consecutive:K`），`metrics.json` 恒含 `ghost_detection` 使防线状态可见。
-
-**评估**：权重文件为正式接口、pnl 双入口、市场摩擦归评估侧 · **pnl 仅 precise 一个模式，仿真器定位** · **单一价值账本**（pos_value × 复权 ret 推进，CA 天然安全；股数账本/split_factor/双账本对账废除，股数归未来订单生成模块）· holding/pnl/daily/metrics 四交付物，逐股 pnl 矩阵为一等交付物 · daily 列含 long/short value·count、trade_dollar、holding_pnl、return · **`return` 分母 = booksize（恒定）** · 停牌沿用冻结价值、冻结重分配满仓口径（avail = booksize − frozen_value、剩余票重归一、先重分配后 clip）· 退市 = 资金回收 vs 停牌 = 资金占用，路径分叉；引擎侧不做停牌处理 · booksize 进 region/meta，容量分析 = 扫 booksize · gap 三分解与 realloc_turnover 单列 · ghost 检测 + delist_date 权威判据。
-
----
-
-## 附录 B：NaN 语义规范（草案，待批）
+## 附录 B：NaN 语义规范
 
 全系统唯一真相，所有算子/ops/仿真实现向此表对齐；批准后冻结，改动走版本。
 

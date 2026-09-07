@@ -22,7 +22,7 @@ L2 → L3 是一道**单向**边界：L3 由 L2 生成，L2 从不读 L3；引�
 ### 0.1 已知缺陷（必须写进 meta，不得静默）
 
 1. **生存者偏差**：Yahoo 与 NasdaqTrader 当前快照都只含存活标的，这一年内退市的票拿不到（实测 `RDS-A` → Not Found）。S&P 清单亦为现任快照，不含期内被剔除的成分。`architecture.md` §3.4 把"含退市标的的历史池子"列为美股必修，§十四 待定决策 #1 指出这需要采购数据源（CRSP / Sharadar）。sec_master 的 `security_id` 分配方式设计成**可后续追加退市标的而不破坏既有 ID**。
-2. **无 vwap**：Yahoo 日线不提供 vwap。**不生造 `(H+L+C)/3` 冒充 vwap**——那会静默污染任何以执行价为主题的研究。`architecture.md` §4.5 示例里的 `bar["vwap"]` 在本数据集上不可用，需要 vwap 的节点必须等接入日内数据或采购源。
+2. **无 vwap**：Yahoo 日线不提供 vwap。**不生造 `(H+L+C)/3` 冒充 vwap**——那会静默污染任何以执行价为主题的研究。以执行价（vwap）为输入的任何因子 在本数据集上不可用，需要 vwap 的节点必须等接入日内数据或采购源。
 3. **`adj_factor` 不是 PIT**：厂商 `adjclose` 是**向后复权**的，每次新分红都会改写全部历史因子。故本契约中因子的权威真相是 `cax` 里的**逐事件原始事实**（PIT 稳定），`pv.adj_factor` 只是带 `asof` 的派生快照。这正是 §3.4 要求"raw price + adjustment factor 双存"的原因。
 4. **最后一个 session 可能未结算**：实测 2026-08-28 对 NVDA / AAPL 均返回 open/high/low/volume 有值但 `close` 与 `adjclose` 为 **null**——厂商在收盘价结算前就发布了该 bar。无 close 即无 `adj_factor` 锚点，故此类 bar 整行丢弃（§5「无报价的标的不出现在该文件中」）。构建器按**日期**统计丢弃数，用以区分"厂商整段 session 未结算"（占比 >50%）与"个别标的的真实缺口"，并在 `_meta.json` 同时记录 `ed`（请求区间）与 `ed_actual`（实际落地区间）——两者不符时必须显式告警，绝不让声明区间与实际数据静默错位。
 
@@ -55,12 +55,12 @@ registry/
 storage/
   l3/                                            # 派生层, 可从 data + 代码完全重建
     {region}/{repo}/{node_dir}/{node_name}-{output}/
-      us/g_common/base_px/field_base_px-adj_close_tc/
-      us/g_yliu/liq/factor_yliu_liq-rvol20/
-      us/g_yliu/rev/alpha_yliu_rev_mix-weight/
+      us/g_common/field_base_px/adj_close_1500/
+      us/g_yliu/factor_yliu_liq/rvol20/
+      us/g_yliu/alpha_yliu_rev/alpha_yliu_rev_mix-weight/
 ```
 
-**`data` 与 `cache` 的分界是"重建代价"**：`data/` 里的东西丢了要重新向厂商取（且当前快照类文件事后取不回，见 §0.1.1）；`l3/` 里的东西丢了跑一遍 `run` 就有——这正是 `architecture.md` §一「内容寻址 + append-only」与 L3 完全可复现的立意。整个 `storage/` 已进 `.gitignore`。
+**`data` 与 `cache` 的分界是"重建代价"**：`data/` 里的东西丢了要重新向厂商取（且当前快照类文件事后取不回，见 §0.1.1）；`l3/` 里的东西丢了跑一遍 `run` 就有——这正是 `architecture.md` §一「内容寻址 + append-only」与 L3 完全可复现的立意。整个 `storage/` **随仓库入库**——见 §1.1。
 
 > **叶子是 `{node_name}-{output}`**：节点名本身含 `{kind}_{ns}_` 前缀，输出名说明是哪一份数据。一次计算可以有多个产物（`factor_yliu_beta_decomp-mkt_beta_w250` 与 `-resid_mom_w250`），而不同节点即便产出同名输出也不会撞车。引用名 `{repo}.{node_dir}.{node_name}-{output}` 与该路径一一对应、纯字符串可互推。完整规则见 `architecture.md` §3.2 与 §4.11。
 
@@ -95,7 +95,7 @@ python3 -m venv .venv && .venv/bin/pip install pandas pyarrow   # 系统 python 
 .venv/bin/python pipeline/build_ref_join.py  # 可选: 参考数据 join 的自检报告
 ```
 
-整个 `storage/` 已进 `.gitignore`——由上述步骤完全可重建，不入库。**注意**：`l1/ref/` 下三个参考快照是当日快照，事后无法重新取到同一版本；若要严格可复现，应单独归档。
+整个 `storage/` **随仓库入库**（约 63 MB / 1584 个文件）: `pipeline/` 将来要独立成单独的 repo, 它一搬走本仓库就再没有东西能重建 storage/, 所以数据跟着引擎走。上述三步是**可选的重造路径**, 不是必经之路。**注意**：`l1/ref/` 下三个参考快照是当日快照，事后无法重新取到同一版本；若要严格可复现，应单独归档。
 
 ## 2. 文件格式（所有 L2 文件统一）
 
@@ -233,7 +233,7 @@ date|security_id|ticker|event_type|div_amount|split_num|split_den|split_ratio
 - `date` = **ex-date**。
 - 无事件的 session **不生成文件**（引擎按 §5.1「文件缺失 = 该源当日全 NaN + warning」处理）。
 
-> **与 `architecture.md` §4.5 示例的一处有意偏离**：该示例从 `cax` 表读 `adj_factor` 与 `ex_date_flag`，隐含公司行动表是逐日稠密的。本契约把稠密的 `adj_factor` 放进 `pv`（它本就是 (date,security) 的价格属性），`cax` 只保留稀疏事件日志。理由是 PIT：事件是不变的事实，累计因子是带 asof 的派生快照，两者混在一张表会让"L2 已 PIT"这个承诺失真。消费侧改动为一行：`bar["close"] * bar["adj_factor"]`。
+> **与"从 cax 表逐日读 adj_factor"那种写法的一处有意偏离**：那种写法隐含公司行动表是逐日稠密的。本契约把稠密的 `adj_factor` 放进 `pv`（它本就是 (date,security) 的价格属性），`cax` 只保留稀疏事件日志。理由是 PIT：事件是不变的事实，累计因子是带 asof 的派生快照，两者混在一张表会让"L2 已 PIT"这个承诺失真。消费侧改动为一行：`bar["close"] * bar["adj_factor"]`。
 
 ## 7. 原始价格反演（核心算法）
 
@@ -334,7 +334,7 @@ D_raw(e) = D_reported(e) × S(ex_date(e))
  "splits_vendor_had_not_applied":[{"symbol":"MNST","ex_date":"2026-08-11","ratio":"2:1",...}],
  "vendor_return_divergence":[{"symbol":"MNST","worst_return_gap":0.503873,...}],
  "unexplained_jumps_gt_40pct":[...], "suspect_securities":[{"symbol":"MNST",...}],
- "validation":"PASS"}
+ "validation": "not_run"}
 ```
 
 

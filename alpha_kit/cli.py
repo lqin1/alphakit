@@ -142,10 +142,18 @@ def _evaluate_alphas(spec, store, a, recs: list[dict]) -> int:
             ref = str(node.ref(key))
             if not store.exists(ref):
                 continue
+            # config 可以覆盖 region 的口径（§4.1）——`booksize` / `sim.*` /
+            # `return_metric` 此前被 load_spec 解析出来却没有任何人读, 于是
+            # 「alpha 可覆盖其中 booksize / sim.*」这句承诺在三处文档里写着而实际不生效:
+            # 写了 booksize: 50000000 的人拿到的仍是 region 的 20M, 一声不吭。
+            sim = spec.sim or {}
             try:
                 evaluate(store, node=ref, sd=a.sd, ed=a.ed,
-                         booksize=a.booksize, rm=a.rm, cost_bps=a.cost_bps,
-                         participation=a.participation, halt_proxy=a.halt_proxy,
+                         booksize=float(spec.booksize) if spec.booksize else a.booksize,
+                         rm=spec.return_metric or a.rm,
+                         cost_bps=a.cost_bps,
+                         participation=float(sim.get("participation", a.participation)),
+                         halt_proxy=sim.get("halt_proxy", a.halt_proxy),
                          out=a.out, by=a.by, region_hash=getattr(a, "region_hash", None))
             except (StoreError, SimError) as e:
                 # 评估失败不该把 run 的成果一起判负: 数已经算出来并落库了。
