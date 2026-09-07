@@ -48,7 +48,7 @@
     "version": 1,
     "first_session": 64,
     "last_session": 249,
-    "updated_at": "2026-09-05T04:27:52Z",
+    "updated_at": "2026-09-07T01:59:47Z",
     "deps": [
       "g_common.field_base_px.adj_close_1500"
     ],
@@ -56,7 +56,7 @@
       "g_common.field_base_px.adj_close_1500": 1
     },
     "region": "us",
-    "region_hash": "sha256:9aefe642f8ddef96",
+    "region_hash": "sha256:d76181262671b32c",
     "cutoff": "1500",
     "universe": null,
     "node": "factor_yliu_mom",

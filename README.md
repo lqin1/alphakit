@@ -22,7 +22,7 @@
 `storage/l3/us` 现有 7 个 base 节点 + 三个示例产出的 8 个节点。
 
 ```bash
-.venv/bin/python tests/run_all.py      # 六套自检 233 项断言, 全绿
+.venv/bin/python tests/run_all.py      # 六套自检 234 项断言, 全绿
 ```
 
 三个示例（`architecture.md` §4.10）全部可运行：因子 → alpha（两变体）→ combo（含跨 repo 依赖）。

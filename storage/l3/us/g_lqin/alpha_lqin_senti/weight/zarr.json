@@ -45,10 +45,10 @@
     "status": "wip",
     "registered": false,
     "fingerprint": "sha256:b7000f2ebeaeaba2",
-    "version": 2,
+    "version": 1,
     "first_session": 64,
     "last_session": 249,
-    "updated_at": "2026-09-05T04:29:15Z",
+    "updated_at": "2026-09-07T02:00:48Z",
     "deps": [
       "g_common.field_base_px.adj_close_1500",
       "g_common.factor_common_gics.sector"
@@ -58,7 +58,7 @@
       "g_common.factor_common_gics.sector": 1
     },
     "region": "us",
-    "region_hash": "sha256:9aefe642f8ddef96",
+    "region_hash": "sha256:d76181262671b32c",
     "cutoff": "1500",
     "universe": "g_common.field_common_univ.us_top400",
     "node": "alpha_lqin_senti",

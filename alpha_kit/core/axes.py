@@ -40,9 +40,15 @@ class Axes:
         if not (a / "sessions.json").exists():
             raise StoreMissing(
                 f"no L3 store at {root} -- axes not found ({a / 'sessions.json'}).\n"
-                f"  If this is the alphakit repo, the store ships with it: check you are "
-                f"inside the repo (or set ALPHAKIT_ROOT), then `ak store status`.\n"
-                f"  To build one from L2: python pipeline/build_l3_base.py")
+                f"  Inside the alphakit repo the store ships with it, so this usually means "
+                f"the store could not be located rather than that it is missing.\n"
+                f"  If your research repo lives outside the alphakit repo, point at the store "
+                f"in one of these ways:\n"
+                f"    ALPHAKIT_ROOT=/path/to/alphakit   ak store status      # per shell\n"
+                f"    ak --store /path/to/alphakit/storage/l3/us store status  # per command\n"
+                f"    l3_root: /path/to/alphakit/storage/l3/us               # in your "
+                f"regions/{{region}}.yaml -- permanent, and it does not affect region_hash\n"
+                f"  To build a store from L2 instead: python pipeline/build_l3_base.py")
         sessions = json.loads((a / "sessions.json").read_text())
         securities = json.loads((a / "securities.json").read_text())
         cap = json.loads((a / "capacity.json").read_text())

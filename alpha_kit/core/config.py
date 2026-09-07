@@ -153,6 +153,21 @@ def _params(raw, where: str) -> dict:
     raise ConfigError(f"{where}: params must be a mapping or a list of mappings, got {type(raw).__name__}")
 
 
+# region 文件里有两类键, 只有第一类进 hash:
+#   口径   calendar / time_cutoff / return_metric / universe / booksize / cost_model / sim
+#   本机   l3_root / pnl_out
+# region_hash 是**可比性**的锚（§二）: 它要回答的是"你我用的是同一套口径吗", 而不是
+# "你我的磁盘长得一样吗"。把路径也算进去, 研究员一旦把自己的 repo 搬到别处、需要给
+# l3_root 写一个绝对路径, hash 就和队友的对不上了——find_region 会判定口径分叉,
+# gate 7 会报不可比, 而实际上两人的口径一个字都没差。
+LOCAL_KEYS = {"l3_root", "pnl_out"}
+
+
+def _convention(doc: dict) -> dict:
+    """region 文件里真正构成口径的那部分。"""
+    return {k: v for k, v in (doc or {}).items() if k not in LOCAL_KEYS}
+
+
 def _canon(obj) -> str:
     """region 的规范化文本（§4.1.1）：递归按键排序、数值最短往返、UTF-8、LF。
 
@@ -180,12 +195,12 @@ def load_region(path: Path, region: str) -> tuple[dict, str | None]:
         f = base / "regions" / f"{region}.yaml"
         if f.exists():
             doc = yaml.safe_load(f.read_text()) or {}
-            return doc, "sha256:" + hashlib.sha256(_canon(doc).encode()).hexdigest()[:16]
+            return doc, "sha256:" + hashlib.sha256(_canon(_convention(doc)).encode()).hexdigest()[:16]
     return {}, None
 
 
-def find_region(region: str, repo: str | None = None,
-                root: Path | None = None) -> tuple[dict, str | None, Path | None]:
+def find_region(region: str, repo: str | None = None, root: Path | None = None,
+                start: Path | None = None) -> tuple[dict, str | None, Path | None]:
     """不带 config 路径时定位 `regions/{region}.yaml`——`pnl` 的入口是一个 store ref。
 
     按 §二, region 文件是**可比性的锚**: 口径 hash 进权重 meta, 提交 alpha 池时按 hash
@@ -194,11 +209,25 @@ def find_region(region: str, repo: str | None = None,
     别的地方会喊出来。给了 repo 就先按 repo 找（alpha 属于哪个 repo, 就按那个 repo
     声明的口径评估）。
     """
-    # 从**项目根**找, 不是从 cwd: 研究员会在 repos/g_yliu/nodes/... 里敲 run,
-    # 而在那儿 glob "repos/*/regions/" 什么也找不到——然后静默退回 {}, 口径全失效。
-    root = root or project.find_root() or Path.cwd()
+    # 三种布局都要认, 顺序是"离使用者最近的优先":
+    #
+    #   ① 就在手边的研究 repo 里     ./regions/us.yaml, 或往上任一级
+    #   ② 引擎仓库下的 repos/*/     {root}/repos/g_yliu/regions/us.yaml
+    #   ③ 指名道姓的那个 repo       {root}/repos/{repo}/regions/us.yaml
+    #
+    # ① 此前是漏掉的, 而 §二 说得很清楚: 研究 repo 是独立的, region 文件**跟着 repo
+    # 走**（各 repo 各存一份、内容必须一致）。把 g_yliu 从引擎仓库里搬出去单独放,
+    # 是这套架构的正常用法, 不是异常——而此前那样做, 手边明明就有 regions/us.yaml,
+    # 却会得到"没找到 region, 已退回内置缺省"。
     cands: list[Path] = []
-    if repo:
+    here = Path(start or Path.cwd()).resolve()
+    for d in (here, *here.parents):
+        f = d / "regions" / f"{region}.yaml"
+        if f.exists():
+            cands = [f]
+            break
+    root = root or project.find_root() or Path.cwd()
+    if not cands and repo:
         f = root / "repos" / repo / "regions" / f"{region}.yaml"
         if f.exists():
             cands = [f]
@@ -209,7 +238,7 @@ def find_region(region: str, repo: str | None = None,
     seen: dict[str, list[Path]] = {}
     for f in cands:
         doc = yaml.safe_load(f.read_text()) or {}
-        h = "sha256:" + hashlib.sha256(_canon(doc).encode()).hexdigest()[:16]
+        h = "sha256:" + hashlib.sha256(_canon(_convention(doc)).encode()).hexdigest()[:16]
         seen.setdefault(h, []).append(f)
     if len(seen) > 1:
         detail = "\n".join(f"  {h}  {', '.join(str(x) for x in fs)}" for h, fs in seen.items())

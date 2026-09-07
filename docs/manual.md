@@ -163,7 +163,7 @@ run alpha_yliu_rev/rev.yaml  2025-12-01..2026-08-27
 一条命令自证整条链是通的：
 
 ```bash
-.venv/bin/python tests/run_all.py      # 六套 233 项断言, exit 0 才算装好
+.venv/bin/python tests/run_all.py      # 六套 234 项断言, exit 0 才算装好
 ```
 
 它把六套自检串起来跑，红一套即非零退出：
@@ -183,6 +183,45 @@ run alpha_yliu_rev/rev.yaml  2025-12-01..2026-08-27
 
 顺序不能颠倒：**v0 引擎不做图分析**，跨 config 的依赖必须已经在 store 里
 （引擎唯一的兜底是"deps 不存在则报错"）。`store status` 可查谁已经落地。
+
+---
+
+### 2.5 研究 repo 放在引擎仓库之外
+
+`repos/g_yliu/` 这样的研究 repo 是**独立的**（§二）——把它单独放到别处、单独版本控制,
+是正常用法而不是异常。region 文件跟着 repo 走, 所以搬走之后 `regions/us.yaml` 就在
+你手边, 口径照常生效。
+
+唯一要交代的是**共享的 L3 库在哪**: 引擎仓库里 `l3_root: storage/l3/us` 是相对仓库根
+说的, 而你的 repo 已经不在那儿了。三选一：
+
+```bash
+# ① 这个 shell 里都生效
+export ALPHAKIT_ROOT=/path/to/alphakit
+ak store status
+
+# ② 只这一条命令
+ak --store /path/to/alphakit/storage/l3/us store status
+
+# ③ 一次性写死在你自己的 regions/us.yaml 里（推荐）
+l3_root: /path/to/alphakit/storage/l3/us
+```
+
+**③ 不会影响 `region_hash`。** 路径键（`l3_root` / `pnl_out`）不进 hash——它要回答的是
+"你我用的是同一套口径吗", 不是"你我的磁盘长得一样吗"。所以你写一个只对自己机器成立的
+绝对路径, 与队友的可比性不受影响; 而改动 `booksize` / `sim` / `return_metric` 这类真
+口径, hash 立刻就变。
+
+搬走之后一切照旧：
+
+```bash
+cd /wherever/g_yliu
+run nodes/factor_yliu_mom/ --sd 2025-12-01          # 写进共享库, ref 仍是 g_yliu.…
+pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight --sd 2025-12-01
+```
+
+`repo` 段取自目录名, 所以目录必须仍叫 `g_yliu`。落库的 `code_ref` 此时是绝对路径——
+研究 repo 在引擎仓库之外, 没有共同的根可以相对。
 
 ---
 

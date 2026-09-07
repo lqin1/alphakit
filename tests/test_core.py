@@ -981,6 +981,47 @@ def test_param_tag_consistency():
     return f"lone case exempt / consistent family allowed / mismatched value and missing tag both rejected ({len(TAGS)} tags)"
 
 
+def test_standalone_research_repo(): 
+    """研究 repo 搬到引擎仓库之外仍要能用（§二）。
+
+    §二 说研究 repo 是独立的、region 文件跟着 repo 走, 所以把 g_yliu 单独放在别处
+    是**正常用法**。此前 find_region 只 glob `{root}/repos/*/regions/`, 于是手边明明
+    就有 regions/us.yaml, 却会得到"没找到 region, 已退回内置缺省"——而那意味着
+    booksize / participation / halt_proxy / return_metric 统统换成硬编码值, 一声不吭。
+
+    另一半是 region_hash: 路径键不进 hash。研究员把 repo 搬走后多半要给 l3_root 写一个
+    绝对路径, 若那也算进 hash, 他和队友的口径就"分叉"了——而两人的口径一个字没差。
+    """
+    import shutil as _sh
+    from alpha_kit.core.config import find_region
+    root = Path(__file__).resolve().parents[1]
+    src = root / "repos" / "g_yliu"
+    if not src.exists():
+        return "跳过（仓库里没有 repos/g_yliu）"
+    away = TMP / "away" / "g_yliu"
+    _sh.rmtree(TMP / "away", ignore_errors=True)
+    away.parent.mkdir(parents=True, exist_ok=True)
+    _sh.copytree(src, away)
+
+    doc, h, f = find_region("us", start=away)
+    check(f is not None and f.is_relative_to(away),
+          f"没找到搬走的 repo 自己的 region：{f}")
+    check(doc.get("booksize") and doc.get("sim"), f"口径没读出来：{sorted(doc)}")
+
+    # 本机路径键不影响 hash；口径键影响
+    _, h_in_repo, _ = find_region("us", root=root, start=root)
+    check(h == h_in_repo, f"搬走前后 region_hash 不同：{h_in_repo} vs {h}")
+    y = (away / "regions" / "us.yaml")
+    y.write_text(y.read_text().replace("l3_root: storage/l3/us",
+                                       "l3_root: /somewhere/else/storage/l3/us"))
+    _, h_abs, _ = find_region("us", start=away)
+    check(h_abs == h, f"改了 l3_root 却动了 region_hash：{h_abs} vs {h}")
+    y.write_text(y.read_text().replace("booksize: 20000000", "booksize: 999"))
+    _, h_conv, _ = find_region("us", start=away)
+    check(h_conv != h, "改了 booksize 却没动 region_hash——口径变化必须反映出来")
+    return "搬走后仍找得到自己的 region；路径键不进 hash、口径键进"
+
+
 def test_relative_config_path_still_infers_the_right_repo():
     """repo / node_dir 由 config 的父目录推出, 所以路径必须先解析成绝对（§4.11.2）。
 
@@ -1391,6 +1432,7 @@ TESTS = [
     test_node_level_ops_with_multiple_outputs,
     test_node_ops_and_output_ops_conflict,
     test_param_tag_consistency,
+    test_standalone_research_repo,
     test_relative_config_path_still_infers_the_right_repo,
     test_ref_segments_are_validated,
     test_paths_anchor_to_the_project_root_not_cwd,
