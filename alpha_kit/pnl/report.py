@@ -27,10 +27,12 @@ def _load_weights(store: Store, node: str | None, weight_file: str | None,
             raise StoreError(f"no such weight file: {weight_file}")
         # 外来权重按扩展名认格式: 交付物现在落 CSV, 但别人递过来的仍可能是 feather/parquet
         suf = Path(weight_file).suffix.lower()
-        rd = {".csv": pd.read_csv, ".feather": pd.read_feather,
+        rd = {".psv": lambda f: pd.read_csv(f, sep="|"),
+              ".csv": pd.read_csv,
+              ".feather": pd.read_feather,
               ".parquet": pd.read_parquet}.get(suf)
         if rd is None:
-            raise StoreError(f"unrecognised weight file format `{suf}`: {weight_file} (supported: .csv/.feather/.parquet)")
+            raise StoreError(f"unrecognised weight file format `{suf}`: {weight_file} (supported: .psv/.csv/.feather/.parquet)")
         w = rd(weight_file)
         return w.set_index(w.columns[0])
     if not store.exists(node):
@@ -78,56 +80,71 @@ def _require_contiguous(store: Store, w) -> None:
             f"  Re-run the node over the gap, or evaluate one side with --sd/--ed.")
 
 
-def run_pnl(a) -> int:
-    store = Store(a.store, a.region)
-    node = getattr(a, "node", None)
-    w = _load_weights(store, node, getattr(a, "weight", None), a.sd, a.ed)
+def evaluate(store, *, node=None, weight=None, sd=None, ed=None,
+             booksize=20e6, rm=RET, cost_bps=10.0, participation=0.10,
+             halt_proxy=None, out="pnl_out", by="both", region_hash=None,
+             show=True) -> dict:
+    """权重 → 四交付物 + 指标。**取参数, 不取 argparse namespace。**
+
+    此前入口是 `run_pnl(a)`, 于是这条路的接缝就是 CLI 对象本身: 想在进程里评估两次
+    （比较两个变体、或 `run` 完顺手评一下）就得伪造一个 namespace。现在 CLI 那层只
+    负责把 namespace 摊平成参数, 库这层谁都能调。
+    """
+    w = _load_weights(store, node, weight, sd, ed)
     w = w.dropna(how="all")
     _require_contiguous(store, w)
     if w.empty:
         raise StoreError(f"{node}: weights are empty -- run that node first")
-    sd, ed = w.index[0], w.index[-1]
+    sd_, ed_ = w.index[0], w.index[-1]
 
-    ret = store.read(a.rm, sd, ed)
-    adv = store.read(ADV, sd, ed) if store.exists(ADV) else None
-    mkt = store.read(MKT, sd, ed) if store.exists(MKT) else None
+    ret = store.read(rm, sd_, ed_)
+    adv = store.read(ADV, sd_, ed_) if store.exists(ADV) else None
+    mkt = store.read(MKT, sd_, ed_) if store.exists(MKT) else None
 
     # 本数据集没有 is_halted / delist_date（l2_schema §0.1）。§九 规定此时必须**显式降级
     # 或拒绝运行**，不允许把 ghost_days 记 0 继续跑——故这里把 halt_proxy 一路传下去，
     # 由 simulate 决定是降级还是拒绝。
-    res = simulate(w, ret, booksize=a.booksize, adv_dollar=adv,
-                   cost_bps=a.cost_bps, participation=a.participation,
-                   halt_proxy=a.halt_proxy)
+    res = simulate(w, ret, booksize=booksize, adv_dollar=adv,
+                   cost_bps=cost_bps, participation=participation,
+                   halt_proxy=halt_proxy)
 
-    name = node or Path(a.weight).stem
-    out = Path(a.out) / name
-    out.mkdir(parents=True, exist_ok=True)
-    # 用 SimResult 自己的写法：手工 to_feather 会让整型 security_id 列名被
-    # pyarrow 静默强转成字符串（只发一条 warning），读回来就对不上了
-    res.write(out)
+    name = node or Path(weight).stem
+    outdir = Path(out) / name
+    outdir.mkdir(parents=True, exist_ok=True)
+    res.write(outdir)
 
     # 权重是在哪个口径下**算出来**的, 与本次评估用的是不是同一个——这才是有意义的
-    # 可比性检查, 也正是 §二 的 region_hash 存在的理由。此前 cli 把 hash 算出来放进
-    # namespace 就没了, gate 7 只能永远读到 None、永远报 NO-BASIS。
+    # 可比性检查, 也正是 §二 的 region_hash 存在的理由。
     computed_under = None
     if node and store.exists(node):
         computed_under = (store.meta(node) or {}).get("region_hash")
 
     m = compute_metrics(res, market_ret=mkt,
-                        meta={"node": name, "return_metric": a.rm,
-                              "region_hash": getattr(a, "region_hash", None),
+                        meta={"node": name, "return_metric": rm,
+                              "region_hash": region_hash,
                               "region_hash_canonical": computed_under,
-                              "booksize": a.booksize, "sd": str(sd), "ed": str(ed),
-                              "cost_bps": a.cost_bps,
-                              "participation": a.participation,
+                              "booksize": booksize, "sd": str(sd_), "ed": str(ed_),
+                              "cost_bps": cost_bps,
+                              "participation": participation,
                               # 数据集的已知缺陷必须随指标一起走, 否则读报表的人
                               # 无从知道这些数字是在什么样的数据上算出来的
                               "known_defects": ["survivorship_bias_no_delisted",
                                                 "no_vwap", "no_shares_outstanding",
                                                 "equal_weighted_market_proxy"]})
-    (out / "metrics.json").write_text(json.dumps(m, indent=1, ensure_ascii=False))
+    (outdir / "metrics.json").write_text(json.dumps(m, indent=1, ensure_ascii=False))
+    if show:
+        _print(name, m, outdir, by=by)
+    return m
 
-    _print(name, m, out, by=getattr(a, "by", "both"))
+
+def run_pnl(a) -> int:
+    """CLI 适配器: 把 namespace 摊平成参数。"""
+    evaluate(Store(a.store, a.region),
+             node=getattr(a, "node", None), weight=getattr(a, "weight", None),
+             sd=a.sd, ed=a.ed, booksize=a.booksize, rm=a.rm,
+             cost_bps=a.cost_bps, participation=a.participation,
+             halt_proxy=a.halt_proxy, out=a.out,
+             by=getattr(a, "by", "both"), region_hash=getattr(a, "region_hash", None))
     return 0
 
 
@@ -200,7 +217,7 @@ def _print(name: str, m: dict, out: Path, by: str = "both") -> None:
     if kd:
         print(f" Defects {', '.join(kd)}")
     print(f" Verdict {m.get('summary','')}")
-    print(f" Output  {out}/  →  daily.csv  pnl.csv  holding.csv  metrics.json")
+    print(f" Output  {out}/  →  daily.psv  pnl.psv  holding.psv  metrics.json")
     print("=" * W)
 
 

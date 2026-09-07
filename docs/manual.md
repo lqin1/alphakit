@@ -16,7 +16,7 @@
 | 查一个节点的元数据 | `ak store meta <ref>` |
 | 跑一个 alpha | `run <节点目录> --sd 2025-12-01` |
 | 只试跑不落库 | `run <节点目录> --probe 20` |
-| 评估它 | `pnl --node <ref> --sd 2025-12-01` |
+| 评估它 | 跑 alpha 时**自动做**；单独评估用 `pnl --node <ref> --sd 2025-12-01` |
 | 自检整条链 | `.venv/bin/python tests/run_all.py` |
 
 一条完整的研究回路：
@@ -163,7 +163,7 @@ run alpha_yliu_rev/rev.yaml  2025-12-01..2026-08-27
 一条命令自证整条链是通的：
 
 ```bash
-.venv/bin/python tests/run_all.py      # 六套 234 项断言, exit 0 才算装好
+.venv/bin/python tests/run_all.py      # 六套 239 项断言, exit 0 才算装好
 ```
 
 它把六套自检串起来跑，红一套即非零退出：
@@ -418,7 +418,18 @@ universe 是不是秩-2 bool、`sd`/`ed` 在不在轴上、`ed` 有没有越过�
 元数据看不出的错——形状不符、返回类型不对、`multi_outputs` 漏了一个 key——
 用 `--probe K` 抓：它在暖机之后的尾段试跑 K 天，**不写 store**。
 
-### 4.8 评估：`pnl`
+### 4.8 评估：跑 alpha 时自动做
+
+**`run` 一个 alpha 之后会直接评估它**，不用再敲第二条命令：算完紧接着看指标是研究期
+最短的那个回路，让人再抄一遍 60 字符的 ref 只是多一步。因子和数据节点不评（没有权重
+可仿真），`--probe` 也不评（那一趟本来就不落库，评的会是上一次的权重）。
+
+```bash
+run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --sd 2025-12-01   # 算 + 评, 两个变体各一份
+run … --no-pnl                                                    # 只算不评
+```
+
+单独评估一份已经落库的权重（或别人给的权重文件）：
 
 ```bash
 pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight --sd 2025-12-01
@@ -481,7 +492,7 @@ ref **要带输出名**。单输出的 alpha 那个输出叫 `weight`，所以�
  Audit   ghost_detection=proxy(3)  ghost_days=1  delist_source=none
  Defects survivorship_bias_no_delisted, no_vwap, no_shares_outstanding, equal_weighted_market_proxy
  Verdict submission readiness: 3/7 gates pass
- Output  pnl_out/…w005-weight/  →  daily.csv  pnl.csv  holding.csv  metrics.json
+ Output  pnl_out/…w005-weight/  →  daily.psv  pnl.psv  holding.psv  metrics.json
 ====================================================================================================
 ```
 
@@ -501,9 +512,13 @@ ref **要带输出名**。单输出的 alpha 那个输出叫 `weight`，所以�
 **两套恒定都在**，各 19 个字段，不受这个开关影响。月份超过 36 个只印最后 36 行，
 再多就是一堵读不出东西的墙。
 
-四交付物落在 `pnl_out/{ref}/`，**全是纯文本**：`holding.csv` / `pnl.csv`（逐股逐日，
-归因就是一行 groupby）/ `daily.csv` / `metrics.json`。选 CSV 是为了能 grep、能 diff、
-不装 pyarrow 也打得开；代价是体积和读写速度，真要快就别读交付物、直接读 store。
+四交付物落在 `pnl_out/{ref}/`，**全是纯文本、`|` 分隔**（与 L2 同一种格式，见
+`l2_schema.md` §2）：`holding.psv` / `pnl.psv`（逐股逐日，归因就是一行 groupby）/
+`daily.psv` / `metrics.json`。选纯文本是为了能 grep、能 diff、不装 pyarrow 也打得开；
+代价是体积和读写速度，真要快就别读交付物、直接读 store。
+
+`holding.psv` 的列是两层拍平的，接缝用**冒号**：`holding_value:101`——`|` 已经是字段
+分隔符，再拿它当列名内部的接缝，表头会被解析成两列。
 
 **每道闸门通过也打印数字**，且没有判据时报 `NO-BASIS` 而不是 `PASS`——空白绝不能在
 "干净"与"根本没查"之间有歧义。上面这次运行就很说明问题：
@@ -514,7 +529,7 @@ ref **要带输出名**。单输出的 alpha 那个输出叫 `weight`，所以�
   它应该 FAIL，直到接入真数据为止。
 - **period stability NO-BASIS** 是因为 250 个 session 只跨两个**不完整**年份。
 
-外来权重（别人给的、或别的工具算的）走 `--weight FILE`，认 `.csv` / `.feather` / `.parquet`：
+外来权重（别人给的、或别的工具算的）走 `--weight FILE`，认 `.psv` / `.csv` / `.feather` / `.parquet`：
 
 ```bash
 pnl --weight some_weights.csv --sd 2025-12-01

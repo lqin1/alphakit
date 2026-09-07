@@ -22,7 +22,7 @@
 `storage/l3/us` 现有 7 个 base 节点 + 三个示例产出的 8 个节点。
 
 ```bash
-.venv/bin/python tests/run_all.py      # 六套自检 234 项断言, 全绿
+.venv/bin/python tests/run_all.py      # 六套自检 239 项断言, 全绿
 ```
 
 三个示例（`architecture.md` §4.10）全部可运行：因子 → alpha（两变体）→ combo（含跨 repo 依赖）。
@@ -63,7 +63,7 @@ python3 -m venv .venv && .venv/bin/pip install -e .   # 系统 python 受 PEP 66
 source .venv/bin/activate                             # 之后可直接敲 ak / run / pnl
 
 run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --sd 2025-12-01
-pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight --sd 2025-12-01
+pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005-weight --sd 2025-12-01   # run 已自动评过, 这是单独评估
 ```
 
 装上四个命令：`alphakit`、`ak`（简写）、`run`、`pnl`。后两个名字很通用，

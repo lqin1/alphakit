@@ -100,6 +100,8 @@ def cmd_run(a) -> int:
                        only=a.only, rebuild=a.rebuild, probe=a.probe)
             records.extend(recs)
             rc = _report_degenerate(recs) or rc
+            if not a.no_pnl and a.probe is None:
+                rc = _evaluate_alphas(spec, store, a, recs) or rc
         except (ConfigError, StoreError, ValueError, KeyError, TypeError) as e:
             # ConfigError 是 ValueError 的子类, 但引擎运行期抛的多数是**裸**的
             # ValueError/KeyError/TypeError: ctx._coerce 的形状不符（作者最常犯的
@@ -118,6 +120,37 @@ def cmd_run(a) -> int:
              "finished_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
              "rc": rc, "nodes": records}, indent=1, ensure_ascii=False))
         print(f"  run record -> {a.record}")
+    return rc
+
+
+def _evaluate_alphas(spec, store, a, recs: list[dict]) -> int:
+    """`run` 之后顺手评估本次跑过的每个 alpha。
+
+    算完一个 alpha 紧接着就想看指标, 是研究期最短的那个回路; 让人再敲一条 `pnl --node
+    <60 字符的 ref>` 只是把 ref 抄一遍。所以这是**缺省行为**, `--no-pnl` 关掉。
+
+    只评 alpha: 数据节点与因子没有权重可仿真。`--probe` 下不评——那一趟本来就不落库,
+    评的会是上一次的权重, 比不评更容易骗人。
+    """
+    from .pnl.report import evaluate
+    done = {r["node"] for r in recs}
+    rc = 0
+    for name, node in spec.nodes.items():
+        if node.kind != "alpha" or name not in done:
+            continue
+        for key in node.outputs:
+            ref = str(node.ref(key))
+            if not store.exists(ref):
+                continue
+            try:
+                evaluate(store, node=ref, sd=a.sd, ed=a.ed,
+                         booksize=a.booksize, rm=a.rm, cost_bps=a.cost_bps,
+                         participation=a.participation, halt_proxy=a.halt_proxy,
+                         out=a.out, by=a.by, region_hash=getattr(a, "region_hash", None))
+            except (StoreError, SimError) as e:
+                # 评估失败不该把 run 的成果一起判负: 数已经算出来并落库了。
+                print(f"  warn  {ref}: evaluation skipped -- {e}", file=sys.stderr)
+                rc = rc or 0
     return rc
 
 
@@ -228,6 +261,10 @@ def main(argv=None) -> int:
     r.add_argument("--probe", nargs="?", type=int, const=20, default=None,
                    help="trial-run the warmed tail; does not write the store")
     r.add_argument("--rebuild", action="store_true", help="full rebuild, bumping version")
+    r.add_argument("--no-pnl", dest="no_pnl", action="store_true",
+                   help="skip the automatic evaluation of alpha nodes")
+    r.add_argument("--by", choices=["year", "month", "both", "none"], default="both",
+                   help="period breakdown tables in the automatic evaluation")
     r.add_argument("--record", default=None,
                    help="write a machine-readable run record (JSON) to this path")
     r.set_defaults(fn=cmd_run)
@@ -279,8 +316,14 @@ def main(argv=None) -> int:
               f" -- falling back to built-in defaults; booksize/participation/halt_proxy/"
               f"return_metric are NOT the ones your region file declares", file=sys.stderr)
     a.store = a.store if a.store else str(project.anchor(rdoc.get("l3_root") or DEFAULT_L3))
-    if a.cmd == "pnl":
+    if a.cmd in ("pnl", "run"):
+        # `run` 缺省也要评估 alpha, 所以这套口径两条命令都要摊平——它们本来就该来自
+        # 同一个 region, 让 run 走一套缺省、pnl 走另一套, 同一个 alpha 会给出两个数。
         sim = rdoc.get("sim") or {}
+        for k, v in (("out", None), ("halt_proxy", None), ("participation", None),
+                     ("booksize", None), ("rm", None), ("cost_bps", 10.0), ("by", "both")):
+            if not hasattr(a, k):
+                setattr(a, k, v)
         if a.out is None:
             a.out = str(project.anchor(rdoc.get("pnl_out") or "pnl_out"))
         if a.halt_proxy is None:

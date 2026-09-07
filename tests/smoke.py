@@ -110,14 +110,40 @@ def main() -> int:
         outside = float(row[~pool].abs().sum())
         check("weights outside the pool are exactly 0 (second masking gate)", outside == 0.0, f"outside-pool Sigma|w| = {outside:g}")
 
-    print("=== 6. the four pnl deliverables and seven gates ===")
+    print("=== 6. run evaluates alphas by default ===")
+    import shutil as _sh
+    _sh.rmtree(REPO / "pnl_out", ignore_errors=True)
+    r = subprocess.run([PY_, "-m", "alpha_kit.cli", "run",
+                        "repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml",
+                        "--sd", "2025-12-01", "--by", "none"],
+                       cwd=REPO, capture_output=True, text=True)
+    check("run succeeds", r.returncode == 0, (r.stderr or "")[-200:])
+    # 算完一个 alpha 紧接着就想看指标是最短的那个回路; 让人再抄一遍 60 字符的 ref
+    # 只是多一步。所以这是缺省行为。
+    check("run evaluated the alpha without a second command",
+          "submission readiness" in r.stdout, "run did not evaluate")
+    check("deliverables landed", (REPO / "pnl_out" /
+          "g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight" / "daily.psv").exists())
+    _sh.rmtree(REPO / "pnl_out", ignore_errors=True)
+    r2 = subprocess.run([PY_, "-m", "alpha_kit.cli", "run",
+                         "repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml",
+                         "--sd", "2025-12-01", "--no-pnl"],
+                        cwd=REPO, capture_output=True, text=True)
+    check("--no-pnl skips it", "submission readiness" not in r2.stdout)
+    # 因子没有权重可仿真, 不该被评
+    r3 = subprocess.run([PY_, "-m", "alpha_kit.cli", "run",
+                         "repos/g_yliu/nodes/factor_yliu_mom/", "--sd", "2025-12-01"],
+                        cwd=REPO, capture_output=True, text=True)
+    check("a factor is not evaluated", "submission readiness" not in r3.stdout)
+
+    print("=== 7. the four pnl deliverables and seven gates ===")
     r = subprocess.run([PY_, "-m", "alpha_kit.cli", "pnl",
                         "--node", "g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight",
                         "--halt-proxy", "3"], cwd=REPO, capture_output=True, text=True)
     check("pnl runs", r.returncode == 0,
           "" if r.returncode == 0 else r.stderr.strip().splitlines()[-1][:110])
     d = REPO / "pnl_out" / "g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight"
-    for f in ("holding.csv", "pnl.csv", "daily.csv", "metrics.json"):
+    for f in ("holding.psv", "pnl.psv", "daily.psv", "metrics.json"):
         check(f"deliverable {f}", (d / f).exists())
     if (d / "metrics.json").exists():
         import json

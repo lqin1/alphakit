@@ -606,11 +606,11 @@ def test_deliverables():
         paths = res.write(td)
         (Path(td) / "metrics.json").write_text(
             json.dumps(metrics(res), ensure_ascii=False, indent=1, allow_nan=False))
-        back = pd.read_csv(paths["daily"])
-        check(len(back) == T and "return" in back.columns, "daily.csv reads back",
+        back = pd.read_csv(paths["daily"], sep="|")
+        check(len(back) == T and "return" in back.columns, "daily.psv reads back",
               f"{len(back)} rows x {len(back.columns)} cols")
-        check(pd.read_csv(paths["holding"]).shape[1] == 2 * N + 1,
-              "holding.csv is flattened to {block}|{security_id}")
+        check(pd.read_csv(paths["holding"], sep="|").shape[1] == 2 * N + 1,
+              "holding.psv is flattened to {block}:{security_id}")
         m = json.loads((Path(td) / "metrics.json").read_text())
         check(set(m) >= {"scalar", "by_year", "audit", "gates", "summary", "snapshot"},
               "metrics.json is structurally complete", str(sorted(m)))

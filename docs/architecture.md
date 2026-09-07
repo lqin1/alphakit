@@ -1185,11 +1185,11 @@ pos_value[delist_today] = 0                            # 退市: 对价已由 re
 
 ```
 pnl_out/g_yliu.alpha_yliu_rev.alpha_yliu_rev_w005_h250-weight/
-  holding.csv       # date × instrument: holding_value + holding_weight(= value/booksize,
+  holding.psv       # date × instrument: holding_value + holding_weight(= value/booksize,
                     #   与目标权重同尺度可逐股对比); 股数视图归未来订单生成模块
-  pnl.csv           # date × instrument 逐股逐日损益 —— 归因("收益集中在哪些票/哪个月/
+  pnl.psv           # date × instrument 逐股逐日损益 —— 归因("收益集中在哪些票/哪个月/
                     #   是否三只退市股贡献一半")变成一行 groupby, 无需重仿真
-  daily.csv         # 日度汇总, 列清单见下
+  daily.psv         # 日度汇总, 列清单见下（`|` 分隔, 与 L2 同格式）
   metrics.json      # 标量 + 分年度 + 口径快照(region@ver/rm/booksize/cost/区间/权重hash)
 ```
 
