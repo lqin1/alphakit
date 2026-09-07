@@ -60,7 +60,7 @@ L3  Zarr 数组，全局共享轴（引擎的唯一输入与唯一输出）
 ### 2.1 前置
 
 只需要 **Python 3.11+** 与 **git**。不需要数据库、不需要 Docker。
-磁盘：引导数据集约 60 MB（L1 18 MB + L2 41 MB + L3 2 MB）。
+磁盘：数据随仓库入库, 约 63 MB（L1 18 MB + L2 41 MB + L3 5 MB）。**不需要另外取数**。
 
 ```bash
 git clone <repo> alphakit && cd alphakit
@@ -87,7 +87,15 @@ python3 -m venv .venv
 > **系统 Python 装不上包？** 较新的发行版按 PEP 668 锁住了全局 site-packages，
 > 报 `externally-managed-environment`。上面的 venv 就是正解，不要用 `--break-system-packages`。
 
-### 2.2 取数据（约 2 分钟，需要外网）
+### 2.2 取数据 —— **通常不需要做**（约 2 分钟，需要外网）
+
+> **先读这一段再动手。** `storage/` 是**入库**的（约 63 MB, 1584 个文件）, clone 完
+> 装好就能直接 `ak store status` / `run` / `pnl`。下面三条是**从原始数据重造一遍**的
+> 路径, 只有在你要换数据源、换区间、或验证复权反演时才需要。
+>
+> 照着跑一遍的代价不小: `build_l2.py` 会把每一行的 `ref_asof` 盖成当天日期, 于是
+> **517 个文件、约 25 万行**全部显示为改动, 而数据本身逐字节相同——你会得到一棵看不出
+> 哪里真的变了的工作树。真要跑, 跑完用 `git checkout -- storage/` 复原。
 
 ```bash
 .venv/bin/python pipeline/fetch_yahoo.py     # 503 只 S&P 成分, 约 60 秒
@@ -98,8 +106,10 @@ python3 -m venv .venv
 第三条必须 **exit 0**。它跑 V1–V8 契约断言加 X1–X15 结构断言，其中 V1 是把我们自算的复权
 日收益与厂商的 `adjclose` 逐点对比——502/503 只标的吻合在 1 个基点内。
 
-`storage/` 整个在 `.gitignore` 里，因为它由上述三步完全可重建。**唯一的例外是
-`registry/security_id.us.csv`**：它是 append-only 的 ID 注册表，删掉就丢失了全部历史 ID 的含义。
+`storage/` **在版本控制里**（`.gitignore` 里曾经排除过它, 现已反转）: `pipeline/` 将来要
+独立成单独的 repo, 它一搬走本仓库就再没有东西能重建 storage/, 所以数据跟着引擎走。
+`registry/security_id.us.csv` 同样入库——它是 append-only 的 ID 注册表, 删掉就丢失了
+全部历史 ID 的含义。唯一不入库的是 `pnl_out/`: 一条命令即可再生, 且每跑一次全变。
 
 ### 2.3 生成 L3（一次性，约 3 秒）
 
@@ -142,25 +152,28 @@ run repos/g_yliu/nodes/alpha_yliu_rev/rev_mix.yaml  --sd 2025-12-01   # 例7 com
 ```
 preflight OK    repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml  2 nodes / 2 outputs / 6 deps  0 error 0 warn  6.2 ms
 run alpha_yliu_rev/rev.yaml  2025-12-01..2026-08-27
-  alpha_yliu_rev_w005                216 days (warmup 30) wrote 1 outputs  0.69s
-  alpha_yliu_rev_w020                216 days (warmup 30) wrote 1 outputs  0.83s
+  alpha_yliu_rev_w005                218 days (warmup 32) wrote 1 outputs  0.67s
+  alpha_yliu_rev_w020                218 days (warmup 32) wrote 1 outputs  0.65s
 ```
 
-`warmup 30` 是 `lookback` 撑出来的：算 2025-12-01 那天要用到之前 30 个 session 的数据，
-引擎自己往前取，不用你操心。
+`warmup 32` = `lookback: 30` **加上** ops 链要的 2 天（`linear_decay: 3` 需要 2 天先前历史）。
+两段是相加的: 链吃的是 handle 的产出, 要让链在第一个请求日就填满缓冲, handle 必须在那
+之前就已经在产出有效值。引擎自己往前取, 不用你操心。
 
 一条命令自证整条链是通的：
 
 ```bash
-.venv/bin/python tests/run_all.py      # 五套 213 项断言, exit 0 才算装好
+.venv/bin/python tests/run_all.py      # 六套 233 项断言, exit 0 才算装好
 ```
 
-它把五套自检串起来跑，红一套即非零退出：
+它把六套自检串起来跑，红一套即非零退出：
 
 | 套件 | 查什么 |
 |---|---|
 | `tests/test_ops.py` | 算子链（纯内存，不碰 store） |
-| `tests/test_simulate.py` | pnl 仿真器：会计恒等式 / 停牌退市三分类 / 七道闸门 |
+| `tests/test_simulate.py` | pnl 仿真器：会计恒等式 / 停牌退市三分类 / 七道闸门 / 时间轴连续性 |
+| `tests/test_core.py` | 轴 / store / 命名 / 配置：append-only、秩、指纹、键集封闭、路径锚定 |
+| `tests/test_runner.py` | 执行层：预热相加、两道掩码闸门、自引用回灌、probe 不落库 |
 | `tests/smoke.py` | **引擎**端到端：轴 / store 读写 / 命名检查 / 逐日主循环 / 预热 / 落库路径 / 两道掩码闸门 |
 | `pipeline/validate_l2.py` | **数据**的验收闸门（§2.2 那一条，此处重跑一遍） |
 
@@ -182,12 +195,12 @@ alpha_kit/              引擎（pip 包, 纯代码零数据定义）
   pnl/     simulate.py metrics.py report.py  precise 仿真 / 指标与闸门 / 入口
   cli.py                                    run / store / pnl
 pipeline/               ingestion（L1 → L2 → L3），不属于引擎
-tests/                  五套自检: run_all.py 一条命令跑完
+tests/                  六套自检: run_all.py 一条命令跑完
 repos/                  研究仓库（目标架构里是三个独立 repo）
   g_common/  共享 ns：base / common / univ / sector …
   g_yliu/  g_lqin/   个人沙箱
 registry/               security_id 注册表 —— append-only, 必须入库
-storage/                数据（gitignore；可完全重建）
+storage/                数据（**入库**；L3 可由 L2 重建, L2 可由 L1 重建）
   data/base/l1  l2      摄入层
   l3/us/                派生层
 tests/                  自检（不进 wheel）：run_all / test_ops / test_simulate / smoke
@@ -253,7 +266,9 @@ def handle(ctx):
 run repos/g_yliu/nodes/factor_yliu_mom/ --sd 2025-12-01
 ```
 
-落到 `storage/l3/us/g_yliu/mom/factor_yliu_mom-mom/`。
+落到 `storage/l3/us/g_yliu/factor_yliu_mom/mom/`——注意**两段都不是从 yaml 文件名来的**:
+`node_dir` 是所在**目录**名（`factor_yliu_mom`, 不是 `mom.yaml` 的 stem）, 而叶子因为
+node_name 与 node_dir 同名被折叠成了纯输出名 `mom`（§4.1 的折叠规则）。
 
 ### 4.3 handle 能看到什么
 
@@ -315,7 +330,8 @@ nodes:
 1. **ops 链必须以 `scale` 收尾**。少了它，上游各自 `Σ|w|=1` 的权重线性组合后会因方向相反处
    互相抵消而缩水。**本仓库真实跑出来的三个 alpha 按 0.4/0.3/0.3 混合，`Σ|w|` 只剩 0.5088**
    ——账本只投出去 51%，而 **Sharpe 看着完全正常**，因为收益和风险同比例缩水。
-   跑 `tests/smoke.py` 可以复现这个数。
+   这个数出自把三个 alpha 手工按 0.4/0.3/0.3 线性组合后量 `Σ|w|`; `tests/smoke.py` 断言的
+   是**修好之后**的性质（combo 收尾有 `scale`, 故 `Σ|w| = 1.000000`, 且池外恰为 0）。
 2. **`ops` 用到的分组 field 也要写进 `deps`**。`neutralize` 由引擎在算子链里解析，
    handle 里根本没提它，漏写会在运行期才炸、且报错点离 yaml 很远。
 3. **`neutralize` 要写全 ref**，不能写裸名 `sector`——裸名会解析进你自己的 ns。

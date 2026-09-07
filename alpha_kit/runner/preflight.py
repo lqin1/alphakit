@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..core import freshness
+from ..core import project
 from ..core import rank as rk
 from ..core.naming import expand_wildcard
 from ..core.config import CS_OPS, KINDS, ConfigError, Spec, is_wildcard, parse_ref
@@ -265,9 +266,15 @@ def _read_code(path: Path) -> _Code:
 
 # ----------------------------------------------------------------------- 主体
 def _rel(p: Path | str) -> str:
+    """诊断里的路径, 相对**项目根**而不是 cwd。
+
+    诊断是定宽的、要能 grep / awk -F: （见本模块开头）。以 cwd 为基准的话, 同一条
+    诊断从 repos/g_yliu/nodes 下跑就成了绝对路径, 列宽变了、也不再可复现。
+    """
     p = Path(p)
+    root = project.find_root()
     try:
-        return str(p.relative_to(Path.cwd()))
+        return str(p.resolve().relative_to(root)) if root else str(p)
     except ValueError:
         return str(p)
 

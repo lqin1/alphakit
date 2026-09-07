@@ -16,6 +16,7 @@ import yaml
 # 命名规则住在 naming.py；这里 re-export，既有 `from ...config import parse_ref`
 # 的写法不受影响——拆分是为了让 store 不必依赖加载器，不是为了制造迁移工作。
 from . import opspec
+from . import project
 from . import rank as rk
 from .naming import (KINDS, NAME_RE, NS_RE, RESERVED, ConfigError, Ref,  # noqa: F401
                      check_name, is_wildcard, parse_ref)
@@ -193,7 +194,9 @@ def find_region(region: str, repo: str | None = None,
     别的地方会喊出来。给了 repo 就先按 repo 找（alpha 属于哪个 repo, 就按那个 repo
     声明的口径评估）。
     """
-    root = root or Path.cwd()
+    # 从**项目根**找, 不是从 cwd: 研究员会在 repos/g_yliu/nodes/... 里敲 run,
+    # 而在那儿 glob "repos/*/regions/" 什么也找不到——然后静默退回 {}, 口径全失效。
+    root = root or project.find_root() or Path.cwd()
     cands: list[Path] = []
     if repo:
         f = root / "repos" / repo / "regions" / f"{region}.yaml"
@@ -253,6 +256,12 @@ def _norm_ops(raw, where: str) -> list:
 def load_spec(path: str | Path, repo: str | None = None) -> Spec:
     path = Path(path)
     doc = yaml.safe_load(path.read_text()) or {}
+    # **先解析成绝对路径**。repo 与 node_dir 是从路径的父目录推出来的, 而相对路径
+    # 的父目录取决于使用者站在哪儿: 在 repos/g_yliu/nodes 下敲 `run factor_yliu_mom/`,
+    # parent.parent.parent 是 '' —— 于是 repo 成了空串, ref 成了 `.factor_yliu_mom.mom`,
+    # 然后**安静地写进 storage/l3/us/factor_yliu_mom/**（少了一层 repo）。
+    # 不是报错, 是写到了错的地方。
+    path = path.resolve()
     node_dir = path.parent.name
     repo = repo or path.parent.parent.parent.name
 

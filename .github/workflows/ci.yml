@@ -1,4 +1,4 @@
-# 214 条断言与一个正确的退出码此前没有任何东西去调用它——安全网只网住了有人
+# 233 条断言与一个正确的退出码此前没有任何东西去调用它——安全网只网住了有人
 # 记得手跑的那些。数据随仓库入库（storage/ 约 63 MB）, 所以 CI 不需要外网取数,
 # 整条链能真跑, 而不是只做一次 import 冒烟。
 name: ci
@@ -29,8 +29,16 @@ jobs:
         # （PEP 701 的 f-string 就这么混进来过一次, 而 pyproject 承诺的是 3.11+）。
         run: ruff check alpha_kit tests
       - name: engine + data self-check
-        # run_all.py 非零退出即失败; 它把五套串起来跑
+        # run_all.py 非零退出即失败; 它把六套串起来跑
         run: python tests/run_all.py
+      - name: works out of the box, from any directory
+        # clone 下来什么都不建就该能跑——storage/ 是入库的。而且不能要求人先 cd 回
+        # 仓库根: 研究员就待在 repos/…/nodes 里写节点。这两条各回归过一次。
+        run: |
+          ak store status
+          (cd storage && ak store status)
+          (cd repos/g_yliu/nodes && ak store status)
+          (cd docs && pnl --node g_yliu.alpha_yliu_rev.alpha_yliu_rev_mix-weight --sd 2025-12-01 --by none)
       - name: end-to-end rebuild from committed L2
         # 删掉 L3 再造一遍, 证明"开箱即用"这句话是真的而不是本地缓存的产物
         run: |

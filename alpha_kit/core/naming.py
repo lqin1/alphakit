@@ -59,6 +59,13 @@ def parse_ref(ref: str) -> Ref:
     if len(parts) != 3:
         raise ConfigError(f"a ref must have three segments {{repo}}.{{node_dir}}.{{node_name}}-{{output}}: {ref}")
     repo, node_dir, leaf = parts
+    # repo 段此前完全不校验, 于是空串也能过——`.factor_yliu_mom.mom` 被当成合法引用名,
+    # 落库时少一层目录。推导出错难免, 但这道闸门本该拦住它。
+    for seg, what in ((repo, "repo"), (node_dir, "node_dir")):
+        if not seg or not NAME_RE.match(seg):
+            raise ConfigError(
+                f"the {what} segment of a ref must be a lowercase identifier "
+                f"({'empty' if not seg else repr(seg)}): {ref}")
     if ref != ref.lower():
         # §4.11.1 第 4 条：大小写不敏感的文件系统（macOS APFS 默认）上,
         # MktBeta 与 mktbeta 在一台机器上是同一个目录、在另一台上是两个。

@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from ..core.config import NodeSpec, Spec, is_wildcard
+from ..core import project
 from ..core.freshness import effective_ed
 from ..core.store import Store, StoreError
 from .ctx import Ctx, PanelLoader, UniverseView
@@ -49,6 +50,15 @@ def warmup(declared: int, node: NodeSpec) -> int:
     """
     from .ops import ops_lookback
     return declared + max((ops_lookback(o.ops) for o in node.outputs.values()), default=0)
+
+
+def _code_ref(code: Path) -> str:
+    """handle 源码相对项目根的位置——落进 meta 的血缘指针要可移植。"""
+    root = project.find_root()
+    try:
+        return str(code.resolve().relative_to(root)) if root else str(code)
+    except ValueError:
+        return str(code)
 
 
 def resolve_deps(store: Store, node: NodeSpec) -> list[str]:
@@ -164,8 +174,10 @@ def run_node(store: Store, spec: Spec, node: NodeSpec, sd: str, ed: str,
                           "cutoff": spec.cutoff, "universe": spec.universe,
                           "node": node.name, "node_dir": node.node_dir, "repo": node.repo,
                           "params": node.params, "sibling_outputs": sorted(node.outputs),
-                          "code_ref": {"path": str(node.code.relative_to(Path.cwd()))
-                                       if node.code.is_relative_to(Path.cwd()) else str(node.code)},
+                          # 相对**项目根**而不是 cwd: 同一个节点在四个目录下跑会存出
+                          # 四个不同的 code_ref, 其中一个还是产出者的家目录绝对路径。
+                          # 血缘指针必须能在别的机器上解析。
+                          "code_ref": {"path": _code_ref(node.code)},
                           "lookback": lookback})
         written[ref] = len(keep)
     if verbose:

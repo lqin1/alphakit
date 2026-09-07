@@ -22,12 +22,12 @@
 `storage/l3/us` 现有 7 个 base 节点 + 三个示例产出的 8 个节点。
 
 ```bash
-.venv/bin/python tests/run_all.py      # 五套自检 213 项断言, 全绿
+.venv/bin/python tests/run_all.py      # 六套自检 233 项断言, 全绿
 ```
 
 三个示例（`architecture.md` §4.10）全部可运行：因子 → alpha（两变体）→ combo（含跨 repo 依赖）。
 其中两个实测值得一看：`adv20` 与独立重算**逐点相符**（最大相对误差 0.0e+00）；三个 alpha 按
-0.4/0.3/0.3 混合后 `Σ|w|` 只剩 **0.5088**——少了收尾 `scale`，账本只投出去 51%，而 Sharpe 看着正常。
+0.4/0.3/0.3 手工线性组合后 `Σ|w|` 只剩 **0.5088**——少了收尾 `scale`，账本只投出去 51%，而 Sharpe 看着正常。（仓库里的 combo 是带 `scale` 的, 故 `Σ|w| = 1`。）
 
 ## 布局
 
@@ -43,7 +43,7 @@ pipeline/
   build_l2.py                      复权反演 + 五表写出
   validate_l2.py                   验收闸门, 非零退出即失败
 tests/
-  run_all.py                       五套自检一次跑完, 非零退出即失败
+  run_all.py                       六套自检一次跑完, 非零退出即失败
   test_ops.py  test_simulate.py    算子链 / pnl 仿真器
   smoke.py                         引擎端到端
 docs/

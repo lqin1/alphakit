@@ -981,6 +981,92 @@ def test_param_tag_consistency():
     return f"lone case exempt / consistent family allowed / mismatched value and missing tag both rejected ({len(TAGS)} tags)"
 
 
+def test_relative_config_path_still_infers_the_right_repo():
+    """repo / node_dir 由 config 的父目录推出, 所以路径必须先解析成绝对（§4.11.2）。
+
+    在 `repos/g_yliu/nodes` 下敲 `run factor_yliu_mom/`, 相对路径的
+    parent.parent.parent 是空串——于是 repo 成了 '', ref 成了 `.factor_yliu_mom.mom`,
+    然后**安静地写进 storage/l3/us/factor_yliu_mom/**（少了一层 repo）。不是报错,
+    是写到了错的地方; 而 `ak store ls` 里它看着还挺正常。
+    """
+    import os
+    root = Path(__file__).resolve().parents[1]
+    node = root / "repos" / "g_yliu" / "nodes" / "factor_yliu_mom" / "mom.yaml"
+    if not node.exists():
+        return "跳过（仓库里没有 factor_yliu_mom）"
+    absolute = load_spec(node).nodes["factor_yliu_mom"]
+    cwd = os.getcwd()
+    try:
+        os.chdir(node.parents[1])                     # repos/g_yliu/nodes
+        relative = load_spec(Path("factor_yliu_mom/mom.yaml")).nodes["factor_yliu_mom"]
+    finally:
+        os.chdir(cwd)
+    check(relative.repo == absolute.repo == "g_yliu",
+          f"相对路径推出的 repo 是 {relative.repo!r}, 绝对是 {absolute.repo!r}")
+    check(str(relative.ref("mom")) == str(absolute.ref("mom")),
+          f"两种路径给出不同的 ref：{relative.ref('mom')} vs {absolute.ref('mom')}")
+    return f"相对/绝对路径给出同一个 ref {absolute.ref('mom')}"
+
+
+def test_ref_segments_are_validated():
+    """repo / node_dir 段也要校验——推导出错时这是最后一道闸门。
+
+    此前只有叶子段有规则, repo 段完全不查, 于是空串也能过: `.factor_yliu_mom.mom`
+    被当成合法引用名, 落库时少一层目录。
+    """
+    for bad, why in [(".factor_yliu_mom.mom", "空 repo"),
+                     ("g_yliu..mom", "空 node_dir"),
+                     ("G_YLIU.factor_yliu_mom.mom", "repo 大写"),
+                     ("g-yliu.factor_yliu_mom.mom", "repo 含连字符")]:
+        e = raises(ConfigError, parse_ref, bad)
+        check(bad in str(e), f"{why}: 报错里没有原串 {bad}")
+    check(str(parse_ref("g_yliu.factor_yliu_mom.mom")) == "g_yliu.factor_yliu_mom.mom",
+          "合法引用名被误拒")
+    return "4 种非法 repo/node_dir 段全拒"
+
+
+def test_paths_anchor_to_the_project_root_not_cwd():
+    """命令在仓库里的任何目录下都该一样（§十二）。
+
+    此前一切相对路径都对着 **cwd** 解析: find_region 用 Path.cwd() 去 glob
+    repos/*/regions/, --store 的缺省是字面量 storage/l3。于是 `cd storage && ak store
+    status` 会去找 storage/storage/l3/…, 而且是双重静默——region 找不到就退回 {},
+    l3_root / pnl_out / halt_proxy 这些口径统统失效改用 argparse 缺省, 然后 store 路径
+    也错, 最后以一个读 json 的裸 traceback 收场。研究员就待在 repos/…/nodes 里写节点,
+    在那儿敲一条 run 是最自然的事。
+    """
+    import os
+    from alpha_kit.core import project
+    root = Path(__file__).resolve().parents[1]
+    check((root / "repos").is_dir(), "前提没了：仓库里没有 repos/")
+
+    for start in (root, root / "storage", root / "repos" / "g_yliu" / "nodes", root / "docs"):
+        if not Path(start).is_dir():
+            continue
+        check(project.find_root(start) == root, f"从 {start} 找到的根是 {project.find_root(start)}")
+    check(project.find_root(Path("/")) is None, "根目录不该被认成项目根")
+
+    # 相对路径钉到根；绝对路径原样
+    check(project.anchor("storage/l3/us", root) == root / "storage/l3/us", "相对路径没钉住")
+    check(project.anchor("/x/y", root) == Path("/x/y"), "绝对路径被改写了")
+
+    # ALPHAKIT_ROOT 是逃生口：引擎装成库、repos 不在仓库里时
+    old = os.environ.get("ALPHAKIT_ROOT")
+    try:
+        os.environ["ALPHAKIT_ROOT"] = str(root)
+        check(project.find_root(Path("/tmp")) == root, "ALPHAKIT_ROOT 没生效")
+    finally:
+        os.environ.pop("ALPHAKIT_ROOT", None)
+        if old is not None:
+            os.environ["ALPHAKIT_ROOT"] = old
+
+    # region 必须从根找得到, 否则口径静默失效
+    from alpha_kit.core.config import find_region
+    doc, h, f = find_region("us", root=root)
+    check(doc.get("l3_root") and h and f, f"从根找不到 region：{f}")
+    return "根/子目录/无关目录三种起点一致；ALPHAKIT_ROOT 可覆盖"
+
+
 def test_op_registry_is_the_single_source():
     """算子的声明只有一份, 且实现方在 import 时自证覆盖它（§6.2）。
 
@@ -1305,6 +1391,9 @@ TESTS = [
     test_node_level_ops_with_multiple_outputs,
     test_node_ops_and_output_ops_conflict,
     test_param_tag_consistency,
+    test_relative_config_path_still_infers_the_right_repo,
+    test_ref_segments_are_validated,
+    test_paths_anchor_to_the_project_root_not_cwd,
     test_op_registry_is_the_single_source,
     test_half_created_array_does_not_exist,
     test_session_axis_is_append_only,

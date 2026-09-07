@@ -1,0 +1,14 @@
+# 节点指纹取的是 code.read_bytes() 的原始字节（core/config.py 的 NodeSpec.fingerprint）,
+# 所以 CRLF 与 LF 会给同一份逻辑算出两个指纹。在 core.autocrlf=true 的克隆上, 每个
+# 节点都会撞上 check_fingerprint 的"定义变了而名字没变", 而报错里没有任何线索表明
+# 差别只是行尾。区域 hash 不受影响（_canon 走的是解析后的 YAML 对象）, 唯独节点指纹
+# 是字节敏感的——所以这里把它钉死。
+* text=auto eol=lf
+*.py   text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
+*.csv  text eol=lf
+
+# L3 是 zarr 二进制分块; L1 的厂商载荷同理。任何行尾转换都会损坏它们。
+storage/l3/**      -text -diff
+storage/data/base/l1/** -text

@@ -10,6 +10,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+class StoreMissing(FileNotFoundError):
+    """库不在/轴打不开——环境层面的失败, 与"节点代码 open 了一个不存在的文件"不同。
+
+    单独一个类型, 是为了让 CLI 顶层能只兜这一类。兜整个 FileNotFoundError 会连节点
+    自己的 open() 失败一起吞掉, 那会绕过 `_runtime_error` 的定位、并中断 glob 里
+    后面的 yaml。
+    """
+
+
 @dataclass
 class Axes:
     """di 轴（sessions）与 ii 轴（securities）。ti 轴按需从 grids/ 载入。"""
@@ -28,6 +37,12 @@ class Axes:
     def load(cls, root: str | Path) -> "Axes":
         root = Path(root)
         a = root / "_axes"
+        if not (a / "sessions.json").exists():
+            raise StoreMissing(
+                f"no L3 store at {root} -- axes not found ({a / 'sessions.json'}).\n"
+                f"  If this is the alphakit repo, the store ships with it: check you are "
+                f"inside the repo (or set ALPHAKIT_ROOT), then `ak store status`.\n"
+                f"  To build one from L2: python pipeline/build_l3_base.py")
         sessions = json.loads((a / "sessions.json").read_text())
         securities = json.loads((a / "securities.json").read_text())
         cap = json.loads((a / "capacity.json").read_text())

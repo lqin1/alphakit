@@ -9,6 +9,9 @@ import time
 import warnings
 from pathlib import Path
 
+from .core import project
+from .core.axes import StoreMissing as _StoreMissing
+from .pnl.simulate import SimError
 from .core.config import ConfigError, find_region, load_spec
 from .core.store import Store, StoreError
 
@@ -20,7 +23,10 @@ def _specs(path: str) -> list[Path]:
     hits = [Path(p) for p in sorted(glob.glob(path))] or [Path(path)]
     out: list[Path] = []
     for h in hits:
-        out.extend(sorted(h.glob("*.yaml")) if h.is_dir() else [h])
+        # 排除隐藏文件: macOS 在 exFAT/SMB 上会生成 `._mom.yaml` 这类 AppleDouble
+        # 伴生文件, pathlib 的 glob 会把它们一并匹配进来当成 spec 喂给 load_spec。
+        out.extend(sorted(q for q in h.glob("*.yaml") if not q.name.startswith("."))
+                   if h.is_dir() else [h])
     if not out:
         raise SystemExit(f"no config matched: {path}")
     return out
@@ -105,7 +111,10 @@ def cmd_run(a) -> int:
     if getattr(a, "record", None):
         Path(a.record).parent.mkdir(parents=True, exist_ok=True)
         Path(a.record).write_text(json.dumps(
-            {"argv": sys.argv[1:], "region": a.region, "store": a.store,
+            {"argv": sys.argv[1:], "region": a.region,
+             # 存相对项目根的路径: 记录是要被提交/传阅的, 不该带上产出它的那台机器
+             # 的目录布局（此前 anchor 之后这里成了 /Users/xxx/... 的绝对路径）。
+             "store": _portable(a.store),
              "finished_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
              "rc": rc, "nodes": records}, indent=1, ensure_ascii=False))
         print(f"  run record -> {a.record}")
@@ -137,12 +146,17 @@ def cmd_store(a) -> int:
             if cat.empty:
                 print(f"no ref starts with {a.ref!r}"); return 1
         if cat.empty:
-            print("store is empty"); return 0
+            # 一定要说清是**哪个**库空的。此前只印 "store is empty" 加退出码 0——
+            # 从一个碰巧也有 storage/l3/us 的目录下跑, 使用者会以为数据没 clone 下来,
+            # 然后一头扎进 pipeline 去重造一份本来就在的数据。
+            print(f"store is empty: {store.root / store.region}")
+            return 0
         cat["first"] = cat["first_session"].map(lambda i: store.axes.date(int(i)) if i is not None else "")
         cat["last"] = cat["last_session"].map(lambda i: store.axes.date(int(i)) if i is not None else "")
         cols = ["ref", "dims", "dtype", "version", "first", "last"]
         print(cat[cols].to_string(index=False))
-        print(f"\naxes: {store.axes.n_sessions} sessions x {store.axes.n_securities} securities")
+        print(f"\nstore: {store.root / store.region}")
+        print(f"axes:  {store.axes.n_sessions} sessions x {store.axes.n_securities} securities")
     elif a.action == "ls":
         hits = [r for r in store.list_refs() if not a.ref or r.startswith(a.ref)]
         if not hits:
@@ -150,7 +164,18 @@ def cmd_store(a) -> int:
         for r in hits:
             print(r)
     elif a.action == "meta":
-        import json
+        if not a.ref:
+            print("store meta needs a ref", file=sys.stderr); return 1
+        if not store.exists(a.ref):
+            # 这条命令的全部工作就是"按名字查一个 ref", 打错名字正是它最该帮上忙的时候。
+            # 此前它把 zarr 的 FileNotFoundError 连同五层库内栈一起漏出来, 而编辑距离
+            # 建议的机器就在 preflight 里现成放着。
+            import difflib
+            near = difflib.get_close_matches(a.ref, store.list_refs(), 3, cutoff=0.5)
+            print(f"error  no such ref: {a.ref}"
+                  + (f"\n  did you mean: {', '.join(near)}" if near else
+                     "\n  `ak store ls` lists everything that has landed"), file=sys.stderr)
+            return 1
         print(json.dumps(store.meta(a.ref), indent=1, ensure_ascii=False, default=str))
     return 0
 
@@ -158,6 +183,16 @@ def cmd_store(a) -> int:
 def cmd_pnl(a) -> int:
     from .pnl.report import run_pnl
     return run_pnl(a)
+
+
+def _portable(p) -> str:
+    """把路径写成相对项目根的形式——记录要能在别的机器上读懂。"""
+    root = project.find_root()
+    q = Path(p)
+    try:
+        return str(q.resolve().relative_to(root)) if root else str(q)
+    except ValueError:
+        return str(q)
 
 
 def _terse_warning(message, category, filename, lineno, line=None):  # noqa: ARG001
@@ -231,11 +266,23 @@ def main(argv=None) -> int:
     except ConfigError as e:
         print(f"error  {e}", file=sys.stderr)
         return 1
-    a.store = a.store or rdoc.get("l3_root") or DEFAULT_L3
+    # 只钉**缺省值**, 不钉使用者亲手敲的。region 里的 `storage/l3/us` 是相对仓库说的,
+    # 必须钉到根; 而 `--store ./scratch` 里的 `./` 是使用者相对**自己**说的, 钉走它就
+    # 违背了 shell 的常识——同一个字符串在 tab 补全和在这里指向两个地方。
+    # 三个路径选项此前三种规则（store 一律钉、out 只钉缺省、record 从不钉）, 现在一致:
+    # 缺省钉根, 显式给的照 cwd 解析。
+    if rfile is None:
+        # 静默退回缺省是最贵的一种失败: booksize / participation / return_metric 会换成
+        # 硬编码常量（今天恰好与 yaml 相等, 改了 yaml 就不等了）, halt_proxy 变 None,
+        # region_hash 变 None 于是 gate 7 永远 NO-BASIS——而这一切都不会说一个字。
+        print(f"warn  no regions/{a.region}.yaml found from {project.find_root() or Path.cwd()}"
+              f" -- falling back to built-in defaults; booksize/participation/halt_proxy/"
+              f"return_metric are NOT the ones your region file declares", file=sys.stderr)
+    a.store = a.store if a.store else str(project.anchor(rdoc.get("l3_root") or DEFAULT_L3))
     if a.cmd == "pnl":
         sim = rdoc.get("sim") or {}
         if a.out is None:
-            a.out = rdoc.get("pnl_out") or "pnl_out"
+            a.out = str(project.anchor(rdoc.get("pnl_out") or "pnl_out"))
         if a.halt_proxy is None:
             a.halt_proxy = sim.get("halt_proxy")
         if a.participation is None:
@@ -244,9 +291,17 @@ def main(argv=None) -> int:
             a.booksize = float(rdoc.get("booksize") or 20e6)
         if a.rm is None:
             a.rm = rdoc.get("return_metric") or "g_common.field_base_px.ret_1d_1500"
-        a.region_file = str(rfile) if rfile else None
         a.region_hash = rhash
-    return a.fn(a)
+    try:
+        return a.fn(a)
+    except (StoreError, _StoreMissing, SimError) as e:
+        # 只兜"库不在/轴打不开"这一类环境失败, 让它以一句话而不是 traceback 呈现——
+        # 这里的读者是"我刚 clone 下来, 它没跑起来"。
+        # **不能兜整个 FileNotFoundError**: 节点自己 `open("x.csv")` 失败也是它,
+        # 那样会绕过 _runtime_error 的定位、并中断 glob 里后面的 yaml, 与 cmd_run
+        # 开头写明的契约相反。
+        print(f"error  {e}", file=sys.stderr)
+        return 1
 
 
 def main_run(argv=None) -> int:

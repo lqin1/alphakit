@@ -23,6 +23,8 @@ MKT = "g_common.field_base_px.market_ret"
 def _load_weights(store: Store, node: str | None, weight_file: str | None,
                   sd, ed) -> pd.DataFrame:
     if weight_file:
+        if not Path(weight_file).exists():
+            raise StoreError(f"no such weight file: {weight_file}")
         # 外来权重按扩展名认格式: 交付物现在落 CSV, 但别人递过来的仍可能是 feather/parquet
         suf = Path(weight_file).suffix.lower()
         rd = {".csv": pd.read_csv, ".feather": pd.read_feather,
@@ -31,6 +33,16 @@ def _load_weights(store: Store, node: str | None, weight_file: str | None,
             raise StoreError(f"unrecognised weight file format `{suf}`: {weight_file} (supported: .csv/.feather/.parquet)")
         w = rd(weight_file)
         return w.set_index(w.columns[0])
+    if not store.exists(node):
+        # 使用者传的是 `--node`, 说"依赖不存在"文不对题; 而漏掉 `-weight` 后缀是这条
+        # 命令最常见的手误——manual §4.8 也承诺过"会得到一句明确的报错"。
+        import difflib
+        near = difflib.get_close_matches(node, store.list_refs(), 3, cutoff=0.4)
+        raise StoreError(
+            f"no such node: {node}"
+            + (f"\n  did you mean: {', '.join(near)}" if near else "")
+            + "\n  an alpha's single output is called `weight`, so the ref ends in `-weight`"
+              " (or is the collapsed `{repo}.{node_dir}.weight`); `ak store ls` lists them")
     return store.read(node, sd, ed)
 
 

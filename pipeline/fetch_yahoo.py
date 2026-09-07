@@ -39,7 +39,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # --------------------------------------------------------------------------- config
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONSTITUENTS = os.path.join(REPO, "data", "raw", "ref", "sp500_constituents_20260830.csv")
+# 布局在 storage/{data,l3} 那次改名时漏了这一条（下一行的 RAW_DIR 是对的）。
+# 它是 manual §2.2 的第一条命令, 于是新人照着文档走的第一步就是一个 FileNotFoundError。
+CONSTITUENTS = os.path.join(REPO, "storage", "data", "base", "l1", "ref",
+                            "sp500_constituents_20260830.csv")
 RAW_DIR = os.path.join(REPO, "storage", "data", "base", "l1", "yahoo", "chart")
 MANIFEST = os.path.join(REPO, "storage", "data", "base", "l1", "yahoo", "_fetch_manifest_20260830.csv")
 

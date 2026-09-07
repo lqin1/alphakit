@@ -232,6 +232,10 @@ __marimo__/
 # 它是 storage/ 加一条命令就能再生的结果, 而且每跑一次全变, diff 毫无意义。
 pnl_out/
 
+# validate_l2 的报告同理: 每跑一次只有生成时间戳变, 却让 `git status` 从此不干净。
+# 跑完自检就得 checkout 一次的文件, 不该是入库的那种文件。
+storage/data/base/l2/us/_validation_report.txt
+
 # 上面「Distribution / packaging」段里的 `lib/` 本意是 build 产物, 但这个模式匹配任意
 # 层级的 lib/ 目录——architecture.md §二 规定每个研究 repo 都带一个 lib/（跨 node_dir
 # 共用的工具函数）。不放行的话那些代码会被静默漏在版本控制外, 而 `git status` 干净得
