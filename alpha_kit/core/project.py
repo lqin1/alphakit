@@ -1,4 +1,4 @@
-"""项目根：`repos/` 与 `storage/` 相对于谁（architecture.md §二 / §十二）。
+"""项目根：`repos/` 与 `storage/` 相对于谁（implementation.md §二 / §十二）。
 
 引擎此前没有"项目根"这个概念, 一切相对路径都对着**当前工作目录**解析:
 `find_region` 用 `Path.cwd()` 去 glob `repos/*/regions/`, `--store` 的缺省是字面量

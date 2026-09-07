@@ -57,7 +57,7 @@ CAX_COLS = ["date", "security_id", "ticker", "event_type",
                     "div_amount", "split_num", "split_den", "split_ratio"]
 # sec_master and industry are POINT IN TIME: one file per trading session, listing
 # the securities known to be listed on that date.  Reading today's snapshot to
-# interpret last year's panel is look-ahead, which is what architecture.md §3.4
+# interpret last year's panel is look-ahead, which is what implementation.md §3.4
 # ("ticker 为带生效区间的属性") and §十一 exist to prevent.
 #
 # Coverage (first_session / last_session / n_sessions) is deliberately ABSENT: in a
@@ -73,7 +73,7 @@ SEC_MASTER_COLS = ["date", "security_id", "ticker", "ticker_nasdaq", "ticker_cqs
 INDUSTRY_COLS = ["date", "security_id", "ticker", "gics_sector_code", "gics_sector",
                  "gics_sub_industry", "ref_asof", "source"]
 # Official GICS sector codes -- stable integers, and they fit the `dtype: i1`
-# that architecture.md §5.1 declares for a sector field.
+# that implementation.md §5.1 declares for a sector field.
 GICS_SECTOR_CODE = {
     "Energy": 10, "Materials": 15, "Industrials": 20,
     "Consumer Discretionary": 25, "Consumer Staples": 30, "Health Care": 35,
@@ -299,7 +299,7 @@ def compute_adj_factor(rec: dict) -> None:
 def assign_security_ids(recs, ref, path, asof):
     """Append-only security_id assignment against a persistent registry.
 
-    architecture.md §3.4 requires an internal id that is NEVER reused (US tickers
+    implementation.md §3.4 requires an internal id that is NEVER reused (US tickers
     get recycled, so keying on ticker silently welds a dead company's history onto
     whoever inherits its symbol), and §3.3 requires the column axis to grow
     monotonically at the tail.  Deriving ids by sorting whatever happens to be in
@@ -441,7 +441,7 @@ def main() -> int:
     for sym, err in failed[:10]:
         print(f"  FAILED {sym}: {err}")
 
-    # security_id: monotonic by listing order (architecture.md §3.4).  Appending
+    # security_id: monotonic by listing order (implementation.md §3.4).  Appending
     # delisted names later must extend the tail, never renumber existing ids.
     n_new, n_total = assign_security_ids(recs, ref, args.registry, asof)
     print(f"security_id registry {args.registry}: {n_total} entries "
@@ -474,7 +474,7 @@ def main() -> int:
     # Everything downstream is judged against the SESSION AXIS that survives the
     # trim, never against the requested window.  Those differ whenever a trailing
     # session is dropped, and conflating them put a corp_action file on a date the
-    # calendar does not contain (unreachable: architecture.md §5.1 renders that
+    # calendar does not contain (unreachable: implementation.md §5.1 renders that
     # path per session) and credited HUBB -- the one name that did have a close on
     # the dropped session -- with 251 sessions and an empty last_session.
     on_axis = bars_by_date.__contains__
@@ -520,7 +520,7 @@ def main() -> int:
 
     # ---- calendar + sec_master
     # One calendar file per year.  `session` is the GLOBAL axis index and keeps
-    # counting across the year boundary -- it is architecture.md §3.3's
+    # counting across the year boundary -- it is implementation.md §3.3's
     # `_axes/sessions.json` in L2 form, so restarting it per file would sever the
     # very thing it exists to provide.
     by_year = defaultdict(list)

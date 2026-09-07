@@ -1,4 +1,4 @@
-"""秩：一个 L3 输出的形状语义（architecture.md §3.6）。
+"""秩：一个 L3 输出的形状语义（implementation.md §3.6）。
 
 单独成模块, 是因为"秩是什么"此前不属于任何一个模块——它只以 `dims == ("di","ii")`
 这样的字面元组比较散落在 store / ctx / node / config / preflight 五处, 每一处各自

@@ -1,4 +1,4 @@
-"""core 层的自检脚本（architecture.md §3.2 / §3.3 / §3.6 / §4.11 / §十三 3–4）。
+"""core 层的自检脚本（implementation.md §3.2 / §3.3 / §3.6 / §4.11 / §十三 3–4）。
 
     .venv/bin/python tests/test_core.py        # 失败则退出码非 0
 
@@ -1458,7 +1458,7 @@ if __name__ == "__main__":
         run(t)
     print(f"\n{len(TESTS) - len(FAILS)}/{len(TESTS)} passed")
     if FAILS:
-        print("\nThese failures are not environment problems -- each maps to a promise written in architecture.md:")
+        print("\nThese failures are not environment problems -- each maps to a promise written in implementation.md:")
         for i, (name, msg) in enumerate(FAILS, 1):
             print(f"  {i}. {name}\n     {msg.splitlines()[0]}")
     sys.exit(1 if FAILS else 0)

@@ -1,4 +1,4 @@
-"""L3 store：Zarr 数组 + 全局共享轴（architecture.md §3.2 / §3.3）。
+"""L3 store：Zarr 数组 + 全局共享轴（implementation.md §3.2 / §3.3）。
 
 路径      storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/
 引用名    {repo}.{node_dir}.{node_name}-{output}

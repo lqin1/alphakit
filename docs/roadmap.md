@@ -3,8 +3,8 @@
 **这份文档里的东西都不存在。** 从文档重建引擎的人不要照着它实现；它记录的是设计意图,
 用来解释已实现部分为什么长成这样, 以及下一步往哪走。
 
-已实现的契约在 `architecture.md`（每节带 `[SHIPPED]`）、`l2_schema.md`、`manual.md`,
-验收基准在 `acceptance.md`。
+架构总览在 `architecture.md`；已实现的规格在 `implementation.md`（不变量清单与验收
+基准在它的 §〇）、`l2_schema.md`、`manual.md`。
 
 ---
 

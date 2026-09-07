@@ -1,4 +1,4 @@
-"""ops 链的自检脚本（architecture.md §6.2 / §3.5 / §4.10 例 7 / 附录 B）。
+"""ops 链的自检脚本（implementation.md §6.2 / §3.5 / §4.10 例 7 / 附录 B）。
 
     python tests/test_ops.py                   # 失败则退出码非 0
 

@@ -27,7 +27,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.scripts]
-# architecture.md §十二 与 manual.md 通篇写的都是 `alphakit run …`；
+# implementation.md §十二 与 manual.md 通篇写的都是 `alphakit run …`；
 # 有了这一行它才不再是文档里的一个 shell 函数别名。
 alphakit = "alpha_kit.cli:main"
 # `run` / `pnl` 直呼其名：日常只用到这两个动词, 每次多敲一次 `alphakit` 纯是负担。

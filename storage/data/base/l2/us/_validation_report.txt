@@ -1,5 +1,5 @@
 alphakit L2 validation report
-generated   : 2026-09-07T11:14:49+00:00
+generated   : 2026-09-07T11:38:50+00:00
 contract    : docs/l2_schema.md §8 (V1..V8) + X-series structural checks
 l2_dir      : /home/ubuntu/workspace/alphakit/storage/data/base/l2/us
 raw_dir     : /home/ubuntu/workspace/alphakit/storage/data/base/l1/yahoo/chart
@@ -107,7 +107,7 @@ DETAIL
       - storage/data/base/l2/us/pv/2026/08/pv.20260819:477 date=2026-08-19 sid=476 ticker=MRNA: adj_close_vendor 62.959999 (2026-08-18) -> 174.380005 (2026-08-19) = +177.0% — verify no corp action was missed (real 50% moves do exist)
 
 [WARN] W3 — misc data smells (zero volume, id ordering rule, _meta.json)
-    . WARN: docs/architecture.md §4.5/§5.1 still show `/data/l2/daily_bar/{date}.parquet|csv` as the L2 source path; the current contract (l2_schema.md §1) delivers `storage/data/base/l2/us/pv.{YYYYMMDD}` and `cax.{YYYYMMDD}` with no extension — the upstream doc is stale
+    . WARN: docs/implementation.md §4.5/§5.1 still show `/data/l2/daily_bar/{date}.parquet|csv` as the L2 source path; the current contract (l2_schema.md §1) delivers `storage/data/base/l2/us/pv.{YYYYMMDD}` and `cax.{YYYYMMDD}` with no extension — the upstream doc is stale
 
 ==============================================================================
 contract assertions V1..V8 failing : none

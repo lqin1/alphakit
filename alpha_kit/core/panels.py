@@ -1,4 +1,4 @@
-"""`Panels`：执行期看得见的存储切面（architecture.md §3.3 / §七）。
+"""`Panels`：执行期看得见的存储切面（implementation.md §3.3 / §七）。
 
 引擎此前没有这个接缝。`run_node` / `Ctx` / `preflight` 用的是 `Store` 上一组**事实上
 的**八个成员, 而这组成员从未被声明过, 于是:

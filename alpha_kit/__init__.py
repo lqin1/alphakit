@@ -1,6 +1,6 @@
 """alphakit —— 中低频 alpha 研究与回测引擎。
 
-契约见 `docs/architecture.md`；数据契约（L2 与 L3）见 `docs/l2_schema.md`。
+契约见 `docs/implementation.md`；数据契约（L2 与 L3）见 `docs/l2_schema.md`。
 v0 范围：L3 → L3，无 cache，顺序执行。
 
 此前这里只有一个 `__version__`, 于是包本身没有接口——每个调用方都得伸进

@@ -1,7 +1,7 @@
 # alphakit 用户手册
 
 面向两类读者：**要在新机器上把它跑起来的人**（§1–§3），以及**要写自己 alpha 的人**（§4–§6）。
-设计原理与取舍见 [`architecture.md`](architecture.md)；数据契约（L2 与 L3）见
+设计原理与取舍见 [`implementation.md`](implementation.md)；数据契约（L2 与 L3）见
 [`l2_schema.md`](l2_schema.md)。
 
 ---
@@ -289,7 +289,7 @@ L3     storage/l3/{region}/{repo}/{node_dir}/{node_name}-{output}/
 - 单输出的输出名缺省：数据节点取节点名去掉前缀；**alpha 取 `weight`**
 - 参数变体带标签：`alpha_yliu_rev_w005` / `_w020`，且 `params.window` 必须与 `w005` 对得上
 
-完整规则见 `architecture.md` §4.11。
+完整规则见 `implementation.md` §4.11。
 
 ### 4.2 最小的一个因子
 

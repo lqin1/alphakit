@@ -1,4 +1,4 @@
-"""执行引擎主循环（architecture.md §7.2）。
+"""执行引擎主循环（implementation.md §7.2）。
 
 三行无分支的内核：handle → mask(universe) → ops → 落库。
 执行期不存在任何按 kind 的分支——差异全部退化为配置字段的取值。

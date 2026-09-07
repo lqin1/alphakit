@@ -9,17 +9,17 @@ run repos/g_yliu/nodes/alpha_yliu_rev/rev.yaml --sd 2025-12-01   # 算 alpha, �
 
 ## 文档
 
-**要用它**，按 1 → 2 读；**要从文档重建它**，按 1 → 2 → 3 → 4 → 5 读。
+**要用它**：读 1，然后 2。**要从文档重建它**：1 → 3 → 4（先读 §〇 的不变量清单）→ 2 → 5。
 
 | # | 文档 | 谁看 | 内容 |
 |---|---|---|---|
-| 1 | [`docs/manual.md`](docs/manual.md) | 使用者 | 装、跑、写自己的节点、读报表、常见报错。**入口** |
-| 2 | [`docs/l2_schema.md`](docs/l2_schema.md) | 使用者 / 重建者 | 数据契约：L2 五张表与复权反演（§0–§9）、**L3 存储契约**（§10–§17） |
-| 3 | [`docs/acceptance.md`](docs/acceptance.md) | 重建者 | **验收基准**：可手算的算子链例子 + 17 条不变量。写代码前读, 写完当检查表 |
-| 4 | [`docs/architecture.md`](docs/architecture.md) | 重建者 | 引擎设计：Node 模型、命名、ctx/ops 精确语义、指纹、执行循环、仿真器、闸门 |
+| 1 | [`docs/architecture.md`](docs/architecture.md) | 所有人 | **架构总览**：系统长什么样、为什么这么长。十分钟读完 |
+| 2 | [`docs/manual.md`](docs/manual.md) | 使用者 | 装、跑、写自己的节点、读报表、常见报错 |
+| 3 | [`docs/l2_schema.md`](docs/l2_schema.md) | 使用者 / 重建者 | 数据契约：L2 五张表与复权反演（§0–§9）、**L3 存储契约**（§10–§17） |
+| 4 | [`docs/implementation.md`](docs/implementation.md) | 重建者 | **实现规格**：不变量清单（§〇）、命名、yaml schema、**ops 精确语义**、指纹、执行循环、仿真器、闸门、CLI |
 | 5 | [`docs/roadmap.md`](docs/roadmap.md) | — | **尚未实现**的部分。不要照着实现 |
 
-`architecture.md` 每节带 `[SHIPPED]` / `[TARGET]` 标记；没有标记的都是已实现的契约。
+`implementation.md` 每节带 `[SHIPPED]` / `[TARGET]` 标记；没有标记的都是已实现的契约。
 
 ## 现状
 

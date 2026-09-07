@@ -1,4 +1,4 @@
-"""precise 仿真器：单一价值账本（architecture.md §8.1–§8.3 / §九 / 附录 B）。
+"""precise 仿真器：单一价值账本（implementation.md §8.1–§8.3 / §九 / 附录 B）。
 
 pnl 不是"算指标的评估器"而是**仿真器**：维护逐票美元价值账本 `pos_value`，
 按复权 ret 推进——拆股/分红/退市对价/复牌累计天然安全，corporate action

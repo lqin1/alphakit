@@ -1,4 +1,4 @@
-"""三个可执行入口：run 算 / store 查 / pnl 评（architecture.md §十二）。"""
+"""三个可执行入口：run 算 / store 查 / pnl 评（implementation.md §十二）。"""
 from __future__ import annotations
 
 import argparse

@@ -114,7 +114,7 @@ PIT_TABLES = ("daily_bar", "corp_action", "sec_master", "industry")
 YEAR_RE = re.compile(r"^\d{4}$")
 MONTH_RE = re.compile(r"^(0[1-9]|1[0-2])$")
 
-# §3.2 official GICS sector codes; max 60 fits architecture.md §5.1's dtype i1.
+# §3.2 official GICS sector codes; max 60 fits implementation.md §5.1's dtype i1.
 GICS_SECTOR_CODES = {10: "Energy", 15: "Materials", 20: "Industrials",
                      25: "Consumer Discretionary", 30: "Consumer Staples",
                      35: "Health Care", 40: "Financials",
@@ -1154,7 +1154,7 @@ class Validator:
             for fdate, p in self.ca_files:
                 if self.cal_date_set and fdate not in self.cal_date_set:
                     # Not V3: §8 V3 is worded about daily_bar <-> calendar only.  This
-                    # is still dead data — architecture.md §5.1 renders the corp_action
+                    # is still dead data — implementation.md §5.1 renders the corp_action
                     # path per session, so a file off the axis is never read.
                     extra = ""
                     trimmed = (self.meta or {}).get("trimmed_trailing_sessions") or []
@@ -2074,9 +2074,9 @@ class Validator:
         for kind, n in fmt_bad.most_common():
             self.w2.warn(f"{n:,} row(s) — {kind}; e.g. {first_ex[kind]}")
 
-        # W3 architecture.md still shows the pre-move path template
+        # W3 implementation.md still shows the pre-move path template
         self.w3.warn(
-            "docs/architecture.md §4.5/§5.1 still show `/data/l2/daily_bar/{date}."
+            "docs/implementation.md §4.5/§5.1 still show `/data/l2/daily_bar/{date}."
             "parquet|csv` as the L2 source path; the current contract (l2_schema.md "
             "§1) delivers `storage/data/base/l2/us/pv.{YYYYMMDD}` and `cax.{YYYYMMDD}` "
             "with no extension — the upstream doc is stale")
@@ -2328,7 +2328,7 @@ class Validator:
                 if not (INT8_MIN <= code <= INT8_MAX):
                     c.violation(
                         f"{where}: gics_sector_code={code} is outside int8 "
-                        f"[{INT8_MIN}, {INT8_MAX}] — architecture.md §5.1 declares "
+                        f"[{INT8_MIN}, {INT8_MAX}] — implementation.md §5.1 declares "
                         f"dtype i1 for a sector field")
                 if code not in GICS_SECTOR_CODES:
                     c.violation(f"{where}: gics_sector_code={code} is not an official "
@@ -2362,7 +2362,7 @@ class Validator:
 
     # -- X13: the session axis is global, not per-file -----------------------
     def check_x13(self) -> None:
-        """architecture.md §3.3's `_axes/sessions.json` in L2 form.
+        """implementation.md §3.3's `_axes/sessions.json` in L2 form.
 
         `calendar` is split into one file per year, but `session` indexes the
         whole dataset.  A per-file restart is the dangerous failure here: each
@@ -2403,7 +2403,7 @@ class Validator:
                     hint = ""
                     if first.session == 0:
                         hint = ("  <-- the axis RESTARTED at 0 in this file; session is "
-                                "the global dataset index (architecture.md §3.3), not a "
+                                "the global dataset index (implementation.md §3.3), not a "
                                 "within-file row number, so every consumer joining on it "
                                 "would silently collide year against year")
                     c.violation(
@@ -2547,7 +2547,7 @@ class Validator:
     def check_x15(self) -> None:
         """registry/security_id.{country}.csv — the append-only id axis.
 
-        architecture.md §3.4 requires an id that is never reused and §3.3 an
+        implementation.md §3.4 requires an id that is never reused and §3.3 an
         append-only column axis.  Deriving ids by sorting each run's population
         satisfies neither, so they live in a registry outside storage/.
         """

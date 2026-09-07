@@ -1,4 +1,4 @@
-"""算子的**声明**：有哪些算子、各自收什么参数、要多少预热（architecture.md §3.6 / §6.2）。
+"""算子的**声明**：有哪些算子、各自收什么参数、要多少预热（implementation.md §3.6 / §6.2）。
 
 这一份是单一出处。此前同一件事被写了七遍——config 里四处（`CS_OPS`、`TS_OPS`、
 `OP_TYPES`、`_norm_ops` 的类型阶梯）、ops 里三处（`_CS_OPS`、`_TS_FACTORY`、

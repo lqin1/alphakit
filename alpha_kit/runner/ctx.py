@@ -1,4 +1,4 @@
-"""Ctx：handle 能看到的全部世界（architecture.md §6.1 / §十）。
+"""Ctx：handle 能看到的全部世界（implementation.md §6.1 / §十）。
 
 对外极简，对内扛三条纪律：防前视、池外 NaN、性能。
 无日期参数、无绝对索引、无 store 写句柄——API 面积越小，防前视的证明义务越小。

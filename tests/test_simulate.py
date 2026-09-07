@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""pnl 仿真器验收（architecture.md §十三.1 + §8.2 三处易错点 + §九 三分类）。
+"""pnl 仿真器验收（implementation.md §十三.1 + §8.2 三处易错点 + §九 三分类）。
 
 普通脚本跑：`.venv/bin/python tests/test_simulate.py`，任一条红了非零退出。
 

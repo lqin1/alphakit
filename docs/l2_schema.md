@@ -7,7 +7,7 @@ L2 → L3 是一道**单向**边界：L3 由 L2 生成，L2 从不读 L3；引�
 所以这两层的契约可以分开演进，只要这道边界不被跨越。
 
 > 本文件是 pipeline 各部件之间的**唯一共享合同**。改动此文件需同步改 `pipeline/` 与校验器。
-> 上位文档：`docs/architecture.md` §3.1（L2 定义）、§3.4（标的与时间）、§5.1（L2 = 外部文件路径模板）。
+> 上位文档：`docs/implementation.md` §3.1（L2 定义）、§3.4（标的与时间）、§5.1（L2 = 外部文件路径模板）。
 
 ## 0. 范围与来源
 
@@ -21,7 +21,7 @@ L2 → L3 是一道**单向**边界：L3 由 L2 生成，L2 从不读 L3；引�
 
 ### 0.1 已知缺陷（必须写进 meta，不得静默）
 
-1. **生存者偏差**：Yahoo 与 NasdaqTrader 当前快照都只含存活标的，这一年内退市的票拿不到（实测 `RDS-A` → Not Found）。S&P 清单亦为现任快照，不含期内被剔除的成分。`architecture.md` §3.4 把"含退市标的的历史池子"列为美股必修，§十四 待定决策 #1 指出这需要采购数据源（CRSP / Sharadar）。sec_master 的 `security_id` 分配方式设计成**可后续追加退市标的而不破坏既有 ID**。
+1. **生存者偏差**：Yahoo 与 NasdaqTrader 当前快照都只含存活标的，这一年内退市的票拿不到（实测 `RDS-A` → Not Found）。S&P 清单亦为现任快照，不含期内被剔除的成分。`implementation.md` §3.4 把"含退市标的的历史池子"列为美股必修，§十四 待定决策 #1 指出这需要采购数据源（CRSP / Sharadar）。sec_master 的 `security_id` 分配方式设计成**可后续追加退市标的而不破坏既有 ID**。
 2. **无 vwap**：Yahoo 日线不提供 vwap。**不生造 `(H+L+C)/3` 冒充 vwap**——那会静默污染任何以执行价为主题的研究。以执行价（vwap）为输入的任何因子 在本数据集上不可用，需要 vwap 的节点必须等接入日内数据或采购源。
 3. **`adj_factor` 不是 PIT**：厂商 `adjclose` 是**向后复权**的，每次新分红都会改写全部历史因子。故本契约中因子的权威真相是 `cax` 里的**逐事件原始事实**（PIT 稳定），`pv.adj_factor` 只是带 `asof` 的派生快照。这正是 §3.4 要求"raw price + adjustment factor 双存"的原因。
 4. **最后一个 session 可能未结算**：实测 2026-08-28 对 NVDA / AAPL 均返回 open/high/low/volume 有值但 `close` 与 `adjclose` 为 **null**——厂商在收盘价结算前就发布了该 bar。无 close 即无 `adj_factor` 锚点，故此类 bar 整行丢弃（§5「无报价的标的不出现在该文件中」）。构建器按**日期**统计丢弃数，用以区分"厂商整段 session 未结算"（占比 >50%）与"个别标的的真实缺口"，并在 `_meta.json` 同时记录 `ed`（请求区间）与 `ed_actual`（实际落地区间）——两者不符时必须显式告警，绝不让声明区间与实际数据静默错位。
@@ -60,15 +60,15 @@ storage/
       us/g_yliu/alpha_yliu_rev/alpha_yliu_rev_mix-weight/
 ```
 
-**`data` 与 `cache` 的分界是"重建代价"**：`data/` 里的东西丢了要重新向厂商取（且当前快照类文件事后取不回，见 §0.1.1）；`l3/` 里的东西丢了跑一遍 `run` 就有——这正是 `architecture.md` §一「内容寻址 + append-only」与 L3 完全可复现的立意。整个 `storage/` **随仓库入库**——见 §1.1。
+**`data` 与 `cache` 的分界是"重建代价"**：`data/` 里的东西丢了要重新向厂商取（且当前快照类文件事后取不回，见 §0.1.1）；`l3/` 里的东西丢了跑一遍 `run` 就有——这正是 `implementation.md` §一「内容寻址 + append-only」与 L3 完全可复现的立意。整个 `storage/` **随仓库入库**——见 §1.1。
 
-> **叶子是 `{node_name}-{output}`**：节点名本身含 `{kind}_{ns}_` 前缀，输出名说明是哪一份数据。一次计算可以有多个产物（`factor_yliu_beta_decomp-mkt_beta_w250` 与 `-resid_mom_w250`），而不同节点即便产出同名输出也不会撞车。引用名 `{repo}.{node_dir}.{node_name}-{output}` 与该路径一一对应、纯字符串可互推。完整规则见 `architecture.md` §3.2 与 §4.11。
+> **叶子是 `{node_name}-{output}`**：节点名本身含 `{kind}_{ns}_` 前缀，输出名说明是哪一份数据。一次计算可以有多个产物（`factor_yliu_beta_decomp-mkt_beta_w250` 与 `-resid_mom_w250`），而不同节点即便产出同名输出也不会撞车。引用名 `{repo}.{node_dir}.{node_name}-{output}` 与该路径一一对应、纯字符串可互推。完整规则见 `implementation.md` §3.2 与 §4.11。
 
 **分区与命名**：`{category}/{YYYY}/{mm}/{subdata}.{YYYYMMDD}`，`category` 与 `subdata` 同名（目录分区 + 文件自描述，单文件拷出后仍知道自己是什么）。文件名**不带扩展名**。
 
 **除 `calendar` 外全部逐 session、全部 PIT**：`pv` / `cax` / `sec_master` / `industry` 每个交易日一个文件。`calendar` 是唯一例外——它记的是交易日与节假日本身，一年一个文件 `calendar/{YYYY}/calendar.{YYYY}`，无 `mm` 层。
 
-对应 `architecture.md` §5.1 的 `source:` 声明写法：
+对应 `implementation.md` §5.1 的 `source:` 声明写法：
 
 ```yaml
 source:
@@ -101,7 +101,7 @@ python3 -m venv .venv && .venv/bin/pip install pandas pyarrow   # 系统 python 
 
 - 分隔符 `|`（**pipe**），UTF-8，LF 换行，**首行为表头**。
 - **不使用引号包裹**。任何文本字段在写出前必须把 `|`、`\r`、`\n` 替换为空格——这是不加引号的前提。
-- **NaN / 缺失 = 空字段**（两个连续分隔符），不写 `NaN`/`NULL`/`nan`。对齐 `architecture.md` 附录 B。
+- **NaN / 缺失 = 空字段**（两个连续分隔符），不写 `NaN`/`NULL`/`nan`。对齐 `implementation.md` 附录 B。
 - 价格保留 6 位小数，因子保留 10 位小数，`volume` 为整数。
 - **所有 `date` 列一律 `YYYY-MM-DD`**（ISO），而**文件名一律 `YYYYMMDD`**（无分隔符）。两者指同一个 session，校验器需按此对照。
 - 时间戳→日期一律按 `America/New_York` 换算（厂商 bar 时间戳是 09:30 ET；实测 753 根 bar 上 UTC 日期与 NY 日期无分歧，但按交易所时区换算是构造上正确的写法）。
@@ -134,7 +134,7 @@ is_etf|round_lot|financial_status|first_trade_date|currency|ref_asof|source
 
 ### 3.1 `security_id`：持久注册表，append-only
 
-`architecture.md` §3.4 要求内部 ID **永不重用**（美股 ticker 会被回收，以 ticker 为键会把退市公司的历史静默焊到继承该代码的新公司上），§3.3 要求列轴**只在末尾单调增长**。
+`implementation.md` §3.4 要求内部 ID **永不重用**（美股 ticker 会被回收，以 ticker 为键会把退市公司的历史静默焊到继承该代码的新公司上），§3.3 要求列轴**只在末尾单调增长**。
 
 **按当次运行的内容排序生成 ID 两条都不满足**——加一只标的、或补进退市名单，全部 ID 就重排，`42` 昨天是 HUBB 今天就成了别的。故 ID 存放在跨构建持久的注册表里：
 
@@ -184,7 +184,7 @@ date|security_id|ticker|gics_sector_code|gics_sector|gics_sub_industry|ref_asof|
 
 与 `sec_master` 同样逐 session、同样的 PIT 行集与 `ref_asof` 语义。
 
-`gics_sector_code` 用**官方 GICS sector 编码**——10 Energy / 15 Materials / 20 Industrials / 25 Consumer Discretionary / 30 Consumer Staples / 35 Health Care / 40 Financials / 45 Information Technology / 50 Communication Services / 55 Utilities / 60 Real Estate。选它而不是自造序号，是因为它稳定、通用，且最大值 60 正好落在 `architecture.md` §5.1 为 sector field 声明的 `dtype: i1` 内。
+`gics_sector_code` 用**官方 GICS sector 编码**——10 Energy / 15 Materials / 20 Industrials / 25 Consumer Discretionary / 30 Consumer Staples / 35 Health Care / 40 Financials / 45 Information Technology / 50 Communication Services / 55 Utilities / 60 Real Estate。选它而不是自造序号，是因为它稳定、通用，且最大值 60 正好落在 `implementation.md` §5.1 为 sector field 声明的 `dtype: i1` 内。
 
 > **结构是 PIT 的，内容还不是**：`industry` 已逐 session 落盘，行集按 `first_trade_date <= date` 变化；但 S&P/GICS 清单只有现任分类，拿不到期内的行业变更，故各日的 `gics_*` 取值目前相同、且由 `ref_asof` 标出是回填的。等接入有历史的分类源后，只有内容会变，结构与消费方式都不动。
 
@@ -194,7 +194,7 @@ date|security_id|ticker|gics_sector_code|gics_sector|gics_sub_industry|ref_asof|
 session|date|is_half_day|n_securities
 ```
 
-- `session`：int，从 0 起单调递增，**全局日期轴**（`architecture.md` §3.3 `_axes/sessions.json` 的 L2 前身）。
+- `session`：int，从 0 起单调递增，**全局日期轴**（`implementation.md` §3.3 `_axes/sessions.json` 的 L2 前身）。
 - **按年分文件，但 `session` 跨年继续累加、绝不逐文件重置**——它就是那根全局轴，重置等于把轴切断。实测：`calendar.2025` 止于 session 85（2025-12-31），`calendar.2026` 起于 session 86（2026-01-02），合并后连续 `0..249`。
 - 本版 session 集合由数据并集推出，故首尾两年只覆盖数据区间内的交易日，不是完整自然年。
 - `date`：`YYYY-MM-DD`。
@@ -217,7 +217,7 @@ date|security_id|ticker|open|high|low|close|volume|adj_factor|adj_close_vendor
 | `adj_factor` | 累计复权因子，**由 `cax` 事件日志自算**（§7.3），非取自厂商。`adj_close = close × adj_factor`。**非 PIT**，`asof` 见 `_meta.json`；因子只在相差常数倍下确定，故只有它算出的**收益**有绝对意义 |
 | `adj_close_vendor` | 厂商 `adjclose` 原值，**只作独立交叉校验用**（§8 V1），不供研究直接消费——实测它在 MNST 上是错的 |
 
-当日停牌 / 无报价的标的**不出现在该文件中**（不写全 NaN 行）——`architecture.md` §5.1 规定缺失由引擎补 NaN。
+当日停牌 / 无报价的标的**不出现在该文件中**（不写全 NaN 行）——`implementation.md` §5.1 规定缺失由引擎补 NaN。
 
 ## 6. `cax`
 

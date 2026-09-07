@@ -1,4 +1,4 @@
-"""配置与命名（architecture.md §3.2 / §4.1 / §4.11）。
+"""配置与命名（implementation.md §3.2 / §4.1 / §4.11）。
 
 节点名 {kind}_{ns}_{name} 是 identity，kind 与 ns 从中解析、yaml 里不声明。
 引用名 {repo}.{node_dir}.{node_name}-{output} 与 L3 路径一一对应。

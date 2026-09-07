@@ -48,7 +48,7 @@
     "version": 1,
     "first_session": 64,
     "last_session": 249,
-    "updated_at": "2026-09-07T02:00:49Z",
+    "updated_at": "2026-09-07T11:38:43Z",
     "deps": [
       "g_common.field_base_px.adj_close_1500",
       "g_yliu.factor_yliu_liq.rvol20",

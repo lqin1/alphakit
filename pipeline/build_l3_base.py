@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""从 L2 一次性生成 base 数据集的 L3（architecture.md §3.2 / §3.6）。
+"""从 L2 一次性生成 base 数据集的 L3（implementation.md §3.2 / §3.6）。
 
 这一步属于 ingestion 管道而非引擎——v0 引擎只吃 L3、只吐 L3（§七 范围声明），
 L2 → L3 的文件格式、路径模板与 vendor 容错三副担子都留在这里。
